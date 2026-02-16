@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { parseBody, updatePageSchema } from "@/lib/validations";
+import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function GET(
   _req: Request,
@@ -49,6 +50,9 @@ export async function PATCH(
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const rl = rateLimit(`pages-mut:${session.user.id}`, "mutation");
+    if (!rl.success) return rateLimitResponse(rl);
 
     const { pageId } = await params;
 
@@ -105,6 +109,9 @@ export async function DELETE(
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const rl = rateLimit(`pages-mut:${session.user.id}`, "mutation");
+    if (!rl.success) return rateLimitResponse(rl);
 
     const { pageId } = await params;
 

@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { unlink } from "fs/promises";
 import path from "path";
 import { parseBody, updateMediaSchema } from "@/lib/validations";
+import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function PATCH(
   req: Request,
@@ -14,6 +15,9 @@ export async function PATCH(
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const rl = rateLimit(`media-mut:${session.user.id}`, "mutation");
+    if (!rl.success) return rateLimitResponse(rl);
 
     const { mediaId } = await params;
 
@@ -64,6 +68,9 @@ export async function DELETE(
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const rl = rateLimit(`media-mut:${session.user.id}`, "mutation");
+    if (!rl.success) return rateLimitResponse(rl);
 
     const { mediaId } = await params;
 

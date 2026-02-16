@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { sanitizeBlocks } from "@/lib/sanitize";
 import type { Prisma } from "@prisma/client";
 import { parseBody, createTemplateSchema } from "@/lib/validations";
+import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function GET() {
   try {
@@ -38,6 +39,9 @@ export async function POST(req: Request) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const rl = rateLimit(`templates-post:${session.user.id}`, "mutation");
+    if (!rl.success) return rateLimitResponse(rl);
 
     let body;
     try {

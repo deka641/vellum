@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { sanitizeBlocks } from "@/lib/sanitize";
 import type { Prisma } from "@prisma/client";
 import { parseBody, updateBlocksSchema } from "@/lib/validations";
+import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function GET(
   _req: Request,
@@ -45,6 +46,9 @@ export async function PUT(
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const rl = rateLimit(`blocks-put:${session.user.id}`, "autosave");
+    if (!rl.success) return rateLimitResponse(rl);
 
     const { pageId } = await params;
 

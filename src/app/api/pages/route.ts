@@ -5,6 +5,7 @@ import { slugify } from "@/lib/utils";
 import { sanitizeBlocks } from "@/lib/sanitize";
 import { Prisma } from "@prisma/client";
 import { parseBody, createPageSchema } from "@/lib/validations";
+import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function GET(req: Request) {
   try {
@@ -49,6 +50,9 @@ export async function POST(req: Request) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const rl = rateLimit(`pages-post:${session.user.id}`, "mutation");
+    if (!rl.success) return rateLimitResponse(rl);
 
     let body;
     try {

@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { saveUploadedFile, UnsafeFileTypeError } from "@/lib/upload";
 import { getImageDimensions, optimizeImage } from "@/lib/image";
+import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function GET(req: Request) {
   try {
@@ -46,6 +47,9 @@ export async function POST(req: Request) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const rl = rateLimit(`media-upload:${session.user.id}`, "upload");
+    if (!rl.success) return rateLimitResponse(rl);
 
     const formData = await req.formData();
     const file = formData.get("file") as File | null;

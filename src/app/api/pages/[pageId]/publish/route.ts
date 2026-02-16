@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function POST(
   _req: Request,
@@ -11,6 +12,9 @@ export async function POST(
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const rl = rateLimit(`publish:${session.user.id}`, "mutation");
+    if (!rl.success) return rateLimitResponse(rl);
 
     const { pageId } = await params;
 
@@ -49,6 +53,9 @@ export async function DELETE(
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const rl = rateLimit(`publish:${session.user.id}`, "mutation");
+    if (!rl.success) return rateLimitResponse(rl);
 
     const { pageId } = await params;
 
