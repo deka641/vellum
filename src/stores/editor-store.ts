@@ -12,6 +12,7 @@ interface EditorState {
   selectedBlockId: string | null;
   isDirty: boolean;
   isSaving: boolean;
+  saveError: string | null;
   pageId: string | null;
   pageTitle: string;
 
@@ -30,6 +31,7 @@ interface EditorState {
   setBlocks: (blocks: EditorBlock[]) => void;
   setDirty: (dirty: boolean) => void;
   setSaving: (saving: boolean) => void;
+  setSaveError: (error: string | null) => void;
   setPageTitle: (title: string) => void;
   undo: () => void;
   redo: () => void;
@@ -45,11 +47,15 @@ function pushHistory(state: EditorState): Partial<EditorState> {
   };
 }
 
+const CONTENT_HISTORY_DEBOUNCE = 500;
+let contentHistoryTimer: ReturnType<typeof setTimeout> | null = null;
+
 export const useEditorStore = create<EditorState>((set, get) => ({
   blocks: [],
   selectedBlockId: null,
   isDirty: false,
   isSaving: false,
+  saveError: null,
   pageId: null,
   pageTitle: "",
   history: [],
@@ -62,6 +68,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       blocks,
       selectedBlockId: null,
       isDirty: false,
+      saveError: null,
       history: [{ blocks: structuredClone(blocks) }],
       historyIndex: 0,
     }),
@@ -76,6 +83,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         blocks: newBlocks,
         selectedBlockId: block.id,
         isDirty: true,
+        saveError: null,
         ...pushHistory({ ...state, blocks: newBlocks }),
       };
     }),
@@ -88,11 +96,12 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         selectedBlockId:
           state.selectedBlockId === id ? null : state.selectedBlockId,
         isDirty: true,
+        saveError: null,
         ...pushHistory({ ...state, blocks: newBlocks }),
       };
     }),
 
-  updateBlockContent: (id, content) =>
+  updateBlockContent: (id, content) => {
     set((state) => {
       const newBlocks = state.blocks.map((b) =>
         b.id === id ? { ...b, content: { ...b.content, ...content } } : b
@@ -100,8 +109,17 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       return {
         blocks: newBlocks,
         isDirty: true,
+        saveError: null,
       };
-    }),
+    });
+
+    // Debounced history push for content edits
+    if (contentHistoryTimer) clearTimeout(contentHistoryTimer);
+    contentHistoryTimer = setTimeout(() => {
+      const state = get();
+      set(pushHistory(state));
+    }, CONTENT_HISTORY_DEBOUNCE);
+  },
 
   updateBlockSettings: (id, settings) =>
     set((state) => {
@@ -111,6 +129,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       return {
         blocks: newBlocks,
         isDirty: true,
+        saveError: null,
         ...pushHistory({ ...state, blocks: newBlocks }),
       };
     }),
@@ -123,6 +142,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       return {
         blocks: newBlocks,
         isDirty: true,
+        saveError: null,
         ...pushHistory({ ...state, blocks: newBlocks }),
       };
     }),
@@ -135,9 +155,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       ...pushHistory({ ...state, blocks }),
     })),
 
-  setDirty: (dirty) => set({ isDirty: dirty }),
+  setDirty: (dirty) => set({ isDirty: dirty, ...(dirty ? { saveError: null } : {}) }),
   setSaving: (saving) => set({ isSaving: saving }),
-  setPageTitle: (title) => set({ pageTitle: title, isDirty: true }),
+  setSaveError: (error) => set({ saveError: error }),
+  setPageTitle: (title) => set({ pageTitle: title, isDirty: true, saveError: null }),
 
   undo: () =>
     set((state) => {

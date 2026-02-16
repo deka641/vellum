@@ -18,7 +18,7 @@ export default function EditorPage() {
   const [loading, setLoading] = useState(true);
   const [siteId, setSiteId] = useState("");
   const [pageStatus, setPageStatus] = useState<"DRAFT" | "PUBLISHED">("DRAFT");
-  const { setPage, addBlock } = useEditorStore();
+  const { setPage, addBlock, isDirty } = useEditorStore();
   const { save } = useAutosave();
 
   useEffect(() => {
@@ -84,6 +84,18 @@ export default function EditorPage() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [save]);
+
+  // Warn before closing tab with unsaved changes
+  useEffect(() => {
+    if (!isDirty) return;
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
 
   const handlePublish = useCallback(async () => {
     await save();

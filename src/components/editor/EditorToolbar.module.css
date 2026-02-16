@@ -64,6 +64,10 @@
   animation: spin 1s linear infinite;
 }
 
+.saveError {
+  color: var(--color-error, #dc2626);
+}
+
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
