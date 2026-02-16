@@ -1,0 +1,34 @@
+.content {
+  padding: var(--space-8);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-5);
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--space-20) var(--space-4);
+  text-align: center;
+  color: var(--color-text-tertiary);
+}
+
+.empty h3 {
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-primary);
+  letter-spacing: normal;
+}
+
+.empty p {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  max-width: 300px;
+}

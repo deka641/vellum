@@ -1,0 +1,79 @@
+.wrapper {
+  position: relative;
+  border: 2px solid transparent;
+  border-radius: var(--radius-lg);
+  transition: border-color var(--duration-fast) var(--ease-out);
+  cursor: default;
+}
+
+.wrapper:hover {
+  border-color: var(--color-border);
+}
+
+.wrapper:hover .toolbar {
+  opacity: 1;
+}
+
+.selected {
+  border-color: var(--color-accent) !important;
+}
+
+.selected .toolbar {
+  opacity: 1;
+}
+
+.dragging {
+  z-index: 10;
+}
+
+.toolbar {
+  position: absolute;
+  top: -1px;
+  left: -40px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.dragHandle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-md);
+  color: var(--color-text-tertiary);
+  cursor: grab;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.dragHandle:hover {
+  color: var(--color-text-primary);
+  background: var(--color-bg-secondary);
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+.deleteButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-md);
+  color: var(--color-text-tertiary);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.deleteButton:hover {
+  color: var(--color-error);
+  background: var(--color-error-light);
+}
+
+.content {
+  padding: var(--space-3);
+}

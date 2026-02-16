@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String?
+  email        String   @unique
+  passwordHash String
+  avatarUrl    String?
+  sites        Site[]
+  media        Media[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Site {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  favicon     String?
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pages       Page[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Page {
+  id          String     @id @default(cuid())
+  title       String
+  slug        String
+  description String?
+  status      PageStatus @default(DRAFT)
+  isHomepage  Boolean    @default(false)
+  sortOrder   Int        @default(0)
+  siteId      String
+  site        Site       @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  blocks      Block[]
+  publishedAt DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@unique([siteId, slug])
+  @@index([siteId])
+}
+
+enum PageStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model Block {
+  id        String   @id @default(cuid())
+  type      String
+  content   Json
+  settings  Json     @default("{}")
+  sortOrder Int      @default(0)
+  pageId    String
+  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  parentId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([pageId])
+  @@index([parentId])
+}
+
+model Template {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  thumbnail   String?
+  category    String   @default("general")
+  blocks      Json
+  isSystem    Boolean  @default(false)
+  userId      String?
+  createdAt   DateTime @default(now())
+}
+
+model Media {
+  id        String   @id @default(cuid())
+  filename  String
+  mimeType  String
+  size      Int
+  width     Int?
+  height    Int?
+  url       String
+  alt       String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}

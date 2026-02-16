@@ -1,0 +1,83 @@
+.canvas {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--color-bg-secondary);
+  display: flex;
+  justify-content: center;
+  padding: var(--space-8);
+  min-height: 0;
+}
+
+.page {
+  width: 100%;
+  max-width: 720px;
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-8) var(--space-12);
+  min-height: 600px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-20);
+  text-align: center;
+}
+
+.empty p {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-primary);
+}
+
+.empty span {
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+}
+
+.addButton {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  margin-top: var(--space-4);
+  background: var(--color-accent-light);
+  color: var(--color-accent);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.addButton:hover {
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+}
+
+.addBlockBottom {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  margin-top: var(--space-4);
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  color: var(--color-text-tertiary);
+  font-size: var(--text-sm);
+  width: 100%;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.addBlockBottom:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: var(--color-accent-light);
+}

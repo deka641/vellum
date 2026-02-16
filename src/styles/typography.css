@@ -1,0 +1,37 @@
+/* Typography System */
+h1, h2, h3, h4 {
+  font-family: var(--font-heading);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  color: var(--color-text-primary);
+  letter-spacing: -0.02em;
+}
+
+h1 { font-size: var(--text-4xl); }
+h2 { font-size: var(--text-3xl); }
+h3 { font-size: var(--text-2xl); }
+h4 { font-size: var(--text-xl); }
+
+p {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: var(--color-text-secondary);
+}
+
+small {
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+}
+
+strong {
+  font-weight: var(--weight-semibold);
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--color-bg-secondary);
+  padding: 0.125em 0.375em;
+  border-radius: var(--radius-sm);
+}

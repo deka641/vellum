@@ -1,0 +1,108 @@
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: var(--sidebar-width);
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  z-index: var(--z-sticky);
+}
+
+.logo {
+  padding: var(--space-5) var(--space-5);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.logoLink {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.logoText {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  color: var(--color-text-primary);
+  letter-spacing: -0.02em;
+}
+
+.nav {
+  flex: 1;
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-md);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.navItem:hover {
+  color: var(--color-text-primary);
+  background: var(--color-bg-secondary);
+}
+
+.navItem.active {
+  color: var(--color-text-primary);
+  background: var(--color-bg-secondary);
+}
+
+.navItem svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.footer {
+  padding: var(--space-4);
+  border-top: 1px solid var(--color-border-light);
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  transition: background var(--duration-fast) var(--ease-out);
+  cursor: pointer;
+}
+
+.userInfo:hover {
+  background: var(--color-bg-secondary);
+}
+
+.userDetails {
+  flex: 1;
+  min-width: 0;
+}
+
+.userName {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.userEmail {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

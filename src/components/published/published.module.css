@@ -1,0 +1,140 @@
+.page {
+  min-height: 100vh;
+  background: var(--color-surface);
+  display: flex;
+  justify-content: center;
+  padding: var(--space-8) var(--space-4);
+}
+
+.container {
+  width: 100%;
+  max-width: 720px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.heading {
+  font-family: var(--font-heading);
+  font-weight: var(--weight-bold);
+  color: var(--color-text-primary);
+  letter-spacing: -0.02em;
+  line-height: var(--leading-tight);
+}
+
+.heading[data-level="1"] { font-size: var(--text-4xl); }
+.heading[data-level="2"] { font-size: var(--text-3xl); }
+.heading[data-level="3"] { font-size: var(--text-2xl); }
+.heading[data-level="4"] { font-size: var(--text-xl); }
+
+.text {
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: var(--color-text-primary);
+}
+
+.text p {
+  margin-bottom: 0.75em;
+  color: inherit;
+}
+
+.text strong {
+  font-weight: var(--weight-semibold);
+}
+
+.text a {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
+
+.text ul,
+.text ol {
+  padding-left: 1.5em;
+  margin-bottom: 0.75em;
+}
+
+.text ul { list-style: disc; }
+.text ol { list-style: decimal; }
+
+.figure {
+  width: 100%;
+}
+
+.image {
+  width: 100%;
+  display: block;
+}
+
+.caption {
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+  text-align: center;
+  margin-top: var(--space-2);
+}
+
+.buttonContainer {
+  padding: var(--space-2) 0;
+}
+
+.button {
+  display: inline-block;
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.btn-primary {
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+}
+
+.btn-primary:hover {
+  background: var(--color-accent-hover);
+}
+
+.btn-secondary {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+}
+
+.btn-outline {
+  border: 1px solid var(--color-accent);
+  color: var(--color-accent);
+}
+
+.divider {
+  border: none;
+  border-top-width: 1px;
+  margin: var(--space-4) 0;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.video {
+  width: 100%;
+  position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: #000;
+}
+
+.videoIframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
