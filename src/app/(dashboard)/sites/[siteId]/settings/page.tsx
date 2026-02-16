@@ -8,6 +8,8 @@ import { Topbar } from "@/components/dashboard/Topbar";
 import { Input, Textarea } from "@/components/ui/Input/Input";
 import { Button } from "@/components/ui/Button/Button";
 import { useToast } from "@/components/ui/Toast/Toast";
+import { ThemeConfigurator } from "@/components/dashboard/ThemeConfigurator";
+import { DEFAULT_THEME, parseSiteTheme, type SiteTheme } from "@/lib/theme";
 import styles from "./settings.module.css";
 
 export default function SiteSettingsPage() {
@@ -16,6 +18,7 @@ export default function SiteSettingsPage() {
   const { toast } = useToast();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [theme, setTheme] = useState<SiteTheme>(DEFAULT_THEME);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -25,6 +28,8 @@ export default function SiteSettingsPage() {
       .then((site) => {
         setName(site.name);
         setDescription(site.description || "");
+        const parsed = parseSiteTheme(site.theme);
+        if (parsed) setTheme(parsed);
       })
       .finally(() => setLoading(false));
   }, [params.siteId]);
@@ -37,7 +42,7 @@ export default function SiteSettingsPage() {
       const res = await fetch(`/api/sites/${params.siteId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, description }),
+        body: JSON.stringify({ name, description, theme }),
       });
 
       if (res.ok) {
@@ -92,6 +97,9 @@ export default function SiteSettingsPage() {
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
           />
+
+          <ThemeConfigurator theme={theme} onChange={setTheme} />
+
           <div className={styles.actions}>
             <Button type="submit" disabled={saving}>
               {saving ? "Saving..." : "Save changes"}

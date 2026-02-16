@@ -43,9 +43,24 @@ export const createSiteSchema = z.object({
   description: z.string().max(2000).nullable().optional(),
 });
 
+const hexColorSchema = z.string().regex(/^#[0-9a-fA-F]{6}$/);
+
+const fontPresetEnum = z.enum(["modern", "clean", "classic", "bold", "elegant"]);
+
+export const siteThemeSchema = z.object({
+  colors: z.object({
+    primary: hexColorSchema,
+    background: hexColorSchema,
+    surface: hexColorSchema,
+    text: hexColorSchema,
+  }),
+  fontPreset: fontPresetEnum,
+});
+
 export const updateSiteSchema = z.object({
   name: z.string().min(1).max(200).optional(),
   description: z.string().max(2000).nullable().optional(),
+  theme: siteThemeSchema.optional(),
 });
 
 // --- Pages ---

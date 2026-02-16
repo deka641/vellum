@@ -80,6 +80,7 @@ export async function PATCH(
       data: {
         name: parsed.data.name ?? site.name,
         description: parsed.data.description ?? site.description,
+        ...(parsed.data.theme !== undefined && { theme: parsed.data.theme }),
       },
     });
 

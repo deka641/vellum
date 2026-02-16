@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/auth-helpers";
+import { parseSiteTheme, generateThemeVariables, FONT_PRESETS } from "@/lib/theme";
 import { PublishedPage } from "@/components/published/PublishedPage";
 
 interface Props {
@@ -13,7 +14,10 @@ export default async function PreviewPage({ params }: Props) {
 
   const page = await db.page.findFirst({
     where: { id: pageId, site: { userId: user.id } },
-    include: { blocks: { orderBy: { sortOrder: "asc" } } },
+    include: {
+      blocks: { orderBy: { sortOrder: "asc" } },
+      site: { select: { theme: true } },
+    },
   });
 
   if (!page) notFound();
@@ -26,5 +30,20 @@ export default async function PreviewPage({ params }: Props) {
     parentId: b.parentId,
   }));
 
-  return <PublishedPage title={page.title} blocks={blocks} />;
+  const theme = parseSiteTheme(page.site.theme);
+  const themeVars = theme ? generateThemeVariables(theme) : {};
+  const fontPreset = theme ? FONT_PRESETS[theme.fontPreset] : null;
+
+  return (
+    <div style={themeVars as React.CSSProperties}>
+      {fontPreset?.googleFontsUrl && (
+        <>
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+          <link rel="stylesheet" href={fontPreset.googleFontsUrl} />
+        </>
+      )}
+      <PublishedPage title={page.title} blocks={blocks} />
+    </div>
+  );
 }

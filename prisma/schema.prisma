@@ -25,6 +25,7 @@ model Site {
   slug        String   @unique
   description String?
   favicon     String?
+  theme       Json     @default("{}")
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   pages       Page[]
