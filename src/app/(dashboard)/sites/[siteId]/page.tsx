@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Plus, FileText, ArrowLeft, Navigation2 } from "lucide-react";
+import { Plus, FileText, ArrowLeft, Navigation2, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { PageList } from "@/components/dashboard/PageList";
@@ -167,6 +167,11 @@ export default function SiteDetailPage() {
                 Navigation
               </Button>
             </Link>
+            <a href={`/s/${site.slug}`} target="_blank" rel="noopener noreferrer">
+              <Button variant="secondary" leftIcon={<ExternalLink size={16} />} size="sm">
+                View site
+              </Button>
+            </a>
             <Button leftIcon={<Plus size={16} />} size="sm" onClick={handleOpenNewPage}>
               New page
             </Button>
@@ -184,7 +189,7 @@ export default function SiteDetailPage() {
             </Button>
           </div>
         ) : (
-          <PageList pages={site.pages} onDelete={handleDeletePage} />
+          <PageList pages={site.pages} siteSlug={site.slug} onDelete={handleDeletePage} />
         )}
       </div>
 
@@ -201,32 +206,35 @@ export default function SiteDetailPage() {
             autoFocus
             onKeyDown={(e) => e.key === "Enter" && handleCreatePage()}
           />
-          {templates.length > 0 && (
-            <div className={styles.templateSection}>
-              <div className={styles.templateLabel}>Template</div>
-              <div className={styles.templateGrid}>
-                <div
-                  className={`${styles.templateCard} ${selectedTemplateId === null ? styles.templateCardSelected : ""}`}
-                  onClick={() => setSelectedTemplateId(null)}
-                >
-                  <span className={styles.templateCardName}>Blank</span>
-                  <span className={styles.templateCardDesc}>Start from scratch</span>
-                </div>
-                {templates.map((template) => (
+          {(() => {
+            const nonBlankTemplates = templates.filter((t) => t.blocks.length > 0);
+            return (
+              <div className={styles.templateSection}>
+                <div className={styles.templateLabel}>Template</div>
+                <div className={styles.templateGrid}>
                   <div
-                    key={template.id}
-                    className={`${styles.templateCard} ${selectedTemplateId === template.id ? styles.templateCardSelected : ""}`}
-                    onClick={() => setSelectedTemplateId(template.id)}
+                    className={`${styles.templateCard} ${selectedTemplateId === null ? styles.templateCardSelected : ""}`}
+                    onClick={() => setSelectedTemplateId(null)}
                   >
-                    <span className={styles.templateCardName}>{template.name}</span>
-                    {template.description && (
-                      <span className={styles.templateCardDesc}>{template.description}</span>
-                    )}
+                    <span className={styles.templateCardName}>Blank</span>
+                    <span className={styles.templateCardDesc}>Start from scratch</span>
                   </div>
-                ))}
+                  {nonBlankTemplates.map((template) => (
+                    <div
+                      key={template.id}
+                      className={`${styles.templateCard} ${selectedTemplateId === template.id ? styles.templateCardSelected : ""}`}
+                      onClick={() => setSelectedTemplateId(template.id)}
+                    >
+                      <span className={styles.templateCardName}>{template.name}</span>
+                      {template.description && (
+                        <span className={styles.templateCardDesc}>{template.description}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
           <DialogFooter>
             <Button variant="secondary" onClick={() => setShowNewPage(false)}>
               Cancel

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Eye, Save, Undo2, Redo2, Loader2, AlertCircle, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Eye, ExternalLink, Save, Undo2, Redo2, Loader2, AlertCircle, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/Button/Button";
 import { IconButton } from "@/components/ui/IconButton/IconButton";
 import { Badge } from "@/components/ui/Badge/Badge";
@@ -11,11 +11,14 @@ import styles from "./EditorToolbar.module.css";
 
 interface EditorToolbarProps {
   siteId: string;
+  siteSlug: string;
+  pageSlug: string;
+  isHomepage: boolean;
   pageStatus: "DRAFT" | "PUBLISHED";
   onPublish: () => void;
 }
 
-export function EditorToolbar({ siteId, pageStatus, onPublish }: EditorToolbarProps) {
+export function EditorToolbar({ siteId, siteSlug, pageSlug, isHomepage, pageStatus, onPublish }: EditorToolbarProps) {
   const router = useRouter();
   const { pageTitle, setPageTitle, isDirty, isSaving, saveError, conflict, undo, redo } =
     useEditorStore();
@@ -80,6 +83,16 @@ export function EditorToolbar({ siteId, pageStatus, onPublish }: EditorToolbarPr
             window.open(`/preview/${pageId}`, "_blank");
           }}
         />
+        {pageStatus === "PUBLISHED" && (
+          <IconButton
+            icon={<ExternalLink />}
+            label="View published page"
+            onClick={() => {
+              const url = isHomepage ? `/s/${siteSlug}` : `/s/${siteSlug}/${pageSlug}`;
+              window.open(url, "_blank");
+            }}
+          />
+        )}
         <Button size="sm" onClick={() => { save(); }} disabled={hasConflict}>
           <Save size={14} />
           Save

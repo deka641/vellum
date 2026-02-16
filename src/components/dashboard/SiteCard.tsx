@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { MoreHorizontal, Trash2, Settings, Globe } from "lucide-react";
+import { MoreHorizontal, Trash2, Settings, Globe, ExternalLink } from "lucide-react";
 import { Card } from "@/components/ui/Card/Card";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { IconButton } from "@/components/ui/IconButton/IconButton";
@@ -53,6 +53,12 @@ export function SiteCard({ site, onDelete }: SiteCardProps) {
             <IconButton icon={<MoreHorizontal />} label="Site options" size="sm" />
           </DropdownMenuTrigger>
           <DropdownMenuContent>
+            <DropdownMenuItem asChild>
+              <a href={`/s/${site.slug}`} target="_blank" rel="noopener noreferrer">
+                <ExternalLink size={16} />
+                View site
+              </a>
+            </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href={`/sites/${site.id}/settings`}>
                 <Settings size={16} />

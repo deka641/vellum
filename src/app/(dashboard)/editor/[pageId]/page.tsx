@@ -18,6 +18,9 @@ export default function EditorPage() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [siteId, setSiteId] = useState("");
+  const [siteSlug, setSiteSlug] = useState("");
+  const [pageSlug, setPageSlug] = useState("");
+  const [isHomepage, setIsHomepage] = useState(false);
   const [pageStatus, setPageStatus] = useState<"DRAFT" | "PUBLISHED">("DRAFT");
   const { setPage, addBlock, isDirty } = useEditorStore();
   const { save, forceSave } = useAutosave();
@@ -30,6 +33,9 @@ export default function EditorPage() {
         const data = await res.json();
 
         setSiteId(data.site.id);
+        setSiteSlug(data.site.slug);
+        setPageSlug(data.slug);
+        setIsHomepage(data.isHomepage);
         setPageStatus(data.status);
 
         const blocks: EditorBlock[] = data.blocks.map(
@@ -132,6 +138,9 @@ export default function EditorPage() {
     <div className={styles.editor}>
       <EditorToolbar
         siteId={siteId}
+        siteSlug={siteSlug}
+        pageSlug={pageSlug}
+        isHomepage={isHomepage}
         pageStatus={pageStatus}
         onPublish={handlePublish}
       />

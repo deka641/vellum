@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { MoreHorizontal, Trash2, FileText, Home } from "lucide-react";
+import { MoreHorizontal, Trash2, FileText, Home, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { IconButton } from "@/components/ui/IconButton/IconButton";
 import {
@@ -24,10 +24,11 @@ interface Page {
 
 interface PageListProps {
   pages: Page[];
+  siteSlug: string;
   onDelete: (id: string) => void;
 }
 
-export function PageList({ pages, onDelete }: PageListProps) {
+export function PageList({ pages, siteSlug, onDelete }: PageListProps) {
   return (
     <div className={styles.list}>
       {pages.map((page) => (
@@ -58,6 +59,18 @@ export function PageList({ pages, onDelete }: PageListProps) {
                 <IconButton icon={<MoreHorizontal />} label="Page options" size="sm" />
               </DropdownMenuTrigger>
               <DropdownMenuContent>
+                {page.status === "PUBLISHED" && (
+                  <DropdownMenuItem asChild>
+                    <a
+                      href={page.isHomepage ? `/s/${siteSlug}` : `/s/${siteSlug}/${page.slug}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <ExternalLink size={16} />
+                      View page
+                    </a>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem danger onClick={() => onDelete(page.id)}>
                   <Trash2 size={16} />
                   Delete page
