@@ -65,10 +65,18 @@ export const updateSiteSchema = z.object({
 
 // --- Pages ---
 
+const templateBlockSchema = z.object({
+  id: z.string().min(1).max(100).optional(),
+  type: blockTypeEnum,
+  content: z.record(z.string(), z.unknown()),
+  settings: z.record(z.string(), z.unknown()).optional().default({}),
+  parentId: z.string().nullable().optional(),
+});
+
 export const createPageSchema = z.object({
   title: z.string().min(1).max(200),
   siteId: z.string().min(1),
-  templateBlocks: z.array(blockSchema).optional(),
+  templateBlocks: z.array(templateBlockSchema).optional(),
 });
 
 export const updatePageSchema = z.object({
