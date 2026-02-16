@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
+import { getBaseUrl } from "@/lib/url";
 import { parseSiteTheme, generateThemeVariables, FONT_PRESETS } from "@/lib/theme";
 import { SiteHeader } from "@/components/published/SiteHeader";
 import { SiteFooter } from "@/components/published/SiteFooter";
+import { WebSiteJsonLd } from "@/components/published/JsonLd";
 import styles from "@/components/published/site-layout.module.css";
 
 interface Props {
@@ -33,12 +35,16 @@ export default async function PublishedSiteLayout({ params, children }: Props) {
     href: page.isHomepage ? homeHref : `/s/${site.slug}/${page.slug}`,
   }));
 
+  const baseUrl = await getBaseUrl();
+  const siteUrl = `${baseUrl}/s/${site.slug}`;
+
   const theme = parseSiteTheme(site.theme);
   const themeVars = theme ? generateThemeVariables(theme) : {};
   const fontPreset = theme ? FONT_PRESETS[theme.fontPreset] : null;
 
   return (
     <div className={styles.layout} style={themeVars as React.CSSProperties}>
+      {site.favicon && <link rel="icon" href={site.favicon} />}
       {fontPreset?.googleFontsUrl && (
         <>
           <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -46,6 +52,7 @@ export default async function PublishedSiteLayout({ params, children }: Props) {
           <link rel="stylesheet" href={fontPreset.googleFontsUrl} />
         </>
       )}
+      <WebSiteJsonLd name={site.name} description={site.description} url={siteUrl} />
       <SiteHeader siteName={site.name} homeHref={homeHref} navItems={navItems} />
       <main className={styles.main}>{children}</main>
       <SiteFooter siteName={site.name} />
