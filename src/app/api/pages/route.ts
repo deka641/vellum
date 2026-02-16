@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { slugify } from "@/lib/utils";
+import { sanitizeBlocks } from "@/lib/sanitize";
 import { Prisma } from "@prisma/client";
 
 export async function GET(req: Request) {
@@ -96,14 +97,15 @@ export async function POST(req: Request) {
       });
 
       if (templateBlocks && Array.isArray(templateBlocks)) {
+        const cleanBlocks = sanitizeBlocks(templateBlocks);
         await tx.block.createMany({
-          data: templateBlocks.map((block: { type: string; content?: object; settings?: object; parentId?: string | null }, i: number) => ({
+          data: cleanBlocks.map((block, i: number) => ({
             type: block.type,
             content: (block.content || {}) as Prisma.InputJsonValue,
             settings: (block.settings || {}) as Prisma.InputJsonValue,
             sortOrder: i,
             pageId: p.id,
-            parentId: block.parentId || null,
+            parentId: (block.parentId as string) || null,
           })),
         });
       }

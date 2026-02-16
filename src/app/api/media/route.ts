@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { saveUploadedFile } from "@/lib/upload";
+import { saveUploadedFile, UnsafeFileTypeError } from "@/lib/upload";
 import { getImageDimensions, optimizeImage } from "@/lib/image";
 
 export async function GET(req: Request) {
@@ -91,6 +91,12 @@ export async function POST(req: Request) {
 
       return NextResponse.json(media, { status: 201 });
     } catch (error) {
+      if (error instanceof UnsafeFileTypeError) {
+        return NextResponse.json(
+          { error: error.message },
+          { status: 400 }
+        );
+      }
       console.error("POST /api/media upload failed:", error);
       return NextResponse.json(
         { error: "Upload failed" },

@@ -11,20 +11,24 @@ interface VideoBlockProps {
   settings: BlockSettings;
 }
 
+const YOUTUBE_HOSTNAMES = ["www.youtube.com", "youtube.com", "youtu.be"];
+const VIMEO_HOSTNAMES = ["www.vimeo.com", "vimeo.com"];
+const VIDEO_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
+
 function getEmbedUrl(url: string): string | null {
   try {
     const parsed = new URL(url);
     // YouTube
-    if (parsed.hostname.includes("youtube.com") || parsed.hostname.includes("youtu.be")) {
-      const videoId = parsed.hostname.includes("youtu.be")
+    if (YOUTUBE_HOSTNAMES.includes(parsed.hostname)) {
+      const videoId = parsed.hostname === "youtu.be"
         ? parsed.pathname.slice(1)
         : parsed.searchParams.get("v");
-      if (videoId) return `https://www.youtube.com/embed/${videoId}`;
+      if (videoId && VIDEO_ID_PATTERN.test(videoId)) return `https://www.youtube.com/embed/${videoId}`;
     }
     // Vimeo
-    if (parsed.hostname.includes("vimeo.com")) {
+    if (VIMEO_HOSTNAMES.includes(parsed.hostname)) {
       const videoId = parsed.pathname.split("/").pop();
-      if (videoId) return `https://player.vimeo.com/video/${videoId}`;
+      if (videoId && VIDEO_ID_PATTERN.test(videoId)) return `https://player.vimeo.com/video/${videoId}`;
     }
   } catch {
     // invalid URL

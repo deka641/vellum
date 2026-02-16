@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { sanitizeRichHtml, sanitizeUrl, sanitizeImageSrc, getSafeVideoEmbedUrl } from "@/lib/sanitize";
 import styles from "./published.module.css";
 
 interface BlockData {
@@ -37,7 +38,7 @@ export function PublishedBlock({ block }: PublishedBlockProps) {
         <div
           className={styles.text}
           style={{ textAlign: align }}
-          dangerouslySetInnerHTML={{ __html: content.html as string }}
+          dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(content.html as string) }}
         />
       );
 
@@ -46,7 +47,7 @@ export function PublishedBlock({ block }: PublishedBlockProps) {
       return (
         <figure className={styles.figure}>
           <img
-            src={content.src as string}
+            src={sanitizeImageSrc(content.src as string)}
             alt={(content.alt as string) || ""}
             className={styles.image}
             style={{
@@ -66,7 +67,7 @@ export function PublishedBlock({ block }: PublishedBlockProps) {
       return (
         <div className={styles.buttonContainer} style={{ textAlign: align }}>
           <a
-            href={content.url as string}
+            href={sanitizeUrl(content.url as string)}
             className={`${styles.button} ${
               styles[`btn-${content.variant || "primary"}`]
             }`}
@@ -113,19 +114,7 @@ export function PublishedBlock({ block }: PublishedBlockProps) {
     case "video": {
       const url = content.url as string;
       if (!url) return null;
-      let embedUrl = "";
-      try {
-        const parsed = new URL(url);
-        if (parsed.hostname.includes("youtube.com") || parsed.hostname.includes("youtu.be")) {
-          const videoId = parsed.hostname.includes("youtu.be")
-            ? parsed.pathname.slice(1)
-            : parsed.searchParams.get("v");
-          if (videoId) embedUrl = `https://www.youtube.com/embed/${videoId}`;
-        } else if (parsed.hostname.includes("vimeo.com")) {
-          const videoId = parsed.pathname.split("/").pop();
-          if (videoId) embedUrl = `https://player.vimeo.com/video/${videoId}`;
-        }
-      } catch { /* invalid URL */ }
+      const embedUrl = getSafeVideoEmbedUrl(url);
       if (!embedUrl) return null;
       return (
         <div

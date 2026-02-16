@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { sanitizeBlocks } from "@/lib/sanitize";
+import type { Prisma } from "@prisma/client";
 
 export async function GET(
   _req: Request,
@@ -48,8 +50,8 @@ export async function PUT(
     interface BlockInput {
       id: string;
       type: string;
-      content: object;
-      settings?: object;
+      content: Record<string, unknown>;
+      settings?: Record<string, unknown>;
       parentId?: string | null;
     }
 
@@ -84,12 +86,13 @@ export async function PUT(
       await tx.block.deleteMany({ where: { pageId } });
 
       if (blocks && Array.isArray(blocks)) {
+        const cleanBlocks = sanitizeBlocks(blocks);
         await tx.block.createMany({
-          data: blocks.map((block, i) => ({
-            id: block.id,
+          data: cleanBlocks.map((block, i) => ({
+            id: block.id as string,
             type: block.type,
-            content: block.content,
-            settings: block.settings || {},
+            content: block.content as Prisma.InputJsonValue,
+            settings: (block.settings || {}) as Prisma.InputJsonValue,
             sortOrder: i,
             pageId,
             parentId: block.parentId || null,

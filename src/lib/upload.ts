@@ -4,12 +4,38 @@ import { generateId } from "./utils";
 
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
 
+const ALLOWED_EXTENSIONS = new Set([
+  ".jpg", ".jpeg", ".png", ".gif", ".webp", ".avif",
+  ".mp4", ".webm",
+  ".pdf",
+]);
+
+const ALLOWED_MIME_PREFIXES = [
+  "image/jpeg", "image/png", "image/gif", "image/webp", "image/avif",
+  "video/mp4", "video/webm",
+  "application/pdf",
+];
+
+export class UnsafeFileTypeError extends Error {
+  constructor(ext: string) {
+    super(`File type "${ext}" is not allowed`);
+    this.name = "UnsafeFileTypeError";
+  }
+}
+
 export async function saveUploadedFile(
   file: File
 ): Promise<{ filename: string; url: string; size: number; mimeType: string }> {
   await mkdir(UPLOAD_DIR, { recursive: true });
 
-  const ext = path.extname(file.name) || ".bin";
+  const ext = path.extname(file.name).toLowerCase() || ".bin";
+  if (!ALLOWED_EXTENSIONS.has(ext)) {
+    throw new UnsafeFileTypeError(ext);
+  }
+  if (!ALLOWED_MIME_PREFIXES.includes(file.type)) {
+    throw new UnsafeFileTypeError(ext);
+  }
+
   const filename = `${generateId()}-${Date.now()}${ext}`;
   const filepath = path.join(UPLOAD_DIR, filename);
 
