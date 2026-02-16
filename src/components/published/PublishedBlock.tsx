@@ -19,6 +19,8 @@ export function PublishedBlock({ block }: PublishedBlockProps) {
 
   switch (type) {
     case "heading": {
+      const text = content.text as string;
+      if (!text || text.trim() === "" || text === "Untitled heading") return null;
       const level = (content.level || 2) as number;
       const headingMap = { 1: "h1", 2: "h2", 3: "h3", 4: "h4" } as const;
       const Tag = headingMap[level as 1 | 2 | 3 | 4] || "h2";
@@ -28,19 +30,29 @@ export function PublishedBlock({ block }: PublishedBlockProps) {
           style={{ textAlign: align }}
           data-level={level}
         >
-          {content.text as string}
+          {text}
         </Tag>
       );
     }
 
-    case "text":
+    case "text": {
+      const html = content.html as string;
+      if (
+        !html ||
+        html === "<p>Start writing...</p>" ||
+        html === "<p></p>" ||
+        html.replace(/<[^>]*>/g, "").trim() === ""
+      ) {
+        return null;
+      }
       return (
         <div
           className={styles.text}
           style={{ textAlign: align }}
-          dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(content.html as string) }}
+          dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(html) }}
         />
       );
+    }
 
     case "image":
       if (!content.src) return null;

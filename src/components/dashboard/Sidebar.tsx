@@ -20,6 +20,8 @@ interface SidebarProps {
     email: string;
     avatarUrl?: string | null;
   };
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
 }
 
 const navItems = [
@@ -28,56 +30,63 @@ const navItems = [
   { href: "/templates", label: "Templates", icon: LayoutTemplate },
 ];
 
-export function Sidebar({ user }: SidebarProps) {
+export function Sidebar({ user, mobileOpen, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
 
   return (
-    <aside className={styles.sidebar}>
-      <div className={styles.logo}>
-        <Link href="/sites" className={styles.logoLink}>
-          <span className={styles.logoText}>Vellum</span>
-        </Link>
-      </div>
-
-      <nav className={styles.nav}>
-        {navItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={cn(
-              styles.navItem,
-              pathname.startsWith(item.href) && styles.active
-            )}
-          >
-            <item.icon />
-            {item.label}
+    <>
+      <div
+        className={cn(styles.overlay, mobileOpen && styles.overlayVisible)}
+        onClick={onMobileClose}
+      />
+      <aside className={cn(styles.sidebar, mobileOpen && styles.sidebarOpen)}>
+        <div className={styles.logo}>
+          <Link href="/sites" className={styles.logoLink}>
+            <span className={styles.logoText}>Vellum</span>
           </Link>
-        ))}
-      </nav>
+        </div>
 
-      <div className={styles.footer}>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className={styles.userInfo}>
-              <Avatar
-                fallback={user.name || user.email}
-                src={user.avatarUrl}
-                size="sm"
-              />
-              <div className={styles.userDetails}>
-                <div className={styles.userName}>{user.name || "User"}</div>
-                <div className={styles.userEmail}>{user.email}</div>
-              </div>
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent side="top" align="start">
-            <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login" })}>
-              <LogOut size={16} />
-              Sign out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </aside>
+        <nav className={styles.nav}>
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                styles.navItem,
+                pathname.startsWith(item.href) && styles.active
+              )}
+              onClick={onMobileClose}
+            >
+              <item.icon />
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+
+        <div className={styles.footer}>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className={styles.userInfo}>
+                <Avatar
+                  fallback={user.name || user.email}
+                  src={user.avatarUrl}
+                  size="sm"
+                />
+                <div className={styles.userDetails}>
+                  <div className={styles.userName}>{user.name || "User"}</div>
+                  <div className={styles.userEmail}>{user.email}</div>
+                </div>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="top" align="start">
+              <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login" })}>
+                <LogOut size={16} />
+                Sign out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </aside>
+    </>
   );
 }

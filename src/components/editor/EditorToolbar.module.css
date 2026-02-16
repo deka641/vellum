@@ -76,3 +76,27 @@
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+@media (max-width: 768px) {
+  .toolbar {
+    padding: var(--space-2);
+  }
+
+  .left {
+    gap: var(--space-1);
+  }
+
+  .right {
+    gap: var(--space-1);
+  }
+
+  .saveStatus {
+    display: none;
+  }
+
+  .titleInput {
+    max-width: 120px;
+    font-size: var(--text-sm);
+    min-width: unset;
+  }
+}

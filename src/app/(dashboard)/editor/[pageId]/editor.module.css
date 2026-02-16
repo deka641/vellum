@@ -18,3 +18,10 @@
   gap: var(--space-4);
   padding: var(--space-8);
 }
+
+@media (max-width: 768px) {
+  .editor {
+    margin-left: 0;
+    width: 100%;
+  }
+}

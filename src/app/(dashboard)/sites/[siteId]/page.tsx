@@ -261,7 +261,7 @@ export default function SiteDetailPage() {
         title={site.name}
         description={`${site.pages.length} ${site.pages.length === 1 ? "page" : "pages"}`}
         actions={
-          <div style={{ display: "flex", gap: "var(--space-3)" }}>
+          <div className={styles.topbarActions}>
             <Link href="/sites">
               <Button variant="ghost" leftIcon={<ArrowLeft size={16} />} size="sm">
                 Back

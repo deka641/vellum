@@ -21,6 +21,7 @@ export default function EditorPage() {
   const [siteSlug, setSiteSlug] = useState("");
   const [isHomepage, setIsHomepage] = useState(false);
   const [pageStatus, setPageStatus] = useState<"DRAFT" | "PUBLISHED">("DRAFT");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { setPage, addBlock, isDirty, pageSlug } = useEditorStore();
   const { save, forceSave } = useAutosave();
 
@@ -144,7 +145,10 @@ export default function EditorPage() {
       <ConflictBanner onForceSave={forceSave} />
       <div className={styles.body}>
         <EditorCanvas onAddBlock={() => addBlock("text")} />
-        <EditorSidebar />
+        <EditorSidebar
+          mobileOpen={sidebarOpen}
+          onMobileToggle={() => setSidebarOpen((o) => !o)}
+        />
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Settings2 } from "lucide-react";
+import { Plus, Settings2, X } from "lucide-react";
 import { useEditorStore } from "@/stores/editor-store";
 import { AddBlockMenu } from "./AddBlockMenu";
 import { BlockSettings } from "./BlockSettings";
@@ -10,7 +10,12 @@ import styles from "./EditorSidebar.module.css";
 
 type Tab = "add" | "settings";
 
-export function EditorSidebar() {
+interface EditorSidebarProps {
+  mobileOpen?: boolean;
+  onMobileToggle?: () => void;
+}
+
+export function EditorSidebar({ mobileOpen, onMobileToggle }: EditorSidebarProps) {
   const [activeTab, setActiveTab] = useState<Tab>("add");
   const { selectedBlockId, addBlock } = useEditorStore();
 
@@ -23,30 +28,39 @@ export function EditorSidebar() {
   const showSettings = selectedBlockId && activeTab === "settings";
 
   return (
-    <aside className={styles.sidebar}>
-      <div className={styles.tabs}>
-        <button
-          className={`${styles.tab} ${activeTab === "add" ? styles.active : ""}`}
-          onClick={() => setActiveTab("add")}
-        >
-          <Plus size={16} />
-          Add Block
-        </button>
-        <button
-          className={`${styles.tab} ${activeTab === "settings" ? styles.active : ""}`}
-          onClick={() => setActiveTab("settings")}
-        >
-          <Settings2 size={16} />
-          Settings
-        </button>
-      </div>
-      <div className={styles.content}>
-        {activeTab === "add" ? (
-          <AddBlockMenu onAdd={handleAddBlock} />
-        ) : (
-          <BlockSettings />
-        )}
-      </div>
-    </aside>
+    <>
+      <button
+        className={styles.toggleButton}
+        onClick={onMobileToggle}
+        aria-label={mobileOpen ? "Close sidebar" : "Open sidebar"}
+      >
+        {mobileOpen ? <X size={20} /> : <Settings2 size={20} />}
+      </button>
+      <aside className={`${styles.sidebar} ${mobileOpen ? styles.sidebarOpen : ""}`}>
+        <div className={styles.tabs}>
+          <button
+            className={`${styles.tab} ${activeTab === "add" ? styles.active : ""}`}
+            onClick={() => setActiveTab("add")}
+          >
+            <Plus size={16} />
+            Add Block
+          </button>
+          <button
+            className={`${styles.tab} ${activeTab === "settings" ? styles.active : ""}`}
+            onClick={() => setActiveTab("settings")}
+          >
+            <Settings2 size={16} />
+            Settings
+          </button>
+        </div>
+        <div className={styles.content}>
+          {activeTab === "add" ? (
+            <AddBlockMenu onAdd={handleAddBlock} />
+          ) : (
+            <BlockSettings />
+          )}
+        </div>
+      </aside>
+    </>
   );
 }

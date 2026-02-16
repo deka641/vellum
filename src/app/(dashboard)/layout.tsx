@@ -1,7 +1,6 @@
 import { requireAuth } from "@/lib/auth-helpers";
-import { Sidebar } from "@/components/dashboard/Sidebar";
 import { ToastProvider } from "@/components/ui/Toast/Toast";
-import styles from "./dashboard.module.css";
+import { DashboardShell } from "./DashboardShell";
 
 export default async function DashboardLayout({
   children,
@@ -12,10 +11,7 @@ export default async function DashboardLayout({
 
   return (
     <ToastProvider>
-      <div className={styles.layout}>
-        <Sidebar user={user} />
-        <main className={styles.main}>{children}</main>
-      </div>
+      <DashboardShell user={user}>{children}</DashboardShell>
     </ToastProvider>
   );
 }
