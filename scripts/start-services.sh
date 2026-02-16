@@ -18,8 +18,10 @@ pnpm start &
 NEXT_PID=$!
 echo "$NEXT_PID" > /tmp/vellum-next.pid
 
+PORT="${PORT:-3000}"
+HOSTNAME="${HOSTNAME:-localhost}"
 echo ""
-echo "=== Vellum is running at http://localhost:3000 ==="
+echo "=== Vellum is running at http://${HOSTNAME}:${PORT} ==="
 echo "Next.js PID: $NEXT_PID"
 
 disown "$NEXT_PID"
