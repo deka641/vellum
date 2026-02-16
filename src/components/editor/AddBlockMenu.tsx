@@ -11,6 +11,8 @@ import {
   Play,
   Quote,
   FileInput,
+  Code,
+  Share2,
 } from "lucide-react";
 import { type BlockType } from "@/types/blocks";
 import { blockDefinitions, blockCategories } from "@/lib/blocks";
@@ -27,6 +29,8 @@ const iconMap: Record<string, React.ReactNode> = {
   Play: <Play size={20} />,
   Quote: <Quote size={20} />,
   FileInput: <FileInput size={20} />,
+  Code: <Code size={20} />,
+  Share2: <Share2 size={20} />,
 };
 
 interface AddBlockMenuProps {

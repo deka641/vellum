@@ -104,6 +104,22 @@ export const blockDefinitions: Record<BlockType, BlockDefinition> = {
     },
     defaultSettings: {},
   },
+  code: {
+    type: "code",
+    label: "Code / Embed",
+    icon: "Code",
+    category: "media",
+    defaultContent: { code: "", language: "html" },
+    defaultSettings: {},
+  },
+  social: {
+    type: "social",
+    label: "Social Links",
+    icon: "Share2",
+    category: "text",
+    defaultContent: { links: [], style: "icons" },
+    defaultSettings: { align: "center" },
+  },
 };
 
 export function createBlock(type: BlockType): EditorBlock {

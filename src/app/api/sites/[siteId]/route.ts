@@ -83,6 +83,7 @@ export async function PATCH(
         description: parsed.data.description ?? site.description,
         ...(parsed.data.theme !== undefined && { theme: parsed.data.theme }),
         ...(parsed.data.favicon !== undefined && { favicon: parsed.data.favicon }),
+        ...(parsed.data.footer !== undefined && { footer: parsed.data.footer }),
       },
     });
 

@@ -77,6 +77,102 @@
   text-align: center;
 }
 
+.footerSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-secondary);
+}
+
+.footerSectionTitle {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0;
+  letter-spacing: normal;
+}
+
+.footerLinksEditor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.footerLinksLabel {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-secondary);
+}
+
+.footerLinkRow {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.footerLinkInput {
+  flex: 1;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+}
+
+.footerLinkInput:focus {
+  outline: none;
+  border-color: var(--color-border-focus);
+}
+
+.footerLinkRemove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  color: var(--color-text-tertiary);
+  border-radius: var(--radius-md);
+}
+
+.footerLinkRemove:hover {
+  color: var(--color-error);
+  background: var(--color-error-light);
+}
+
+.footerLinkAdd {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-accent);
+  border: 1px dashed var(--color-accent);
+  border-radius: var(--radius-md);
+  justify-content: center;
+}
+
+.footerLinkAdd:hover {
+  background: var(--color-accent-light);
+}
+
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.checkboxRow input[type="checkbox"] {
+  accent-color: var(--color-accent);
+}
+
 .dangerZone {
   margin-top: var(--space-12);
   padding: var(--space-5);

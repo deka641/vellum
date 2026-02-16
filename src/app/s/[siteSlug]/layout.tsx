@@ -55,7 +55,7 @@ export default async function PublishedSiteLayout({ params, children }: Props) {
       <WebSiteJsonLd name={site.name} description={site.description} url={siteUrl} />
       <SiteHeader siteName={site.name} homeHref={homeHref} navItems={navItems} />
       <main className={styles.main}>{children}</main>
-      <SiteFooter siteName={site.name} />
+      <SiteFooter siteName={site.name} footer={site.footer as Record<string, unknown> | null} />
     </div>
   );
 }

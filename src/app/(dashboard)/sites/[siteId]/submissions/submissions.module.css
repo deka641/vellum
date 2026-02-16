@@ -1,0 +1,92 @@
+.content {
+  padding: var(--space-8);
+  max-width: 960px;
+}
+
+.empty {
+  text-align: center;
+  padding: var(--space-16) var(--space-4);
+}
+
+.empty p {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.empty span {
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+}
+
+.tableWrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.th {
+  text-align: left;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+}
+
+.tr {
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.tr:last-child {
+  border-bottom: none;
+}
+
+.td {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+  vertical-align: top;
+}
+
+.pageName {
+  font-weight: var(--weight-medium);
+  color: var(--color-text-primary);
+}
+
+.dataFields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.dataField {
+  display: flex;
+  gap: var(--space-2);
+  line-height: 1.4;
+}
+
+.dataKey {
+  font-weight: var(--weight-medium);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.dataValue {
+  color: var(--color-text-primary);
+  word-break: break-word;
+}
+
+.date {
+  color: var(--color-text-tertiary);
+  white-space: nowrap;
+}

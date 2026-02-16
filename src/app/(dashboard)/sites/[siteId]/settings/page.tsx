@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Upload, X } from "lucide-react";
+import { ArrowLeft, Upload, X, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { Input, Textarea } from "@/components/ui/Input/Input";
@@ -20,6 +20,9 @@ export default function SiteSettingsPage() {
   const [description, setDescription] = useState("");
   const [theme, setTheme] = useState<SiteTheme>(DEFAULT_THEME);
   const [favicon, setFavicon] = useState<string | null>(null);
+  const [footerText, setFooterText] = useState("");
+  const [footerLinks, setFooterLinks] = useState<{ label: string; url: string }[]>([]);
+  const [showBranding, setShowBranding] = useState(true);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [uploadingFavicon, setUploadingFavicon] = useState(false);
@@ -34,6 +37,12 @@ export default function SiteSettingsPage() {
         setFavicon(site.favicon || null);
         const parsed = parseSiteTheme(site.theme);
         if (parsed) setTheme(parsed);
+        if (site.footer && typeof site.footer === "object") {
+          const f = site.footer as { text?: string; links?: { label: string; url: string }[]; showBranding?: boolean };
+          setFooterText(f.text || "");
+          setFooterLinks(f.links || []);
+          setShowBranding(f.showBranding !== false);
+        }
       })
       .finally(() => setLoading(false));
   }, [params.siteId]);
@@ -66,7 +75,17 @@ export default function SiteSettingsPage() {
       const res = await fetch(`/api/sites/${params.siteId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, description, theme, favicon }),
+        body: JSON.stringify({
+          name,
+          description,
+          theme,
+          favicon,
+          footer: {
+            text: footerText || undefined,
+            links: footerLinks.filter((l) => l.label && l.url),
+            showBranding,
+          },
+        }),
       });
 
       if (res.ok) {
@@ -164,6 +183,66 @@ export default function SiteSettingsPage() {
           </div>
 
           <ThemeConfigurator theme={theme} onChange={setTheme} />
+
+          <div className={styles.footerSection}>
+            <h3 className={styles.footerSectionTitle}>Footer</h3>
+            <Input
+              label="Footer text"
+              value={footerText}
+              onChange={(e) => setFooterText(e.target.value)}
+              placeholder="e.g. &copy; 2026 My Company"
+            />
+            <div className={styles.footerLinksEditor}>
+              <label className={styles.footerLinksLabel}>Footer links</label>
+              {footerLinks.map((link, i) => (
+                <div key={i} className={styles.footerLinkRow}>
+                  <input
+                    className={styles.footerLinkInput}
+                    value={link.label}
+                    onChange={(e) => {
+                      const updated = [...footerLinks];
+                      updated[i] = { ...updated[i], label: e.target.value };
+                      setFooterLinks(updated);
+                    }}
+                    placeholder="Label"
+                  />
+                  <input
+                    className={styles.footerLinkInput}
+                    value={link.url}
+                    onChange={(e) => {
+                      const updated = [...footerLinks];
+                      updated[i] = { ...updated[i], url: e.target.value };
+                      setFooterLinks(updated);
+                    }}
+                    placeholder="https://..."
+                  />
+                  <button
+                    type="button"
+                    className={styles.footerLinkRemove}
+                    onClick={() => setFooterLinks(footerLinks.filter((_, j) => j !== i))}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                className={styles.footerLinkAdd}
+                onClick={() => setFooterLinks([...footerLinks, { label: "", url: "" }])}
+              >
+                <Plus size={14} />
+                Add link
+              </button>
+            </div>
+            <label className={styles.checkboxRow}>
+              <input
+                type="checkbox"
+                checked={showBranding}
+                onChange={(e) => setShowBranding(e.target.checked)}
+              />
+              <span>Show &quot;Built with Vellum&quot; branding</span>
+            </label>
+          </div>
 
           <div className={styles.actions}>
             <Button type="submit" disabled={saving}>

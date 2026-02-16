@@ -9,6 +9,7 @@ interface FormField {
   label: string;
   required: boolean;
   placeholder?: string;
+  options?: string[];
 }
 
 interface PublishedFormProps {
@@ -32,7 +33,11 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
     const formData = new FormData(e.currentTarget);
     const data: Record<string, string> = {};
     for (const field of fields) {
-      data[field.label] = formData.get(field.id)?.toString() || "";
+      if (field.type === "checkbox") {
+        data[field.label] = formData.get(field.id) ? "Yes" : "No";
+      } else {
+        data[field.label] = formData.get(field.id)?.toString() || "";
+      }
     }
 
     try {
@@ -71,25 +76,7 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
             {field.label}
             {field.required && <span className={styles.formRequired}>*</span>}
           </label>
-          {field.type === "textarea" ? (
-            <textarea
-              id={field.id}
-              name={field.id}
-              className={styles.formTextarea}
-              placeholder={field.placeholder}
-              rows={4}
-              required={field.required}
-            />
-          ) : (
-            <input
-              id={field.id}
-              name={field.id}
-              type={field.type}
-              className={styles.formInput}
-              placeholder={field.placeholder}
-              required={field.required}
-            />
-          )}
+          {renderField(field)}
         </div>
       ))}
       {error && <p style={{ color: "var(--color-error)", fontSize: "var(--text-sm)" }}>{error}</p>}
@@ -98,4 +85,75 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
       </button>
     </form>
   );
+}
+
+function renderField(field: FormField) {
+  switch (field.type) {
+    case "textarea":
+      return (
+        <textarea
+          id={field.id}
+          name={field.id}
+          className={styles.formTextarea}
+          placeholder={field.placeholder}
+          rows={4}
+          required={field.required}
+        />
+      );
+    case "select":
+      return (
+        <select
+          id={field.id}
+          name={field.id}
+          className={styles.formSelect}
+          required={field.required}
+        >
+          <option value="">{field.placeholder || "Select..."}</option>
+          {(field.options || []).map((opt, i) => (
+            <option key={i} value={opt}>{opt}</option>
+          ))}
+        </select>
+      );
+    case "radio":
+      return (
+        <div className={styles.formRadioGroup}>
+          {(field.options || []).map((opt, i) => (
+            <label key={i} className={styles.formRadioLabel}>
+              <input
+                type="radio"
+                name={field.id}
+                value={opt}
+                required={field.required}
+              />
+              {opt}
+            </label>
+          ))}
+        </div>
+      );
+    case "checkbox":
+      return (
+        <div className={styles.formCheckboxField}>
+          <label className={styles.formCheckboxLabel}>
+            <input
+              type="checkbox"
+              id={field.id}
+              name={field.id}
+              value="yes"
+            />
+            {field.placeholder || "Yes"}
+          </label>
+        </div>
+      );
+    default:
+      return (
+        <input
+          id={field.id}
+          name={field.id}
+          type={field.type}
+          className={styles.formInput}
+          placeholder={field.placeholder}
+          required={field.required}
+        />
+      );
+  }
 }

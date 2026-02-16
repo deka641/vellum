@@ -8,7 +8,9 @@ export type BlockType =
   | "columns"
   | "video"
   | "quote"
-  | "form";
+  | "form"
+  | "code"
+  | "social";
 
 export interface HeadingContent {
   text: string;
@@ -24,12 +26,15 @@ export interface ImageContent {
   src: string;
   alt: string;
   caption?: string;
+  link?: string;
+  linkNewTab?: boolean;
 }
 
 export interface ButtonContent {
   text: string;
   url: string;
   variant: "primary" | "secondary" | "outline";
+  openInNewTab?: boolean;
 }
 
 export interface SpacerContent {
@@ -59,10 +64,26 @@ export interface QuoteContent {
 
 export interface FormField {
   id: string;
-  type: "text" | "email" | "textarea";
+  type: "text" | "email" | "textarea" | "select" | "checkbox" | "radio" | "tel" | "number";
   label: string;
   required: boolean;
   placeholder?: string;
+  options?: string[];
+}
+
+export interface CodeContent {
+  code: string;
+  language: "html" | "embed";
+}
+
+export interface SocialLink {
+  platform: string;
+  url: string;
+}
+
+export interface SocialContent {
+  links: SocialLink[];
+  style: "icons" | "pills";
 }
 
 export interface FormContent {
@@ -81,7 +102,9 @@ export type BlockContent =
   | ColumnsContent
   | VideoContent
   | QuoteContent
-  | FormContent;
+  | FormContent
+  | CodeContent
+  | SocialContent;
 
 export interface BlockSettings {
   align?: "left" | "center" | "right";
@@ -100,6 +123,7 @@ export interface BlockSettings {
   fontSize?: string;
   paddingY?: string;
   paddingX?: string;
+  hidden?: boolean;
 }
 
 export interface EditorBlock {

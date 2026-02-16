@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { Globe, Image, LayoutTemplate, LogOut, Settings } from "lucide-react";
+import { Home, Globe, Image, LayoutTemplate, LogOut, Settings } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar/Avatar";
 import {
   DropdownMenu,
@@ -25,6 +25,7 @@ interface SidebarProps {
 }
 
 const navItems = [
+  { href: "/", label: "Home", icon: Home, exact: true },
   { href: "/sites", label: "Sites", icon: Globe },
   { href: "/media", label: "Media", icon: Image },
   { href: "/templates", label: "Templates", icon: LayoutTemplate },
@@ -48,20 +49,25 @@ export function Sidebar({ user, mobileOpen, onMobileClose }: SidebarProps) {
         </div>
 
         <nav className={styles.nav}>
-          {navItems.map((item) => (
+          {navItems.map((item) => {
+            const isActive = "exact" in item && item.exact
+              ? pathname === item.href
+              : pathname.startsWith(item.href);
+            return (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
                 styles.navItem,
-                pathname.startsWith(item.href) && styles.active
+                isActive && styles.active
               )}
               onClick={onMobileClose}
             >
               <item.icon />
               {item.label}
             </Link>
-          ))}
+            );
+          })}
         </nav>
 
         <div className={styles.footer}>

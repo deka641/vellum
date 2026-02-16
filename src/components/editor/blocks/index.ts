@@ -8,3 +8,5 @@ export { ColumnsBlock } from "./ColumnsBlock";
 export { VideoBlock } from "./VideoBlock";
 export { QuoteBlock } from "./QuoteBlock";
 export { FormBlock } from "./FormBlock";
+export { CodeBlock } from "./CodeBlock";
+export { SocialBlock } from "./SocialBlock";

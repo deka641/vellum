@@ -120,6 +120,60 @@ export function getSafeVideoEmbedUrl(url: string): string | null {
   return null;
 }
 
+/**
+ * Sanitize embed/HTML code for the code block.
+ * Allows iframes with https:// src only. Strips scripts and event handlers.
+ */
+export function sanitizeEmbedHtml(code: string): string {
+  return sanitize(code, {
+    allowedTags: [
+      "iframe", "div", "span", "p", "a", "img", "br", "hr",
+      "h1", "h2", "h3", "h4", "h5", "h6",
+      "strong", "em", "b", "i", "u",
+      "ul", "ol", "li",
+      "table", "thead", "tbody", "tr", "th", "td",
+      "blockquote", "pre", "code",
+      "figure", "figcaption",
+    ],
+    allowedAttributes: {
+      iframe: ["src", "width", "height", "frameborder", "allow", "allowfullscreen", "title", "style"],
+      div: ["style", "class"],
+      span: ["style", "class"],
+      a: ["href", "target", "rel"],
+      img: ["src", "alt", "width", "height", "style"],
+      "*": ["id"],
+    },
+    allowedSchemes: ["http", "https"],
+    allowedIframeHostnames: [],
+    transformTags: {
+      iframe: (tagName, attribs) => {
+        // Only allow https:// src on iframes
+        if (attribs.src) {
+          try {
+            const url = new URL(attribs.src);
+            if (url.protocol !== "https:") {
+              return { tagName: "div", attribs: {} };
+            }
+          } catch {
+            return { tagName: "div", attribs: {} };
+          }
+        }
+        return {
+          tagName,
+          attribs: {
+            ...attribs,
+            sandbox: "allow-scripts allow-same-origin allow-popups",
+          },
+        };
+      },
+      a: (tagName, attribs) => ({
+        tagName,
+        attribs: { ...attribs, rel: "noopener noreferrer" },
+      }),
+    },
+  });
+}
+
 interface BlockLike {
   id?: string;
   type: string;
@@ -197,6 +251,23 @@ function sanitizeBlockContent(block: BlockLike): BlockLike {
       }
       if (typeof content.successMessage === "string") {
         content.successMessage = sanitize(content.successMessage, { allowedTags: [], allowedAttributes: {} });
+      }
+      break;
+
+    case "code":
+      if (typeof content.code === "string") {
+        content.code = sanitizeEmbedHtml(content.code);
+      }
+      break;
+
+    case "social":
+      if (Array.isArray(content.links)) {
+        content.links = (content.links as Array<{ platform: string; url: string }>).map((link) => ({
+          platform: typeof link.platform === "string"
+            ? sanitize(link.platform, { allowedTags: [], allowedAttributes: {} })
+            : link.platform,
+          url: typeof link.url === "string" ? sanitizeUrl(link.url) : "#",
+        }));
       }
       break;
   }

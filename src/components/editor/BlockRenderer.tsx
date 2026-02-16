@@ -1,6 +1,6 @@
 "use client";
 
-import type { EditorBlock, HeadingContent, TextContent, ImageContent, ButtonContent, SpacerContent, DividerContent, ColumnsContent, VideoContent, QuoteContent, FormContent } from "@/types/blocks";
+import type { EditorBlock, HeadingContent, TextContent, ImageContent, ButtonContent, SpacerContent, DividerContent, ColumnsContent, VideoContent, QuoteContent, FormContent, CodeContent, SocialContent } from "@/types/blocks";
 import { ErrorBoundary, BlockErrorFallback } from "@/components/ErrorBoundary";
 import { useEditorStore } from "@/stores/editor-store";
 import {
@@ -14,6 +14,8 @@ import {
   VideoBlock,
   QuoteBlock,
   FormBlock,
+  CodeBlock,
+  SocialBlock,
 } from "./blocks";
 
 interface BlockRendererProps {
@@ -42,6 +44,10 @@ function BlockContent({ block }: BlockRendererProps) {
       return <QuoteBlock id={block.id} content={block.content as QuoteContent} settings={block.settings} />;
     case "form":
       return <FormBlock id={block.id} content={block.content as FormContent} />;
+    case "code":
+      return <CodeBlock id={block.id} content={block.content as CodeContent} settings={block.settings} />;
+    case "social":
+      return <SocialBlock id={block.id} content={block.content as SocialContent} settings={block.settings} />;
     default:
       return <div>Unknown block type: {block.type}</div>;
   }

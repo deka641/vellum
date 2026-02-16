@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Eye, ExternalLink, Save, Undo2, Redo2, Loader2, AlertCircle, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Eye, ExternalLink, Save, Undo2, Redo2, Loader2, AlertCircle, AlertTriangle, Monitor, Tablet, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/Button/Button";
 import { IconButton } from "@/components/ui/IconButton/IconButton";
 import { Badge } from "@/components/ui/Badge/Badge";
@@ -19,7 +19,7 @@ interface EditorToolbarProps {
 
 export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, onPublish }: EditorToolbarProps) {
   const router = useRouter();
-  const { pageTitle, pageSlug, setPageTitle, isDirty, isSaving, saveError, conflict, undo, redo } =
+  const { pageTitle, pageSlug, setPageTitle, isDirty, isSaving, saveError, conflict, undo, redo, previewMode, setPreviewMode } =
     useEditorStore();
   const { save } = useAutosave();
   const hasConflict = conflict !== null;
@@ -73,6 +73,30 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, onPubl
         )}
         <IconButton icon={<Undo2 />} label="Undo (Ctrl+Z)" onClick={undo} />
         <IconButton icon={<Redo2 />} label="Redo (Ctrl+Shift+Z)" onClick={redo} />
+        <div className={styles.divider} />
+        <div className={styles.previewToggle}>
+          <button
+            className={`${styles.previewBtn} ${previewMode === "desktop" ? styles.previewBtnActive : ""}`}
+            onClick={() => setPreviewMode("desktop")}
+            title="Desktop view"
+          >
+            <Monitor size={16} />
+          </button>
+          <button
+            className={`${styles.previewBtn} ${previewMode === "tablet" ? styles.previewBtnActive : ""}`}
+            onClick={() => setPreviewMode("tablet")}
+            title="Tablet view"
+          >
+            <Tablet size={16} />
+          </button>
+          <button
+            className={`${styles.previewBtn} ${previewMode === "mobile" ? styles.previewBtnActive : ""}`}
+            onClick={() => setPreviewMode("mobile")}
+            title="Mobile view"
+          >
+            <Smartphone size={16} />
+          </button>
+        </div>
         <div className={styles.divider} />
         <IconButton
           icon={<Eye />}

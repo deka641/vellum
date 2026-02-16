@@ -24,8 +24,14 @@ interface EditorCanvasProps {
   onAddBlock: () => void;
 }
 
+const previewWidths = {
+  desktop: "100%",
+  tablet: "768px",
+  mobile: "375px",
+} as const;
+
 export function EditorCanvas({ onAddBlock }: EditorCanvasProps) {
-  const { blocks, moveBlock, selectBlock } = useEditorStore();
+  const { blocks, moveBlock, selectBlock, previewMode } = useEditorStore();
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -49,7 +55,13 @@ export function EditorCanvas({ onAddBlock }: EditorCanvasProps) {
 
   return (
     <div className={styles.canvas} onClick={() => selectBlock(null)}>
-      <div className={styles.page}>
+      <div
+        className={styles.page}
+        style={{
+          maxWidth: previewWidths[previewMode],
+          transition: "max-width 300ms ease",
+        }}
+      >
         {blocks.length === 0 ? (
           <div className={styles.empty}>
             <p>Your page is empty</p>

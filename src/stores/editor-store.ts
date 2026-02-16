@@ -14,6 +14,8 @@ interface ConflictState {
   serverUpdatedAt: string;
 }
 
+type PreviewMode = "desktop" | "tablet" | "mobile";
+
 interface EditorState {
   blocks: EditorBlock[];
   selectedBlockId: string | null;
@@ -26,6 +28,7 @@ interface EditorState {
   pageSlug: string;
   lastSavedAt: string | null;
   conflict: ConflictState | null;
+  previewMode: PreviewMode;
 
   // History
   history: HistoryEntry[];
@@ -51,6 +54,15 @@ interface EditorState {
   resolveConflictLoadServer: () => void;
   resolveConflictKeepLocal: () => void;
   duplicateBlock: (id: string) => void;
+  setPreviewMode: (mode: PreviewMode) => void;
+
+  // Column-aware actions
+  addBlockToColumn: (parentId: string, colIndex: number, type: BlockType) => void;
+  removeBlockFromColumn: (parentId: string, blockId: string) => void;
+  updateColumnBlockContent: (parentId: string, blockId: string, content: Partial<BlockContent>) => void;
+  updateColumnBlockSettings: (parentId: string, blockId: string, settings: Partial<BlockSettings>) => void;
+  moveBlockInColumn: (parentId: string, colIndex: number, fromIndex: number, toIndex: number) => void;
+
   undo: () => void;
   redo: () => void;
 }
@@ -82,6 +94,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   conflict: null,
   history: [],
   historyIndex: -1,
+  previewMode: "desktop",
 
   setPage: (pageId, title, blocks, updatedAt, description, slug) =>
     set({
@@ -235,6 +248,102 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       return {
         blocks: newBlocks,
         selectedBlockId: duplicate.id,
+        isDirty: true,
+        saveError: null,
+        ...pushHistory({ ...state, blocks: newBlocks }),
+      };
+    }),
+
+  setPreviewMode: (mode) => set({ previewMode: mode }),
+
+  // Column-aware actions
+  addBlockToColumn: (parentId, colIndex, type) =>
+    set((state) => {
+      const block = createBlock(type);
+      const newBlocks = state.blocks.map((b) => {
+        if (b.id !== parentId || b.type !== "columns") return b;
+        const cols = structuredClone((b.content as ColumnsContent).columns);
+        cols[colIndex].blocks.push(block);
+        return { ...b, content: { columns: cols } };
+      });
+      return {
+        blocks: newBlocks,
+        selectedBlockId: block.id,
+        isDirty: true,
+        saveError: null,
+        ...pushHistory({ ...state, blocks: newBlocks }),
+      };
+    }),
+
+  removeBlockFromColumn: (parentId, blockId) =>
+    set((state) => {
+      const newBlocks = state.blocks.map((b) => {
+        if (b.id !== parentId || b.type !== "columns") return b;
+        const cols = (b.content as ColumnsContent).columns.map((col) => ({
+          blocks: col.blocks.filter((cb) => cb.id !== blockId),
+        }));
+        return { ...b, content: { columns: cols } };
+      });
+      return {
+        blocks: newBlocks,
+        selectedBlockId: state.selectedBlockId === blockId ? null : state.selectedBlockId,
+        isDirty: true,
+        saveError: null,
+        ...pushHistory({ ...state, blocks: newBlocks }),
+      };
+    }),
+
+  updateColumnBlockContent: (parentId, blockId, content) => {
+    set((state) => {
+      const newBlocks = state.blocks.map((b) => {
+        if (b.id !== parentId || b.type !== "columns") return b;
+        const cols = (b.content as ColumnsContent).columns.map((col) => ({
+          blocks: col.blocks.map((cb) =>
+            cb.id === blockId ? { ...cb, content: { ...cb.content, ...content } } : cb
+          ),
+        }));
+        return { ...b, content: { columns: cols } };
+      });
+      return { blocks: newBlocks, isDirty: true, saveError: null };
+    });
+    if (contentHistoryTimer) clearTimeout(contentHistoryTimer);
+    contentHistoryTimer = setTimeout(() => {
+      const state = get();
+      set(pushHistory(state));
+    }, CONTENT_HISTORY_DEBOUNCE);
+  },
+
+  updateColumnBlockSettings: (parentId, blockId, settings) =>
+    set((state) => {
+      const newBlocks = state.blocks.map((b) => {
+        if (b.id !== parentId || b.type !== "columns") return b;
+        const cols = (b.content as ColumnsContent).columns.map((col) => ({
+          blocks: col.blocks.map((cb) =>
+            cb.id === blockId ? { ...cb, settings: { ...cb.settings, ...settings } } : cb
+          ),
+        }));
+        return { ...b, content: { columns: cols } };
+      });
+      return {
+        blocks: newBlocks,
+        isDirty: true,
+        saveError: null,
+        ...pushHistory({ ...state, blocks: newBlocks }),
+      };
+    }),
+
+  moveBlockInColumn: (parentId, colIndex, fromIndex, toIndex) =>
+    set((state) => {
+      const newBlocks = state.blocks.map((b) => {
+        if (b.id !== parentId || b.type !== "columns") return b;
+        const cols = structuredClone((b.content as ColumnsContent).columns);
+        const colBlocks = cols[colIndex].blocks;
+        const [moved] = colBlocks.splice(fromIndex, 1);
+        colBlocks.splice(toIndex, 0, moved);
+        return { ...b, content: { columns: cols } };
+      });
+      return {
+        blocks: newBlocks,
         isDirty: true,
         saveError: null,
         ...pushHistory({ ...state, blocks: newBlocks }),

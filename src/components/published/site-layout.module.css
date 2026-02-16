@@ -136,6 +136,25 @@
   color: var(--color-text-tertiary);
 }
 
+.footerLinks {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.footerLink {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.footerLink:hover {
+  color: var(--color-accent);
+}
+
 .footerBrand {
   font-family: var(--font-body);
   font-size: var(--text-xs);

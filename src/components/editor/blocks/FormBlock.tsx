@@ -11,6 +11,17 @@ interface FormBlockProps {
   content: FormContent;
 }
 
+const FIELD_TYPES: { value: FormField["type"]; label: string }[] = [
+  { value: "text", label: "Text" },
+  { value: "email", label: "Email" },
+  { value: "textarea", label: "Textarea" },
+  { value: "select", label: "Select" },
+  { value: "radio", label: "Radio" },
+  { value: "checkbox", label: "Checkbox" },
+  { value: "tel", label: "Phone" },
+  { value: "number", label: "Number" },
+];
+
 export function FormBlock({ id, content }: FormBlockProps) {
   const updateBlockContent = useEditorStore((s) => s.updateBlockContent);
   const fields = content.fields || [];
@@ -36,46 +47,111 @@ export function FormBlock({ id, content }: FormBlockProps) {
     updateBlockContent(id, { fields: fields.filter((f) => f.id !== fieldId) });
   }
 
+  function updateFieldOption(fieldId: string, optionIndex: number, value: string) {
+    const field = fields.find((f) => f.id === fieldId);
+    if (!field) return;
+    const options = [...(field.options || [])];
+    options[optionIndex] = value;
+    updateField(fieldId, { options });
+  }
+
+  function addFieldOption(fieldId: string) {
+    const field = fields.find((f) => f.id === fieldId);
+    if (!field) return;
+    updateField(fieldId, { options: [...(field.options || []), "Option"] });
+  }
+
+  function removeFieldOption(fieldId: string, optionIndex: number) {
+    const field = fields.find((f) => f.id === fieldId);
+    if (!field) return;
+    updateField(fieldId, { options: (field.options || []).filter((_, i) => i !== optionIndex) });
+  }
+
+  const hasOptions = (type: string) => type === "select" || type === "radio";
+
   return (
     <div className={styles.formEditor}>
       {fields.map((field) => (
-        <div key={field.id} className={styles.formFieldEditor}>
-          <input
-            className={styles.formFieldLabel}
-            value={field.label}
-            onChange={(e) => updateField(field.id, { label: e.target.value })}
-            placeholder="Field label"
-            onClick={(e) => e.stopPropagation()}
-          />
-          <select
-            className={styles.formFieldType}
-            value={field.type}
-            onChange={(e) => updateField(field.id, { type: e.target.value as FormField["type"] })}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <option value="text">Text</option>
-            <option value="email">Email</option>
-            <option value="textarea">Textarea</option>
-          </select>
-          <button
-            className={`${styles.formFieldRequired} ${field.required ? styles.formFieldRequiredActive : ""}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              updateField(field.id, { required: !field.required });
-            }}
-            title={field.required ? "Required" : "Optional"}
-          >
-            {field.required ? "Req" : "Opt"}
-          </button>
-          <button
-            className={styles.formFieldDelete}
-            onClick={(e) => {
-              e.stopPropagation();
-              removeField(field.id);
-            }}
-          >
-            <Trash2 size={14} />
-          </button>
+        <div key={field.id}>
+          <div className={styles.formFieldEditor}>
+            <input
+              className={styles.formFieldLabel}
+              value={field.label}
+              onChange={(e) => updateField(field.id, { label: e.target.value })}
+              placeholder="Field label"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <select
+              className={styles.formFieldType}
+              value={field.type}
+              onChange={(e) => {
+                const newType = e.target.value as FormField["type"];
+                const updates: Partial<FormField> = { type: newType };
+                if (hasOptions(newType) && !field.options?.length) {
+                  updates.options = ["Option 1", "Option 2"];
+                }
+                updateField(field.id, updates);
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {FIELD_TYPES.map((ft) => (
+                <option key={ft.value} value={ft.value}>{ft.label}</option>
+              ))}
+            </select>
+            <button
+              className={`${styles.formFieldRequired} ${field.required ? styles.formFieldRequiredActive : ""}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                updateField(field.id, { required: !field.required });
+              }}
+              title={field.required ? "Required" : "Optional"}
+            >
+              {field.required ? "Req" : "Opt"}
+            </button>
+            <button
+              className={styles.formFieldDelete}
+              onClick={(e) => {
+                e.stopPropagation();
+                removeField(field.id);
+              }}
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+          {hasOptions(field.type) && (
+            <div className={styles.formOptionsEditor}>
+              {(field.options || []).map((opt, i) => (
+                <div key={i} className={styles.formOptionRow}>
+                  <input
+                    className={styles.formOptionInput}
+                    value={opt}
+                    onChange={(e) => updateFieldOption(field.id, i, e.target.value)}
+                    placeholder={`Option ${i + 1}`}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <button
+                    className={styles.formFieldDelete}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeFieldOption(field.id, i);
+                    }}
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              ))}
+              <button
+                className={styles.formAddOption}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  addFieldOption(field.id);
+                }}
+              >
+                <Plus size={12} />
+                Add option
+              </button>
+            </div>
+          )}
         </div>
       ))}
       <button

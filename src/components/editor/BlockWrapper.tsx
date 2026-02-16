@@ -3,7 +3,7 @@
 import { type ReactNode } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Trash2, Copy } from "lucide-react";
+import { GripVertical, Trash2, Copy, Eye, EyeOff } from "lucide-react";
 import { useEditorStore } from "@/stores/editor-store";
 import { cn } from "@/lib/utils";
 import styles from "./BlockWrapper.module.css";
@@ -14,8 +14,10 @@ interface BlockWrapperProps {
 }
 
 export function BlockWrapper({ id, children }: BlockWrapperProps) {
-  const { selectedBlockId, selectBlock, removeBlock, duplicateBlock } = useEditorStore();
+  const { selectedBlockId, selectBlock, removeBlock, duplicateBlock, blocks, updateBlockSettings } = useEditorStore();
   const isSelected = selectedBlockId === id;
+  const block = blocks.find((b) => b.id === id);
+  const isHidden = block?.settings.hidden === true;
 
   const {
     attributes,
@@ -39,7 +41,8 @@ export function BlockWrapper({ id, children }: BlockWrapperProps) {
       className={cn(
         styles.wrapper,
         isSelected && styles.selected,
-        isDragging && styles.dragging
+        isDragging && styles.dragging,
+        isHidden && styles.hidden
       )}
       onClick={(e) => {
         e.stopPropagation();
@@ -63,6 +66,16 @@ export function BlockWrapper({ id, children }: BlockWrapperProps) {
           title="Duplicate block"
         >
           <Copy size={14} />
+        </button>
+        <button
+          className={styles.visibilityButton}
+          onClick={(e) => {
+            e.stopPropagation();
+            updateBlockSettings(id, { hidden: !isHidden });
+          }}
+          title={isHidden ? "Show block" : "Hide block"}
+        >
+          {isHidden ? <EyeOff size={14} /> : <Eye size={14} />}
         </button>
         <button
           className={styles.deleteButton}

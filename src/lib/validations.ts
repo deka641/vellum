@@ -28,6 +28,8 @@ const blockTypeEnum = z.enum([
   "video",
   "quote",
   "form",
+  "code",
+  "social",
 ]);
 
 const blockSchema = z.object({
@@ -59,11 +61,21 @@ export const siteThemeSchema = z.object({
   fontPreset: fontPresetEnum,
 });
 
+export const siteFooterSchema = z.object({
+  text: z.string().max(500).optional(),
+  links: z.array(z.object({
+    label: z.string().min(1).max(200),
+    url: z.string().max(2000),
+  })).max(10).optional(),
+  showBranding: z.boolean().optional(),
+});
+
 export const updateSiteSchema = z.object({
   name: z.string().min(1).max(200).optional(),
   description: z.string().max(2000).nullable().optional(),
   theme: siteThemeSchema.optional(),
   favicon: z.string().max(2000).nullable().optional(),
+  footer: siteFooterSchema.optional(),
 });
 
 // --- Pages ---

@@ -6,22 +6,65 @@ import { useEditorStore } from "@/stores/editor-store";
 import { Input } from "@/components/ui/Input/Input";
 import { PageSettings } from "./PageSettings";
 import { MediaPickerModal } from "./MediaPickerModal";
-import type { HeadingContent, ImageContent, ButtonContent, VideoContent, QuoteContent, BlockSettings as BlockSettingsType } from "@/types/blocks";
+import type { HeadingContent, ImageContent, ButtonContent, VideoContent, QuoteContent, CodeContent, BlockSettings as BlockSettingsType, ColumnsContent } from "@/types/blocks";
 import styles from "./BlockSettings.module.css";
 
+function findBlockInTree(blocks: import("@/types/blocks").EditorBlock[], id: string): import("@/types/blocks").EditorBlock | null {
+  for (const b of blocks) {
+    if (b.id === id) return b;
+    if (b.type === "columns") {
+      const cols = (b.content as ColumnsContent).columns;
+      for (const col of cols) {
+        for (const cb of col.blocks) {
+          if (cb.id === id) return cb;
+        }
+      }
+    }
+  }
+  return null;
+}
+
+function findColumnParent(blocks: import("@/types/blocks").EditorBlock[], id: string): string | null {
+  for (const b of blocks) {
+    if (b.type === "columns") {
+      const cols = (b.content as ColumnsContent).columns;
+      for (const col of cols) {
+        if (col.blocks.some((cb) => cb.id === id)) return b.id;
+      }
+    }
+  }
+  return null;
+}
+
 export function BlockSettings() {
-  const { blocks, selectedBlockId, updateBlockContent, updateBlockSettings } =
+  const { blocks, selectedBlockId, updateBlockContent, updateBlockSettings, updateColumnBlockContent, updateColumnBlockSettings } =
     useEditorStore();
   const [pickerOpen, setPickerOpen] = useState(false);
 
-  const block = blocks.find((b) => b.id === selectedBlockId);
+  const block = selectedBlockId ? findBlockInTree(blocks, selectedBlockId) : null;
 
   if (!block) {
     return <PageSettings />;
   }
 
-  const hasAlign = ["heading", "text", "button", "quote"].includes(block.type);
-  const hasStyle = ["heading", "text", "button", "image", "columns", "quote"].includes(block.type);
+  const columnParentId = findColumnParent(blocks, block.id);
+  const handleContentUpdate = (id: string, content: Record<string, unknown>) => {
+    if (columnParentId) {
+      updateColumnBlockContent(columnParentId, id, content as Partial<import("@/types/blocks").BlockContent>);
+    } else {
+      updateBlockContent(id, content as Partial<import("@/types/blocks").BlockContent>);
+    }
+  };
+  const handleSettingsUpdate = (id: string, settings: Partial<BlockSettingsType>) => {
+    if (columnParentId) {
+      updateColumnBlockSettings(columnParentId, id, settings);
+    } else {
+      updateBlockSettings(id, settings);
+    }
+  };
+
+  const hasAlign = ["heading", "text", "button", "quote", "social"].includes(block.type);
+  const hasStyle = ["heading", "text", "button", "image", "columns", "quote", "code"].includes(block.type);
 
   return (
     <div className={styles.panel}>
@@ -30,6 +73,18 @@ export function BlockSettings() {
       </h3>
 
       <div className={styles.section}>
+        {/* Visibility toggle */}
+        <div className={styles.field}>
+          <label className={styles.checkboxRow}>
+            <input
+              type="checkbox"
+              checked={block.settings.hidden !== true}
+              onChange={() => handleSettingsUpdate(block.id, { hidden: !block.settings.hidden })}
+            />
+            <span className={styles.label}>Visible on published site</span>
+          </label>
+        </div>
+
         {/* Alignment for most blocks */}
         {hasAlign && (
           <div className={styles.field}>
@@ -41,7 +96,7 @@ export function BlockSettings() {
                   className={`${styles.alignBtn} ${
                     (block.settings.align || "left") === align ? styles.active : ""
                   }`}
-                  onClick={() => updateBlockSettings(block.id, { align })}
+                  onClick={() => handleSettingsUpdate(block.id, { align })}
                 >
                   {align}
                 </button>
@@ -63,7 +118,7 @@ export function BlockSettings() {
                       ? styles.active
                       : ""
                   }`}
-                  onClick={() => updateBlockContent(block.id, { level })}
+                  onClick={() => handleContentUpdate(block.id, { level })}
                 >
                   H{level}
                 </button>
@@ -88,7 +143,7 @@ export function BlockSettings() {
                 open={pickerOpen}
                 onOpenChange={setPickerOpen}
                 onSelect={(media) => {
-                  updateBlockContent(block.id, {
+                  handleContentUpdate(block.id, {
                     src: media.url,
                     alt: media.alt || "",
                     mediaId: media.id,
@@ -100,7 +155,7 @@ export function BlockSettings() {
               label="Image URL"
               value={(block.content as ImageContent).src}
               onChange={(e) =>
-                updateBlockContent(block.id, { src: e.target.value })
+                handleContentUpdate(block.id, { src: e.target.value })
               }
               placeholder="https://..."
             />
@@ -108,7 +163,7 @@ export function BlockSettings() {
               label="Alt text"
               value={(block.content as ImageContent).alt}
               onChange={(e) =>
-                updateBlockContent(block.id, { alt: e.target.value })
+                handleContentUpdate(block.id, { alt: e.target.value })
               }
               placeholder="Describe the image"
             />
@@ -116,10 +171,31 @@ export function BlockSettings() {
               label="Caption"
               value={(block.content as ImageContent).caption || ""}
               onChange={(e) =>
-                updateBlockContent(block.id, { caption: e.target.value })
+                handleContentUpdate(block.id, { caption: e.target.value })
               }
               placeholder="Optional caption"
             />
+            <div className={styles.separator} />
+            <Input
+              label="Link URL"
+              value={(block.content as ImageContent).link || ""}
+              onChange={(e) =>
+                handleContentUpdate(block.id, { link: e.target.value })
+              }
+              placeholder="https://... (optional)"
+            />
+            {(block.content as ImageContent).link && (
+              <label className={styles.checkboxRow}>
+                <input
+                  type="checkbox"
+                  checked={(block.content as ImageContent).linkNewTab || false}
+                  onChange={(e) =>
+                    handleContentUpdate(block.id, { linkNewTab: e.target.checked })
+                  }
+                />
+                <span className={styles.label}>Open in new tab</span>
+              </label>
+            )}
           </>
         )}
 
@@ -130,10 +206,20 @@ export function BlockSettings() {
               label="URL"
               value={(block.content as ButtonContent).url}
               onChange={(e) =>
-                updateBlockContent(block.id, { url: e.target.value })
+                handleContentUpdate(block.id, { url: e.target.value })
               }
               placeholder="https://..."
             />
+            <label className={styles.checkboxRow}>
+              <input
+                type="checkbox"
+                checked={(block.content as ButtonContent).openInNewTab || false}
+                onChange={(e) =>
+                  handleContentUpdate(block.id, { openInNewTab: e.target.checked })
+                }
+              />
+              <span className={styles.label}>Open in new tab</span>
+            </label>
             <div className={styles.field}>
               <label className={styles.label}>Style</label>
               <div className={styles.buttonGroup}>
@@ -145,7 +231,7 @@ export function BlockSettings() {
                         ? styles.active
                         : ""
                     }`}
-                    onClick={() => updateBlockContent(block.id, { variant: v })}
+                    onClick={() => handleContentUpdate(block.id, { variant: v })}
                   >
                     {v}
                   </button>
@@ -161,10 +247,30 @@ export function BlockSettings() {
             label="Video URL"
             value={(block.content as VideoContent).url}
             onChange={(e) =>
-              updateBlockContent(block.id, { url: e.target.value })
+              handleContentUpdate(block.id, { url: e.target.value })
             }
             placeholder="YouTube or Vimeo URL"
           />
+        )}
+
+        {/* Code-specific */}
+        {block.type === "code" && (
+          <div className={styles.field}>
+            <label className={styles.label}>Mode</label>
+            <div className={styles.buttonGroup}>
+              {(["html", "embed"] as const).map((lang) => (
+                <button
+                  key={lang}
+                  className={`${styles.alignBtn} ${
+                    ((block.content as CodeContent).language || "html") === lang ? styles.active : ""
+                  }`}
+                  onClick={() => handleContentUpdate(block.id, { language: lang })}
+                >
+                  {lang}
+                </button>
+              ))}
+            </div>
+          </div>
         )}
 
         {/* Divider-specific */}
@@ -178,7 +284,7 @@ export function BlockSettings() {
                   className={`${styles.alignBtn} ${
                     (block.settings.style || "solid") === s ? styles.active : ""
                   }`}
-                  onClick={() => updateBlockSettings(block.id, { style: s })}
+                  onClick={() => handleSettingsUpdate(block.id, { style: s })}
                 >
                   {s}
                 </button>
@@ -198,7 +304,7 @@ export function BlockSettings() {
                   className={`${styles.alignBtn} ${
                     ((block.content as QuoteContent).style || "default") === s ? styles.active : ""
                   }`}
-                  onClick={() => updateBlockContent(block.id, { style: s })}
+                  onClick={() => handleContentUpdate(block.id, { style: s })}
                 >
                   {s}
                 </button>
@@ -221,11 +327,11 @@ export function BlockSettings() {
                     type="color"
                     className={styles.colorInput}
                     value={block.settings.textColor || "#000000"}
-                    onChange={(e) => updateBlockSettings(block.id, { textColor: e.target.value })}
+                    onChange={(e) => handleSettingsUpdate(block.id, { textColor: e.target.value })}
                   />
                   <span className={styles.colorHex}>{block.settings.textColor || "default"}</span>
                   {block.settings.textColor && (
-                    <button className={styles.clearBtn} onClick={() => updateBlockSettings(block.id, { textColor: undefined })}>
+                    <button className={styles.clearBtn} onClick={() => handleSettingsUpdate(block.id, { textColor: undefined })}>
                       clear
                     </button>
                   )}
@@ -240,11 +346,11 @@ export function BlockSettings() {
                   type="color"
                   className={styles.colorInput}
                   value={block.settings.backgroundColor || "#ffffff"}
-                  onChange={(e) => updateBlockSettings(block.id, { backgroundColor: e.target.value })}
+                  onChange={(e) => handleSettingsUpdate(block.id, { backgroundColor: e.target.value })}
                 />
                 <span className={styles.colorHex}>{block.settings.backgroundColor || "default"}</span>
                 {block.settings.backgroundColor && (
-                  <button className={styles.clearBtn} onClick={() => updateBlockSettings(block.id, { backgroundColor: undefined })}>
+                  <button className={styles.clearBtn} onClick={() => handleSettingsUpdate(block.id, { backgroundColor: undefined })}>
                     clear
                   </button>
                 )}
@@ -266,7 +372,7 @@ export function BlockSettings() {
                       className={`${styles.alignBtn} ${
                         (block.settings.fontSize || "") === size.value ? styles.active : ""
                       }`}
-                      onClick={() => updateBlockSettings(block.id, { fontSize: size.value || undefined })}
+                      onClick={() => handleSettingsUpdate(block.id, { fontSize: size.value || undefined })}
                     >
                       {size.label}
                     </button>
@@ -287,7 +393,7 @@ export function BlockSettings() {
                     placeholder="0"
                     min={0}
                     max={200}
-                    onChange={(e) => updateBlockSettings(block.id, { paddingY: e.target.value ? `${e.target.value}px` : undefined })}
+                    onChange={(e) => handleSettingsUpdate(block.id, { paddingY: e.target.value ? `${e.target.value}px` : undefined })}
                   />
                 </div>
                 <div className={styles.paddingField}>
@@ -299,7 +405,7 @@ export function BlockSettings() {
                     placeholder="0"
                     min={0}
                     max={200}
-                    onChange={(e) => updateBlockSettings(block.id, { paddingX: e.target.value ? `${e.target.value}px` : undefined })}
+                    onChange={(e) => handleSettingsUpdate(block.id, { paddingX: e.target.value ? `${e.target.value}px` : undefined })}
                   />
                 </div>
               </div>
