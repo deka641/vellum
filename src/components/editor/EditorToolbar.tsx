@@ -12,15 +12,14 @@ import styles from "./EditorToolbar.module.css";
 interface EditorToolbarProps {
   siteId: string;
   siteSlug: string;
-  pageSlug: string;
   isHomepage: boolean;
   pageStatus: "DRAFT" | "PUBLISHED";
   onPublish: () => void;
 }
 
-export function EditorToolbar({ siteId, siteSlug, pageSlug, isHomepage, pageStatus, onPublish }: EditorToolbarProps) {
+export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, onPublish }: EditorToolbarProps) {
   const router = useRouter();
-  const { pageTitle, setPageTitle, isDirty, isSaving, saveError, conflict, undo, redo } =
+  const { pageTitle, pageSlug, setPageTitle, isDirty, isSaving, saveError, conflict, undo, redo } =
     useEditorStore();
   const { save } = useAutosave();
   const hasConflict = conflict !== null;

@@ -2,6 +2,7 @@
 
 import { useEditorStore } from "@/stores/editor-store";
 import { Input } from "@/components/ui/Input/Input";
+import { PageSettings } from "./PageSettings";
 import type { HeadingContent, ImageContent, ButtonContent, VideoContent } from "@/types/blocks";
 import styles from "./BlockSettings.module.css";
 
@@ -12,11 +13,7 @@ export function BlockSettings() {
   const block = blocks.find((b) => b.id === selectedBlockId);
 
   if (!block) {
-    return (
-      <div className={styles.empty}>
-        <p>Select a block to edit its settings</p>
-      </div>
-    );
+    return <PageSettings />;
   }
 
   return (

@@ -82,12 +82,41 @@ export async function PATCH(
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
+    // Handle slug changes
+    const updateData: { title: string; description: string | null; slug?: string } = {
+      title: parsed.data.title ?? page.title,
+      description: parsed.data.description ?? page.description,
+    };
+
+    if (parsed.data.slug !== undefined) {
+      if (page.isHomepage) {
+        return NextResponse.json(
+          { error: "Cannot change the slug of a homepage" },
+          { status: 400 }
+        );
+      }
+
+      if (parsed.data.slug !== page.slug) {
+        const existing = await db.page.findFirst({
+          where: {
+            siteId: page.siteId,
+            slug: parsed.data.slug,
+            id: { not: pageId },
+          },
+        });
+        if (existing) {
+          return NextResponse.json(
+            { error: "A page with this slug already exists in this site" },
+            { status: 409 }
+          );
+        }
+        updateData.slug = parsed.data.slug;
+      }
+    }
+
     const updated = await db.page.update({
       where: { id: pageId },
-      data: {
-        title: parsed.data.title ?? page.title,
-        description: parsed.data.description ?? page.description,
-      },
+      data: updateData,
     });
 
     return NextResponse.json(updated);

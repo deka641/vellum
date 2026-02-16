@@ -82,6 +82,9 @@ export const createPageSchema = z.object({
 export const updatePageSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   description: z.string().max(2000).nullable().optional(),
+  slug: z.string().min(1).max(200)
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug must be lowercase letters, numbers, and hyphens")
+    .optional(),
 });
 
 // --- Blocks endpoint ---

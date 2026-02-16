@@ -19,10 +19,9 @@ export default function EditorPage() {
   const [loading, setLoading] = useState(true);
   const [siteId, setSiteId] = useState("");
   const [siteSlug, setSiteSlug] = useState("");
-  const [pageSlug, setPageSlug] = useState("");
   const [isHomepage, setIsHomepage] = useState(false);
   const [pageStatus, setPageStatus] = useState<"DRAFT" | "PUBLISHED">("DRAFT");
-  const { setPage, addBlock, isDirty } = useEditorStore();
+  const { setPage, addBlock, isDirty, pageSlug } = useEditorStore();
   const { save, forceSave } = useAutosave();
 
   useEffect(() => {
@@ -34,7 +33,6 @@ export default function EditorPage() {
 
         setSiteId(data.site.id);
         setSiteSlug(data.site.slug);
-        setPageSlug(data.slug);
         setIsHomepage(data.isHomepage);
         setPageStatus(data.status);
 
@@ -48,7 +46,7 @@ export default function EditorPage() {
           })
         );
 
-        setPage(data.id, data.title, blocks, data.updatedAt);
+        setPage(data.id, data.title, blocks, data.updatedAt, data.description, data.slug);
       } catch {
         toast("Failed to load page", "error");
       } finally {
@@ -139,7 +137,6 @@ export default function EditorPage() {
       <EditorToolbar
         siteId={siteId}
         siteSlug={siteSlug}
-        pageSlug={pageSlug}
         isHomepage={isHomepage}
         pageStatus={pageStatus}
         onPublish={handlePublish}

@@ -21,6 +21,8 @@ interface EditorState {
   saveError: string | null;
   pageId: string | null;
   pageTitle: string;
+  pageDescription: string | null;
+  pageSlug: string;
   lastSavedAt: string | null;
   conflict: ConflictState | null;
 
@@ -29,7 +31,7 @@ interface EditorState {
   historyIndex: number;
 
   // Actions
-  setPage: (pageId: string, title: string, blocks: EditorBlock[], updatedAt: string) => void;
+  setPage: (pageId: string, title: string, blocks: EditorBlock[], updatedAt: string, description?: string | null, slug?: string) => void;
   addBlock: (type: BlockType, index?: number) => void;
   removeBlock: (id: string) => void;
   updateBlockContent: (id: string, content: Partial<BlockContent>) => void;
@@ -41,6 +43,8 @@ interface EditorState {
   setSaving: (saving: boolean) => void;
   setSaveError: (error: string | null) => void;
   setPageTitle: (title: string) => void;
+  setPageDescription: (description: string | null) => void;
+  setPageSlug: (slug: string) => void;
   setLastSavedAt: (updatedAt: string) => void;
   setConflict: (conflict: ConflictState) => void;
   resolveConflictLoadServer: () => void;
@@ -70,15 +74,19 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   saveError: null,
   pageId: null,
   pageTitle: "",
+  pageDescription: null,
+  pageSlug: "",
   lastSavedAt: null,
   conflict: null,
   history: [],
   historyIndex: -1,
 
-  setPage: (pageId, title, blocks, updatedAt) =>
+  setPage: (pageId, title, blocks, updatedAt, description, slug) =>
     set({
       pageId,
       pageTitle: title,
+      pageDescription: description ?? null,
+      pageSlug: slug ?? "",
       blocks,
       selectedBlockId: null,
       isDirty: false,
@@ -175,6 +183,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   setSaving: (saving) => set({ isSaving: saving }),
   setSaveError: (error) => set({ saveError: error }),
   setPageTitle: (title) => set({ pageTitle: title, isDirty: true, saveError: null }),
+  setPageDescription: (description) => set({ pageDescription: description }),
+  setPageSlug: (slug) => set({ pageSlug: slug }),
   setLastSavedAt: (updatedAt) => set({ lastSavedAt: updatedAt }),
   setConflict: (conflict) => set({ conflict }),
 
