@@ -24,6 +24,10 @@
   animation: contentShow 200ms var(--ease-out);
 }
 
+.contentWide {
+  max-width: 640px;
+}
+
 .close {
   position: absolute;
   top: var(--space-4);

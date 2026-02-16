@@ -2,12 +2,20 @@ import type { MetadataRoute } from "next";
 import { db } from "@/lib/db";
 import { getBaseUrl, buildPageUrl } from "@/lib/url";
 
+export async function generateSitemaps() {
+  const sites = await db.site.findMany({
+    select: { slug: true },
+  });
+
+  return sites.map((site) => ({ id: site.slug }));
+}
+
 export default async function sitemap({
-  params,
+  id,
 }: {
-  params: Promise<{ siteSlug: string }>;
+  id: string;
 }): Promise<MetadataRoute.Sitemap> {
-  const { siteSlug } = await params;
+  const siteSlug = id;
 
   const site = await db.site.findUnique({
     where: { slug: siteSlug },

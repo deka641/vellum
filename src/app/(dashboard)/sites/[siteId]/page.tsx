@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/Dialog/Dialog";
 import { Input } from "@/components/ui/Input/Input";
 import styles from "./site-detail.module.css";
+import dialogStyles from "@/components/ui/Dialog/Dialog.module.css";
 
 interface SiteDetail {
   id: string;
@@ -34,6 +35,15 @@ interface SiteDetail {
   }>;
 }
 
+interface Template {
+  id: string;
+  name: string;
+  description: string | null;
+  category: string;
+  isSystem: boolean;
+  blocks: unknown[];
+}
+
 export default function SiteDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -43,6 +53,8 @@ export default function SiteDetailPage() {
   const [showNewPage, setShowNewPage] = useState(false);
   const [newPageTitle, setNewPageTitle] = useState("");
   const [creating, setCreating] = useState(false);
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`/api/sites/${params.siteId}`)
@@ -51,18 +63,37 @@ export default function SiteDetailPage() {
       .finally(() => setLoading(false));
   }, [params.siteId]);
 
+  useEffect(() => {
+    fetch("/api/templates")
+      .then((res) => res.json())
+      .then(setTemplates)
+      .catch(() => {});
+  }, []);
+
+  function handleOpenNewPage() {
+    setShowNewPage(true);
+    setNewPageTitle("");
+    setSelectedTemplateId(null);
+  }
+
   async function handleCreatePage() {
     if (!newPageTitle.trim()) return;
     setCreating(true);
 
     try {
+      const selectedTemplate = templates.find((t) => t.id === selectedTemplateId);
+      const body: Record<string, unknown> = {
+        title: newPageTitle,
+        siteId: params.siteId,
+      };
+      if (selectedTemplate && selectedTemplate.blocks.length > 0) {
+        body.templateBlocks = selectedTemplate.blocks;
+      }
+
       const res = await fetch("/api/pages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: newPageTitle,
-          siteId: params.siteId,
-        }),
+        body: JSON.stringify(body),
       });
 
       if (res.ok) {
@@ -70,6 +101,7 @@ export default function SiteDetailPage() {
         toast("Page created!");
         setShowNewPage(false);
         setNewPageTitle("");
+        setSelectedTemplateId(null);
         router.push(`/editor/${page.id}`);
       } else {
         toast("Failed to create page", "error");
@@ -135,7 +167,7 @@ export default function SiteDetailPage() {
                 Navigation
               </Button>
             </Link>
-            <Button leftIcon={<Plus size={16} />} size="sm" onClick={() => setShowNewPage(true)}>
+            <Button leftIcon={<Plus size={16} />} size="sm" onClick={handleOpenNewPage}>
               New page
             </Button>
           </div>
@@ -147,7 +179,7 @@ export default function SiteDetailPage() {
             <FileText size={48} strokeWidth={1} />
             <h3>No pages yet</h3>
             <p>Create your first page to start building</p>
-            <Button leftIcon={<Plus size={16} />} onClick={() => setShowNewPage(true)}>
+            <Button leftIcon={<Plus size={16} />} onClick={handleOpenNewPage}>
               Create a page
             </Button>
           </div>
@@ -157,7 +189,7 @@ export default function SiteDetailPage() {
       </div>
 
       <Dialog open={showNewPage} onOpenChange={setShowNewPage}>
-        <DialogContent>
+        <DialogContent className={dialogStyles.contentWide}>
           <DialogHeader>
             <DialogTitle>Create new page</DialogTitle>
           </DialogHeader>
@@ -169,6 +201,32 @@ export default function SiteDetailPage() {
             autoFocus
             onKeyDown={(e) => e.key === "Enter" && handleCreatePage()}
           />
+          {templates.length > 0 && (
+            <div className={styles.templateSection}>
+              <div className={styles.templateLabel}>Template</div>
+              <div className={styles.templateGrid}>
+                <div
+                  className={`${styles.templateCard} ${selectedTemplateId === null ? styles.templateCardSelected : ""}`}
+                  onClick={() => setSelectedTemplateId(null)}
+                >
+                  <span className={styles.templateCardName}>Blank</span>
+                  <span className={styles.templateCardDesc}>Start from scratch</span>
+                </div>
+                {templates.map((template) => (
+                  <div
+                    key={template.id}
+                    className={`${styles.templateCard} ${selectedTemplateId === template.id ? styles.templateCardSelected : ""}`}
+                    onClick={() => setSelectedTemplateId(template.id)}
+                  >
+                    <span className={styles.templateCardName}>{template.name}</span>
+                    {template.description && (
+                      <span className={styles.templateCardDesc}>{template.description}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <DialogFooter>
             <Button variant="secondary" onClick={() => setShowNewPage(false)}>
               Cancel

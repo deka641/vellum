@@ -26,3 +26,53 @@
   font-size: var(--text-sm);
   color: var(--color-text-secondary);
 }
+
+.templateSection {
+  margin-top: var(--space-4);
+}
+
+.templateLabel {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-2);
+}
+
+.templateGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.templateCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+  background: var(--color-surface);
+}
+
+.templateCard:hover {
+  border-color: var(--color-text-tertiary);
+}
+
+.templateCardSelected {
+  border-color: var(--color-accent);
+  background: var(--color-bg-secondary);
+}
+
+.templateCardName {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.templateCardDesc {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  line-height: var(--leading-normal);
+}
