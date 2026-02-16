@@ -84,6 +84,18 @@ export const createTemplateSchema = z.object({
   blocks: z.array(blockSchema).optional(),
 });
 
+// --- Navigation ---
+
+export const updateNavigationSchema = z.object({
+  pages: z.array(
+    z.object({
+      id: z.string().min(1),
+      sortOrder: z.number().int().min(0),
+      showInNav: z.boolean(),
+    })
+  ).min(1).max(500),
+});
+
 // --- Register ---
 
 export const registerSchema = z.object({

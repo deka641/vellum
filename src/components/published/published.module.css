@@ -1,5 +1,4 @@
 .page {
-  min-height: 100vh;
   background: var(--color-surface);
   display: flex;
   justify-content: center;

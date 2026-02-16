@@ -41,6 +41,7 @@ model Page {
   description String?
   status      PageStatus @default(DRAFT)
   isHomepage  Boolean    @default(false)
+  showInNav   Boolean    @default(true)
   sortOrder   Int        @default(0)
   siteId      String
   site        Site       @relation(fields: [siteId], references: [id], onDelete: Cascade)

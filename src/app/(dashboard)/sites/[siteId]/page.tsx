@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Plus, FileText, ArrowLeft } from "lucide-react";
+import { Plus, FileText, ArrowLeft, Navigation2 } from "lucide-react";
 import Link from "next/link";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { PageList } from "@/components/dashboard/PageList";
@@ -128,6 +128,11 @@ export default function SiteDetailPage() {
             <Link href="/sites">
               <Button variant="ghost" leftIcon={<ArrowLeft size={16} />} size="sm">
                 Back
+              </Button>
+            </Link>
+            <Link href={`/sites/${site.id}/navigation`}>
+              <Button variant="secondary" leftIcon={<Navigation2 size={16} />} size="sm">
+                Navigation
               </Button>
             </Link>
             <Button leftIcon={<Plus size={16} />} size="sm" onClick={() => setShowNewPage(true)}>
