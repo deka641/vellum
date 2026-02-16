@@ -3,7 +3,7 @@
 import { type ReactNode } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Trash2 } from "lucide-react";
+import { GripVertical, Trash2, Copy } from "lucide-react";
 import { useEditorStore } from "@/stores/editor-store";
 import { cn } from "@/lib/utils";
 import styles from "./BlockWrapper.module.css";
@@ -14,7 +14,7 @@ interface BlockWrapperProps {
 }
 
 export function BlockWrapper({ id, children }: BlockWrapperProps) {
-  const { selectedBlockId, selectBlock, removeBlock } = useEditorStore();
+  const { selectedBlockId, selectBlock, removeBlock, duplicateBlock } = useEditorStore();
   const isSelected = selectedBlockId === id;
 
   const {
@@ -55,11 +55,22 @@ export function BlockWrapper({ id, children }: BlockWrapperProps) {
           <GripVertical size={14} />
         </button>
         <button
+          className={styles.duplicateButton}
+          onClick={(e) => {
+            e.stopPropagation();
+            duplicateBlock(id);
+          }}
+          title="Duplicate block"
+        >
+          <Copy size={14} />
+        </button>
+        <button
           className={styles.deleteButton}
           onClick={(e) => {
             e.stopPropagation();
             removeBlock(id);
           }}
+          title="Delete block"
         >
           <Trash2 size={14} />
         </button>

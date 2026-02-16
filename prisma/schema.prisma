@@ -36,20 +36,21 @@ model Site {
 }
 
 model Page {
-  id          String     @id @default(cuid())
-  title       String
-  slug        String
-  description String?
-  status      PageStatus @default(DRAFT)
-  isHomepage  Boolean    @default(false)
-  showInNav   Boolean    @default(true)
-  sortOrder   Int        @default(0)
-  siteId      String
-  site        Site       @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  blocks      Block[]
-  publishedAt DateTime?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id              String           @id @default(cuid())
+  title           String
+  slug            String
+  description     String?
+  status          PageStatus       @default(DRAFT)
+  isHomepage      Boolean          @default(false)
+  showInNav       Boolean          @default(true)
+  sortOrder       Int              @default(0)
+  siteId          String
+  site            Site             @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  blocks          Block[]
+  formSubmissions FormSubmission[]
+  publishedAt     DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 
   @@unique([siteId, slug])
   @@index([siteId])
@@ -86,6 +87,18 @@ model Template {
   isSystem    Boolean  @default(false)
   userId      String?
   createdAt   DateTime @default(now())
+}
+
+model FormSubmission {
+  id        String   @id @default(cuid())
+  pageId    String
+  blockId   String
+  data      Json
+  createdAt DateTime @default(now())
+  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@index([pageId])
+  @@index([blockId])
 }
 
 model Media {

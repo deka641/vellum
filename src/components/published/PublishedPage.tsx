@@ -1,4 +1,5 @@
 import { PublishedBlock } from "./PublishedBlock";
+import { SafePublishedBlock } from "./SafePublishedBlock";
 import styles from "./published.module.css";
 
 interface BlockData {
@@ -12,14 +13,15 @@ interface BlockData {
 interface PublishedPageProps {
   title: string;
   blocks: BlockData[];
+  pageId?: string;
 }
 
-export function PublishedPage({ title, blocks }: PublishedPageProps) {
+export function PublishedPage({ title, blocks, pageId }: PublishedPageProps) {
   return (
     <div className={styles.page}>
       <div className={styles.container}>
         {blocks.map((block) => (
-          <PublishedBlock key={block.id} block={block} />
+          <SafePublishedBlock key={block.id} block={block} pageId={pageId} />
         ))}
       </div>
     </div>

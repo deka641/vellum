@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { Globe, Image, LayoutTemplate, LogOut } from "lucide-react";
+import { Globe, Image, LayoutTemplate, LogOut, Settings } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar/Avatar";
 import {
   DropdownMenu,
@@ -28,6 +28,7 @@ const navItems = [
   { href: "/sites", label: "Sites", icon: Globe },
   { href: "/media", label: "Media", icon: Image },
   { href: "/templates", label: "Templates", icon: LayoutTemplate },
+  { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 export function Sidebar({ user, mobileOpen, onMobileClose }: SidebarProps) {

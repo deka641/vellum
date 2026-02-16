@@ -9,6 +9,8 @@ import {
   Minus,
   Columns2,
   Play,
+  Quote,
+  FileInput,
 } from "lucide-react";
 import { type BlockType } from "@/types/blocks";
 import { blockDefinitions, blockCategories } from "@/lib/blocks";
@@ -23,6 +25,8 @@ const iconMap: Record<string, React.ReactNode> = {
   Minus: <Minus size={20} />,
   Columns: <Columns2 size={20} />,
   Play: <Play size={20} />,
+  Quote: <Quote size={20} />,
+  FileInput: <FileInput size={20} />,
 };
 
 interface AddBlockMenuProps {

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Image as ImageIcon } from "lucide-react";
+import { useEffect, useState, useMemo } from "react";
+import { Image as ImageIcon, Search } from "lucide-react";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { MediaGrid } from "@/components/media/MediaGrid";
 import { MediaUploader } from "@/components/media/MediaUploader";
@@ -20,9 +20,13 @@ interface MediaItem {
   height: number | null;
 }
 
+type MediaTypeFilter = "all" | "images" | "videos" | "documents";
+
 export default function MediaPage() {
   const [items, setItems] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [typeFilter, setTypeFilter] = useState<MediaTypeFilter>("all");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -31,6 +35,19 @@ export default function MediaPage() {
       .then((data) => setItems(data.media || []))
       .finally(() => setLoading(false));
   }, []);
+
+  const filteredItems = useMemo(() => {
+    return items.filter((item) => {
+      const q = searchQuery.toLowerCase();
+      const matchesSearch = !q || item.filename.toLowerCase().includes(q);
+      if (!matchesSearch) return false;
+
+      if (typeFilter === "all") return true;
+      if (typeFilter === "images") return item.mimeType.startsWith("image/");
+      if (typeFilter === "videos") return item.mimeType.startsWith("video/");
+      return !item.mimeType.startsWith("image/") && !item.mimeType.startsWith("video/");
+    });
+  }, [items, searchQuery, typeFilter]);
 
   async function handleDelete(id: string) {
     if (!confirm("Delete this file?")) return;
@@ -66,7 +83,32 @@ export default function MediaPage() {
             <p>Upload your first file to get started</p>
           </div>
         ) : (
-          <MediaGrid items={items} onDelete={handleDelete} />
+          <>
+            <div className={styles.filterBar}>
+              <div className={styles.searchWrap}>
+                <Search size={16} className={styles.searchIcon} />
+                <input
+                  className={styles.searchInput}
+                  type="text"
+                  placeholder="Search files..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <div className={styles.typeTabs}>
+                {(["all", "images", "videos", "documents"] as const).map((t) => (
+                  <button
+                    key={t}
+                    className={`${styles.typeTab} ${typeFilter === t ? styles.typeTabActive : ""}`}
+                    onClick={() => setTypeFilter(t)}
+                  >
+                    {t.charAt(0).toUpperCase() + t.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <MediaGrid items={filteredItems} onDelete={handleDelete} />
+          </>
         )}
       </div>
     </>

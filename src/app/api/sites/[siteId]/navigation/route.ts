@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { parseBody, updateNavigationSchema } from "@/lib/validations";
@@ -55,6 +56,10 @@ export async function PATCH(
       where: { siteId },
       orderBy: { sortOrder: "asc" },
     });
+
+    try {
+      revalidatePath(`/s/${site.slug}`, "layout");
+    } catch { /* revalidation failure is non-fatal */ }
 
     return NextResponse.json({ pages: updatedPages });
   } catch (error) {

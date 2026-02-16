@@ -6,7 +6,9 @@ export type BlockType =
   | "spacer"
   | "divider"
   | "columns"
-  | "video";
+  | "video"
+  | "quote"
+  | "form";
 
 export interface HeadingContent {
   text: string;
@@ -49,6 +51,26 @@ export interface VideoContent {
   provider: "youtube" | "vimeo" | "";
 }
 
+export interface QuoteContent {
+  text: string;
+  attribution?: string;
+  style: "default" | "bordered" | "filled";
+}
+
+export interface FormField {
+  id: string;
+  type: "text" | "email" | "textarea";
+  label: string;
+  required: boolean;
+  placeholder?: string;
+}
+
+export interface FormContent {
+  fields: FormField[];
+  submitText: string;
+  successMessage: string;
+}
+
 export type BlockContent =
   | HeadingContent
   | TextContent
@@ -57,7 +79,9 @@ export type BlockContent =
   | SpacerContent
   | DividerContent
   | ColumnsContent
-  | VideoContent;
+  | VideoContent
+  | QuoteContent
+  | FormContent;
 
 export interface BlockSettings {
   align?: "left" | "center" | "right";
@@ -71,6 +95,11 @@ export interface BlockSettings {
   style?: "solid" | "dashed" | "dotted";
   gap?: string;
   distribution?: string;
+  textColor?: string;
+  backgroundColor?: string;
+  fontSize?: string;
+  paddingY?: string;
+  paddingX?: string;
 }
 
 export interface EditorBlock {

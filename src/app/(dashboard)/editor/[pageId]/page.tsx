@@ -72,6 +72,16 @@ export default function EditorPage() {
           useEditorStore.getState().undo();
         }
       }
+      if ((e.metaKey || e.ctrlKey) && e.key === "d") {
+        e.preventDefault();
+        const { selectedBlockId, duplicateBlock } = useEditorStore.getState();
+        if (selectedBlockId) {
+          duplicateBlock(selectedBlockId);
+        }
+      }
+      if (e.key === "Escape") {
+        useEditorStore.getState().selectBlock(null);
+      }
       if (e.key === "Delete" || e.key === "Backspace") {
         const { selectedBlockId, removeBlock } = useEditorStore.getState();
         const target = e.target as HTMLElement;

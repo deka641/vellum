@@ -1,6 +1,7 @@
 import { create } from "zustand";
-import { type EditorBlock, type BlockContent, type BlockSettings } from "@/types/blocks";
+import { type EditorBlock, type BlockContent, type BlockSettings, type ColumnsContent } from "@/types/blocks";
 import { createBlock } from "@/lib/blocks";
+import { generateId } from "@/lib/utils";
 import type { BlockType } from "@/types/blocks";
 
 interface HistoryEntry {
@@ -49,6 +50,7 @@ interface EditorState {
   setConflict: (conflict: ConflictState) => void;
   resolveConflictLoadServer: () => void;
   resolveConflictKeepLocal: () => void;
+  duplicateBlock: (id: string) => void;
   undo: () => void;
   redo: () => void;
 }
@@ -208,6 +210,35 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     set({
       conflict: null,
       isDirty: true,
+    }),
+
+  duplicateBlock: (id) =>
+    set((state) => {
+      const index = state.blocks.findIndex((b) => b.id === id);
+      if (index === -1) return state;
+
+      function cloneBlock(block: EditorBlock): EditorBlock {
+        const cloned = structuredClone(block);
+        cloned.id = generateId();
+        if (cloned.type === "columns") {
+          const cols = cloned.content as ColumnsContent;
+          cols.columns = cols.columns.map((col) => ({
+            blocks: col.blocks.map(cloneBlock),
+          }));
+        }
+        return cloned;
+      }
+
+      const duplicate = cloneBlock(state.blocks[index]);
+      const newBlocks = [...state.blocks];
+      newBlocks.splice(index + 1, 0, duplicate);
+      return {
+        blocks: newBlocks,
+        selectedBlockId: duplicate.id,
+        isDirty: true,
+        saveError: null,
+        ...pushHistory({ ...state, blocks: newBlocks }),
+      };
     }),
 
   undo: () =>

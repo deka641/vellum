@@ -91,6 +91,31 @@
   font-size: var(--text-sm);
 }
 
+.imagePlaceholderActions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.browseMediaBtn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.browseMediaBtn:hover {
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+}
+
 .imageUrlInput {
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--color-border);
@@ -218,6 +243,171 @@
   justify-content: center;
   height: 100%;
   font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+}
+
+/* Quote */
+.quote {
+  padding: var(--space-4) var(--space-5);
+  border-left: 4px solid var(--color-accent);
+  font-style: italic;
+  margin: 0;
+}
+
+.quote-default {
+  border-left: 4px solid var(--color-accent);
+}
+
+.quote-bordered {
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--color-accent);
+}
+
+.quote-filled {
+  background: var(--color-bg-secondary);
+  border-left: 4px solid var(--color-accent);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+.quoteText {
+  outline: none;
+  min-height: 1em;
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: var(--color-text-primary);
+  cursor: text;
+}
+
+.quoteText:empty::before {
+  content: attr(data-placeholder);
+  color: var(--color-text-tertiary);
+  pointer-events: none;
+}
+
+.quoteAttribution {
+  display: block;
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  font-style: normal;
+  color: var(--color-text-secondary);
+  border: none;
+  background: none;
+  outline: none;
+  padding: 0;
+  width: 100%;
+}
+
+.quoteAttribution::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+/* Form */
+.formEditor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-secondary);
+}
+
+.formFieldEditor {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-sm);
+}
+
+.formFieldLabel {
+  flex: 1;
+  font-size: var(--text-sm);
+  border: none;
+  background: none;
+  outline: none;
+  color: var(--color-text-primary);
+  padding: var(--space-1);
+}
+
+.formFieldLabel::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+.formFieldType {
+  font-size: var(--text-xs);
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+}
+
+.formFieldRequired {
+  font-size: var(--text-xs);
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.formFieldRequiredActive {
+  color: var(--color-accent);
+  font-weight: var(--weight-semibold);
+}
+
+.formFieldDelete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: var(--color-text-tertiary);
+  border-radius: var(--radius-sm);
+}
+
+.formFieldDelete:hover {
+  color: var(--color-error);
+  background: var(--color-error-light);
+}
+
+.formAddField {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-accent);
+  border: 1px dashed var(--color-accent);
+  border-radius: var(--radius-sm);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.formAddField:hover {
+  background: var(--color-accent-light);
+}
+
+.formSettings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border-light);
+}
+
+.formSettingsInput {
+  font-size: var(--text-sm);
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+}
+
+.formSettingsInput::placeholder {
   color: var(--color-text-tertiary);
 }
 

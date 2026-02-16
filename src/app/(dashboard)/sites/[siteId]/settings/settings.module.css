@@ -14,6 +14,69 @@
   justify-content: flex-end;
 }
 
+.faviconSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.faviconLabel {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-secondary);
+}
+
+.faviconRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.faviconPreview {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: var(--color-bg-secondary);
+}
+
+.faviconPreview img {
+  object-fit: contain;
+}
+
+.faviconRemove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--color-error);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+}
+
+.faviconPlaceholder {
+  width: 40px;
+  height: 40px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  color: var(--color-text-tertiary);
+  text-align: center;
+}
+
 .dangerZone {
   margin-top: var(--space-12);
   padding: var(--space-5);

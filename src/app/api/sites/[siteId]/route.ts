@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { parseBody, updateSiteSchema } from "@/lib/validations";
@@ -81,8 +82,13 @@ export async function PATCH(
         name: parsed.data.name ?? site.name,
         description: parsed.data.description ?? site.description,
         ...(parsed.data.theme !== undefined && { theme: parsed.data.theme }),
+        ...(parsed.data.favicon !== undefined && { favicon: parsed.data.favicon }),
       },
     });
+
+    try {
+      revalidatePath(`/s/${site.slug}`, "layout");
+    } catch { /* revalidation failure is non-fatal */ }
 
     return NextResponse.json(updated);
   } catch (error) {

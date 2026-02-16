@@ -170,6 +170,35 @@ function sanitizeBlockContent(block: BlockLike): BlockLike {
         );
       }
       break;
+
+    case "quote":
+      if (typeof content.text === "string") {
+        content.text = sanitize(content.text, { allowedTags: [], allowedAttributes: {} });
+      }
+      if (typeof content.attribution === "string") {
+        content.attribution = sanitize(content.attribution, { allowedTags: [], allowedAttributes: {} });
+      }
+      break;
+
+    case "form":
+      if (Array.isArray(content.fields)) {
+        content.fields = (content.fields as Array<Record<string, unknown>>).map((field) => ({
+          ...field,
+          label: typeof field.label === "string"
+            ? sanitize(field.label, { allowedTags: [], allowedAttributes: {} })
+            : field.label,
+          placeholder: typeof field.placeholder === "string"
+            ? sanitize(field.placeholder, { allowedTags: [], allowedAttributes: {} })
+            : field.placeholder,
+        }));
+      }
+      if (typeof content.submitText === "string") {
+        content.submitText = sanitize(content.submitText, { allowedTags: [], allowedAttributes: {} });
+      }
+      if (typeof content.successMessage === "string") {
+        content.successMessage = sanitize(content.successMessage, { allowedTags: [], allowedAttributes: {} });
+      }
+      break;
   }
 
   return { ...block, content } as BlockLike;

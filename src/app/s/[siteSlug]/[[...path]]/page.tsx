@@ -5,6 +5,8 @@ import { getBaseUrl, buildPageUrl } from "@/lib/url";
 import { PublishedPage } from "@/components/published/PublishedPage";
 import { WebPageJsonLd } from "@/components/published/JsonLd";
 
+export const revalidate = 3600;
+
 interface Props {
   params: Promise<{ siteSlug: string; path?: string[] }>;
 }
@@ -148,7 +150,7 @@ export default async function PublicSitePage({ params }: Props) {
         dateModified={page.updatedAt}
         isPartOf={{ name: site.name, url: siteUrl }}
       />
-      <PublishedPage title={page.title} blocks={blocks} />
+      <PublishedPage title={page.title} blocks={blocks} pageId={page.id} />
     </>
   );
 }

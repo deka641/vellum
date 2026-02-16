@@ -6,3 +6,5 @@ export { SpacerBlock } from "./SpacerBlock";
 export { DividerBlock } from "./DividerBlock";
 export { ColumnsBlock } from "./ColumnsBlock";
 export { VideoBlock } from "./VideoBlock";
+export { QuoteBlock } from "./QuoteBlock";
+export { FormBlock } from "./FormBlock";

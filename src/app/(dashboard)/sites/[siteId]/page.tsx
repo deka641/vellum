@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Plus, FileText, ArrowLeft, Navigation2, ExternalLink } from "lucide-react";
+import { Plus, FileText, ArrowLeft, Navigation2, ExternalLink, Search } from "lucide-react";
 import Link from "next/link";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { PageList } from "@/components/dashboard/PageList";
@@ -55,6 +55,8 @@ export default function SiteDetailPage() {
   const [creating, setCreating] = useState(false);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"ALL" | "DRAFT" | "PUBLISHED">("ALL");
 
   useEffect(() => {
     fetch(`/api/sites/${params.siteId}`)
@@ -294,14 +296,42 @@ export default function SiteDetailPage() {
             </Button>
           </div>
         ) : (
-          <PageList
-            pages={site.pages}
-            siteSlug={site.slug}
-            onDelete={handleDeletePage}
-            onPublish={handlePublishPage}
-            onUnpublish={handleUnpublishPage}
-            onDuplicate={handleDuplicatePage}
-          />
+          <>
+            <div className={styles.filterBar}>
+              <div className={styles.searchWrap}>
+                <Search size={16} className={styles.searchIcon} />
+                <input
+                  className={styles.searchInput}
+                  type="text"
+                  placeholder="Search pages..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <select
+                className={styles.statusSelect}
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as "ALL" | "DRAFT" | "PUBLISHED")}
+              >
+                <option value="ALL">All status</option>
+                <option value="DRAFT">Draft</option>
+                <option value="PUBLISHED">Published</option>
+              </select>
+            </div>
+            <PageList
+              pages={site.pages.filter((p) => {
+                const q = searchQuery.toLowerCase();
+                const matchesSearch = !q || p.title.toLowerCase().includes(q) || p.slug.toLowerCase().includes(q);
+                const matchesStatus = statusFilter === "ALL" || p.status === statusFilter;
+                return matchesSearch && matchesStatus;
+              })}
+              siteSlug={site.slug}
+              onDelete={handleDeletePage}
+              onPublish={handlePublishPage}
+              onUnpublish={handleUnpublishPage}
+              onDuplicate={handleDuplicatePage}
+            />
+          </>
         )}
       </div>
 

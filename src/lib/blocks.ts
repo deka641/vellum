@@ -80,6 +80,30 @@ export const blockDefinitions: Record<BlockType, BlockDefinition> = {
     defaultContent: { url: "", provider: "" },
     defaultSettings: { aspectRatio: "16/9" },
   },
+  quote: {
+    type: "quote",
+    label: "Quote",
+    icon: "Quote",
+    category: "text",
+    defaultContent: { text: "", attribution: "", style: "default" },
+    defaultSettings: { align: "left" },
+  },
+  form: {
+    type: "form",
+    label: "Form",
+    icon: "FileInput",
+    category: "layout",
+    defaultContent: {
+      fields: [
+        { id: "name", type: "text", label: "Name", required: true, placeholder: "Your name" },
+        { id: "email", type: "email", label: "Email", required: true, placeholder: "your@email.com" },
+        { id: "message", type: "textarea", label: "Message", required: false, placeholder: "Your message..." },
+      ],
+      submitText: "Submit",
+      successMessage: "Thank you! Your message has been sent.",
+    },
+    defaultSettings: {},
+  },
 };
 
 export function createBlock(type: BlockType): EditorBlock {

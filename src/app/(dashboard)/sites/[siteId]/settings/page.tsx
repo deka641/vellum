@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Upload, X } from "lucide-react";
 import Link from "next/link";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { Input, Textarea } from "@/components/ui/Input/Input";
@@ -19,8 +19,11 @@ export default function SiteSettingsPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [theme, setTheme] = useState<SiteTheme>(DEFAULT_THEME);
+  const [favicon, setFavicon] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [uploadingFavicon, setUploadingFavicon] = useState(false);
+  const faviconInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetch(`/api/sites/${params.siteId}`)
@@ -28,11 +31,32 @@ export default function SiteSettingsPage() {
       .then((site) => {
         setName(site.name);
         setDescription(site.description || "");
+        setFavicon(site.favicon || null);
         const parsed = parseSiteTheme(site.theme);
         if (parsed) setTheme(parsed);
       })
       .finally(() => setLoading(false));
   }, [params.siteId]);
+
+  async function handleFaviconUpload(file: File) {
+    setUploadingFavicon(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await fetch("/api/media", { method: "POST", body: formData });
+      if (res.ok) {
+        const media = await res.json();
+        setFavicon(media.url);
+        toast("Favicon uploaded");
+      } else {
+        toast("Failed to upload favicon", "error");
+      }
+    } catch {
+      toast("Upload failed", "error");
+    } finally {
+      setUploadingFavicon(false);
+    }
+  }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -42,7 +66,7 @@ export default function SiteSettingsPage() {
       const res = await fetch(`/api/sites/${params.siteId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, description, theme }),
+        body: JSON.stringify({ name, description, theme, favicon }),
       });
 
       if (res.ok) {
@@ -97,6 +121,47 @@ export default function SiteSettingsPage() {
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
           />
+
+          <div className={styles.faviconSection}>
+            <label className={styles.faviconLabel}>Favicon</label>
+            <div className={styles.faviconRow}>
+              {favicon ? (
+                <div className={styles.faviconPreview}>
+                  <img src={favicon} alt="Favicon" width={32} height={32} />
+                  <button
+                    type="button"
+                    className={styles.faviconRemove}
+                    onClick={() => setFavicon(null)}
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                <div className={styles.faviconPlaceholder}>No favicon</div>
+              )}
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                leftIcon={<Upload size={14} />}
+                disabled={uploadingFavicon}
+                onClick={() => faviconInputRef.current?.click()}
+              >
+                {uploadingFavicon ? "Uploading..." : "Upload"}
+              </Button>
+              <input
+                ref={faviconInputRef}
+                type="file"
+                accept=".ico,.png,.jpg,.jpeg,.svg"
+                style={{ display: "none" }}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleFaviconUpload(file);
+                  e.target.value = "";
+                }}
+              />
+            </div>
+          </div>
 
           <ThemeConfigurator theme={theme} onChange={setTheme} />
 

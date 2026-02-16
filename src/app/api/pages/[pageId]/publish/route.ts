@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
@@ -20,6 +21,7 @@ export async function POST(
 
     const page = await db.page.findFirst({
       where: { id: pageId, site: { userId: session.user.id } },
+      include: { site: { select: { slug: true } } },
     });
 
     if (!page) {
@@ -33,6 +35,16 @@ export async function POST(
         publishedAt: new Date(),
       },
     });
+
+    try {
+      const siteSlug = page.site.slug;
+      if (page.isHomepage) {
+        revalidatePath(`/s/${siteSlug}`);
+      } else {
+        revalidatePath(`/s/${siteSlug}/${page.slug}`);
+      }
+      revalidatePath(`/s/${siteSlug}`, "layout");
+    } catch { /* revalidation failure is non-fatal */ }
 
     return NextResponse.json(updated);
   } catch (error) {
@@ -61,6 +73,7 @@ export async function DELETE(
 
     const page = await db.page.findFirst({
       where: { id: pageId, site: { userId: session.user.id } },
+      include: { site: { select: { slug: true } } },
     });
 
     if (!page) {
@@ -74,6 +87,16 @@ export async function DELETE(
         publishedAt: null,
       },
     });
+
+    try {
+      const siteSlug = page.site.slug;
+      if (page.isHomepage) {
+        revalidatePath(`/s/${siteSlug}`);
+      } else {
+        revalidatePath(`/s/${siteSlug}/${page.slug}`);
+      }
+      revalidatePath(`/s/${siteSlug}`, "layout");
+    } catch { /* revalidation failure is non-fatal */ }
 
     return NextResponse.json(updated);
   } catch (error) {

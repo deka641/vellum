@@ -26,6 +26,8 @@ const blockTypeEnum = z.enum([
   "divider",
   "columns",
   "video",
+  "quote",
+  "form",
 ]);
 
 const blockSchema = z.object({
@@ -61,6 +63,7 @@ export const updateSiteSchema = z.object({
   name: z.string().min(1).max(200).optional(),
   description: z.string().max(2000).nullable().optional(),
   theme: siteThemeSchema.optional(),
+  favicon: z.string().max(2000).nullable().optional(),
 });
 
 // --- Pages ---
@@ -128,4 +131,22 @@ export const registerSchema = z.object({
   name: z.string().max(200).optional().default(""),
   email: z.string().email().max(254),
   password: z.string().min(6).max(200),
+});
+
+// --- User Profile ---
+
+export const updateProfileSchema = z.object({
+  name: z.string().max(200),
+  email: z.string().email().max(254),
+});
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: z.string().min(8).max(200),
+});
+
+// --- Form Submissions ---
+
+export const formSubmissionSchema = z.object({
+  data: z.record(z.string(), z.string().max(10000)),
 });
