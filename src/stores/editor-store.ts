@@ -7,6 +7,12 @@ interface HistoryEntry {
   blocks: EditorBlock[];
 }
 
+interface ConflictState {
+  serverBlocks: EditorBlock[];
+  serverTitle: string;
+  serverUpdatedAt: string;
+}
+
 interface EditorState {
   blocks: EditorBlock[];
   selectedBlockId: string | null;
@@ -15,13 +21,15 @@ interface EditorState {
   saveError: string | null;
   pageId: string | null;
   pageTitle: string;
+  lastSavedAt: string | null;
+  conflict: ConflictState | null;
 
   // History
   history: HistoryEntry[];
   historyIndex: number;
 
   // Actions
-  setPage: (pageId: string, title: string, blocks: EditorBlock[]) => void;
+  setPage: (pageId: string, title: string, blocks: EditorBlock[], updatedAt: string) => void;
   addBlock: (type: BlockType, index?: number) => void;
   removeBlock: (id: string) => void;
   updateBlockContent: (id: string, content: Partial<BlockContent>) => void;
@@ -33,6 +41,10 @@ interface EditorState {
   setSaving: (saving: boolean) => void;
   setSaveError: (error: string | null) => void;
   setPageTitle: (title: string) => void;
+  setLastSavedAt: (updatedAt: string) => void;
+  setConflict: (conflict: ConflictState) => void;
+  resolveConflictLoadServer: () => void;
+  resolveConflictKeepLocal: () => void;
   undo: () => void;
   redo: () => void;
 }
@@ -58,10 +70,12 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   saveError: null,
   pageId: null,
   pageTitle: "",
+  lastSavedAt: null,
+  conflict: null,
   history: [],
   historyIndex: -1,
 
-  setPage: (pageId, title, blocks) =>
+  setPage: (pageId, title, blocks, updatedAt) =>
     set({
       pageId,
       pageTitle: title,
@@ -69,6 +83,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       selectedBlockId: null,
       isDirty: false,
       saveError: null,
+      lastSavedAt: updatedAt,
+      conflict: null,
       history: [{ blocks: structuredClone(blocks) }],
       historyIndex: 0,
     }),
@@ -159,6 +175,30 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   setSaving: (saving) => set({ isSaving: saving }),
   setSaveError: (error) => set({ saveError: error }),
   setPageTitle: (title) => set({ pageTitle: title, isDirty: true, saveError: null }),
+  setLastSavedAt: (updatedAt) => set({ lastSavedAt: updatedAt }),
+  setConflict: (conflict) => set({ conflict }),
+
+  resolveConflictLoadServer: () =>
+    set((state) => {
+      if (!state.conflict) return state;
+      const blocks = state.conflict.serverBlocks as EditorBlock[];
+      return {
+        blocks,
+        pageTitle: state.conflict.serverTitle,
+        lastSavedAt: state.conflict.serverUpdatedAt,
+        conflict: null,
+        isDirty: false,
+        saveError: null,
+        history: [{ blocks: structuredClone(blocks) }],
+        historyIndex: 0,
+      };
+    }),
+
+  resolveConflictKeepLocal: () =>
+    set({
+      conflict: null,
+      isDirty: true,
+    }),
 
   undo: () =>
     set((state) => {

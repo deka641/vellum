@@ -8,7 +8,7 @@ const MAX_RETRIES = 3;
 const BASE_DELAY = 2000;
 
 export function useAutosave() {
-  const { blocks, pageId, pageTitle, isDirty, setDirty, setSaving, setSaveError } =
+  const { blocks, pageId, pageTitle, isDirty, conflict, setDirty, setSaving, setSaveError, setLastSavedAt, setConflict } =
     useEditorStore();
   const { toast } = useToast();
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -16,11 +16,22 @@ export function useAutosave() {
   const titleRef = useRef(pageTitle);
   const retryCountRef = useRef(0);
   const isSavingRef = useRef(false);
+  const forceNextSaveRef = useRef(false);
+  const lastSavedAtRef = useRef(useEditorStore.getState().lastSavedAt);
+  const conflictRef = useRef(conflict);
 
   useEffect(() => {
     blocksRef.current = blocks;
     titleRef.current = pageTitle;
   }, [blocks, pageTitle]);
+
+  useEffect(() => {
+    lastSavedAtRef.current = useEditorStore.getState().lastSavedAt;
+  });
+
+  useEffect(() => {
+    conflictRef.current = conflict;
+  }, [conflict]);
 
   // Reset retry counter when user makes new edits
   useEffect(() => {
@@ -29,25 +40,56 @@ export function useAutosave() {
     }
   }, [isDirty, blocks, pageTitle]);
 
-  const saveWithRetry = useCallback(async (): Promise<boolean> => {
-    if (!pageId) return false;
+  const saveWithRetry = useCallback(async (): Promise<{ success: boolean; conflict?: boolean }> => {
+    if (!pageId) return { success: false };
+
+    const body: Record<string, unknown> = {
+      blocks: blocksRef.current,
+      title: titleRef.current,
+    };
+
+    // Send expectedUpdatedAt unless force-saving
+    if (!forceNextSaveRef.current && lastSavedAtRef.current) {
+      body.expectedUpdatedAt = lastSavedAtRef.current;
+    }
+    forceNextSaveRef.current = false;
 
     const res = await fetch(`/api/pages/${pageId}/blocks`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        blocks: blocksRef.current,
-        title: titleRef.current,
-      }),
+      body: JSON.stringify(body),
     });
+
+    if (res.status === 409) {
+      const data = await res.json().catch(() => ({}));
+      if (data.serverState) {
+        setConflict({
+          serverBlocks: data.serverState.blocks.map((b: { id: string; type: string; content: unknown; settings: unknown; parentId: string | null }) => ({
+            id: b.id,
+            type: b.type,
+            content: b.content,
+            settings: b.settings,
+            parentId: b.parentId,
+          })),
+          serverTitle: data.serverState.title,
+          serverUpdatedAt: data.serverState.updatedAt,
+        });
+      }
+      return { success: false, conflict: true };
+    }
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       throw new Error(data.error || `Save failed (${res.status})`);
     }
 
-    return true;
-  }, [pageId]);
+    const data = await res.json();
+    if (data.updatedAt) {
+      setLastSavedAt(data.updatedAt);
+    }
+
+    return { success: true };
+  }, [pageId, setConflict, setLastSavedAt]);
 
   const save = useCallback(async () => {
     if (!pageId || isSavingRef.current) return;
@@ -57,7 +99,16 @@ export function useAutosave() {
 
     for (let attempt = 0; attempt <= MAX_RETRIES - 1; attempt++) {
       try {
-        await saveWithRetry();
+        const result = await saveWithRetry();
+
+        if (result.conflict) {
+          // Conflict is not a transient error — don't retry
+          toast("This page was modified in another session", "info");
+          isSavingRef.current = false;
+          setSaving(false);
+          return;
+        }
+
         setDirty(false);
         setSaveError(null);
         retryCountRef.current = 0;
@@ -82,8 +133,13 @@ export function useAutosave() {
     setSaving(false);
   }, [pageId, saveWithRetry, setDirty, setSaving, setSaveError, toast]);
 
+  const forceSave = useCallback(async () => {
+    forceNextSaveRef.current = true;
+    await save();
+  }, [save]);
+
   useEffect(() => {
-    if (!isDirty) return;
+    if (!isDirty || conflictRef.current) return;
 
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(save, 2000);
@@ -91,7 +147,7 @@ export function useAutosave() {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [isDirty, blocks, pageTitle, save]);
+  }, [isDirty, blocks, pageTitle, save, conflict]);
 
-  return { save };
+  return { save, forceSave };
 }

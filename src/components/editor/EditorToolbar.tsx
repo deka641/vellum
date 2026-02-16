@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Eye, Save, Undo2, Redo2, Loader2, AlertCircle } from "lucide-react";
+import { ArrowLeft, Eye, Save, Undo2, Redo2, Loader2, AlertCircle, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/Button/Button";
 import { IconButton } from "@/components/ui/IconButton/IconButton";
 import { Badge } from "@/components/ui/Badge/Badge";
@@ -17,9 +17,10 @@ interface EditorToolbarProps {
 
 export function EditorToolbar({ siteId, pageStatus, onPublish }: EditorToolbarProps) {
   const router = useRouter();
-  const { pageTitle, setPageTitle, isDirty, isSaving, saveError, undo, redo } =
+  const { pageTitle, setPageTitle, isDirty, isSaving, saveError, conflict, undo, redo } =
     useEditorStore();
   const { save } = useAutosave();
+  const hasConflict = conflict !== null;
 
   return (
     <div className={styles.toolbar}>
@@ -44,22 +45,28 @@ export function EditorToolbar({ siteId, pageStatus, onPublish }: EditorToolbarPr
         </Badge>
       </div>
       <div className={styles.right}>
-        {isSaving && (
+        {hasConflict && (
+          <span className={`${styles.saveStatus} ${styles.saveConflict}`}>
+            <AlertTriangle size={14} />
+            Conflict
+          </span>
+        )}
+        {!hasConflict && isSaving && (
           <span className={styles.saveStatus}>
             <Loader2 size={14} className={styles.spinner} />
             Saving...
           </span>
         )}
-        {!isSaving && saveError && (
+        {!hasConflict && !isSaving && saveError && (
           <span className={`${styles.saveStatus} ${styles.saveError}`}>
             <AlertCircle size={14} />
             Save failed
           </span>
         )}
-        {!isSaving && !saveError && isDirty && (
+        {!hasConflict && !isSaving && !saveError && isDirty && (
           <span className={styles.saveStatus}>Unsaved changes</span>
         )}
-        {!isSaving && !saveError && !isDirty && (
+        {!hasConflict && !isSaving && !saveError && !isDirty && (
           <span className={styles.saveStatus}>Saved</span>
         )}
         <IconButton icon={<Undo2 />} label="Undo (Ctrl+Z)" onClick={undo} />
@@ -73,11 +80,11 @@ export function EditorToolbar({ siteId, pageStatus, onPublish }: EditorToolbarPr
             window.open(`/preview/${pageId}`, "_blank");
           }}
         />
-        <Button size="sm" onClick={() => { save(); }}>
+        <Button size="sm" onClick={() => { save(); }} disabled={hasConflict}>
           <Save size={14} />
           Save
         </Button>
-        <Button size="sm" onClick={onPublish}>
+        <Button size="sm" onClick={onPublish} disabled={hasConflict}>
           {pageStatus === "PUBLISHED" ? "Update" : "Publish"}
         </Button>
       </div>

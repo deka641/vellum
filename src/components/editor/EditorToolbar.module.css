@@ -68,6 +68,10 @@
   color: var(--color-error, #dc2626);
 }
 
+.saveConflict {
+  color: var(--color-warning);
+}
+
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }

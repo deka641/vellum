@@ -7,6 +7,7 @@ import { useAutosave } from "@/hooks/use-autosave";
 import { EditorToolbar } from "@/components/editor/EditorToolbar";
 import { EditorCanvas } from "@/components/editor/EditorCanvas";
 import { EditorSidebar } from "@/components/editor/EditorSidebar";
+import { ConflictBanner } from "@/components/editor/ConflictBanner";
 import { useToast } from "@/components/ui/Toast/Toast";
 import { Skeleton } from "@/components/ui/Skeleton/Skeleton";
 import type { EditorBlock } from "@/types/blocks";
@@ -19,7 +20,7 @@ export default function EditorPage() {
   const [siteId, setSiteId] = useState("");
   const [pageStatus, setPageStatus] = useState<"DRAFT" | "PUBLISHED">("DRAFT");
   const { setPage, addBlock, isDirty } = useEditorStore();
-  const { save } = useAutosave();
+  const { save, forceSave } = useAutosave();
 
   useEffect(() => {
     async function loadPage() {
@@ -41,7 +42,7 @@ export default function EditorPage() {
           })
         );
 
-        setPage(data.id, data.title, blocks);
+        setPage(data.id, data.title, blocks, data.updatedAt);
       } catch {
         toast("Failed to load page", "error");
       } finally {
@@ -104,7 +105,11 @@ export default function EditorPage() {
         method: "POST",
       });
       if (res.ok) {
+        const data = await res.json();
         setPageStatus("PUBLISHED");
+        if (data.updatedAt) {
+          useEditorStore.getState().setLastSavedAt(data.updatedAt);
+        }
         toast("Page published!");
       } else {
         toast("Failed to publish", "error");
@@ -130,6 +135,7 @@ export default function EditorPage() {
         pageStatus={pageStatus}
         onPublish={handlePublish}
       />
+      <ConflictBanner onForceSave={forceSave} />
       <div className={styles.body}>
         <EditorCanvas onAddBlock={() => addBlock("text")} />
         <EditorSidebar />

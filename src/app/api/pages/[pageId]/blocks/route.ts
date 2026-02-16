@@ -66,21 +66,48 @@ export async function PUT(
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
-    const { blocks, title } = parsed.data;
+    const { blocks, title, expectedUpdatedAt } = parsed.data;
+    const userId = session.user.id;
 
-    const page = await db.page.findFirst({
-      where: { id: pageId, site: { userId: session.user.id } },
-    });
+    const result = await db.$transaction(async (tx) => {
+      const page = await tx.page.findFirst({
+        where: { id: pageId, site: { userId } },
+      });
 
-    if (!page) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
-    }
+      if (!page) {
+        return { status: 404 as const };
+      }
 
-    await db.$transaction(async (tx) => {
+      // Optimistic locking: check version if client sent expectedUpdatedAt
+      if (expectedUpdatedAt) {
+        const expected = new Date(expectedUpdatedAt).getTime();
+        const actual = page.updatedAt.getTime();
+        if (expected !== actual) {
+          const serverBlocks = await tx.block.findMany({
+            where: { pageId },
+            orderBy: { sortOrder: "asc" },
+          });
+          return {
+            status: 409 as const,
+            serverState: {
+              blocks: serverBlocks,
+              title: page.title,
+              updatedAt: page.updatedAt.toISOString(),
+            },
+          };
+        }
+      }
+
       if (title !== undefined) {
         await tx.page.update({
           where: { id: pageId },
           data: { title },
+        });
+      } else {
+        // Bump updatedAt even for blocks-only saves
+        await tx.page.update({
+          where: { id: pageId },
+          data: { updatedAt: new Date() },
         });
       }
 
@@ -100,9 +127,30 @@ export async function PUT(
           })),
         });
       }
+
+      // Re-read the page to get the final updatedAt
+      const updated = await tx.page.findUniqueOrThrow({
+        where: { id: pageId },
+      });
+
+      return {
+        status: 200 as const,
+        updatedAt: updated.updatedAt.toISOString(),
+      };
     });
 
-    return NextResponse.json({ success: true });
+    if (result.status === 404) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    if (result.status === 409) {
+      return NextResponse.json(
+        { error: "Conflict: page was modified by another session", serverState: result.serverState },
+        { status: 409 }
+      );
+    }
+
+    return NextResponse.json({ success: true, updatedAt: result.updatedAt });
   } catch (error) {
     console.error("PUT /api/pages/[pageId]/blocks failed:", error);
     return NextResponse.json(
