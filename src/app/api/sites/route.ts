@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { slugify } from "@/lib/utils";
+import { parseBody, createSiteSchema } from "@/lib/validations";
 
 export async function GET() {
   try {
@@ -45,11 +46,11 @@ export async function POST(req: Request) {
       );
     }
 
-    const { name, description } = body;
-
-    if (!name) {
-      return NextResponse.json({ error: "Name is required" }, { status: 400 });
+    const parsed = parseBody(createSiteSchema, body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
+    const { name, description } = parsed.data;
 
     const userId = session.user.id;
 

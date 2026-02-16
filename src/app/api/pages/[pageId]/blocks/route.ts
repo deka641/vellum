@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { sanitizeBlocks } from "@/lib/sanitize";
 import type { Prisma } from "@prisma/client";
+import { parseBody, updateBlocksSchema } from "@/lib/validations";
 
 export async function GET(
   _req: Request,
@@ -47,15 +48,7 @@ export async function PUT(
 
     const { pageId } = await params;
 
-    interface BlockInput {
-      id: string;
-      type: string;
-      content: Record<string, unknown>;
-      settings?: Record<string, unknown>;
-      parentId?: string | null;
-    }
-
-    let body: { blocks?: BlockInput[]; title?: string };
+    let body;
     try {
       body = await req.json();
     } catch {
@@ -65,7 +58,11 @@ export async function PUT(
       );
     }
 
-    const { blocks, title } = body;
+    const parsed = parseBody(updateBlocksSchema, body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error }, { status: 400 });
+    }
+    const { blocks, title } = parsed.data;
 
     const page = await db.page.findFirst({
       where: { id: pageId, site: { userId: session.user.id } },
@@ -85,7 +82,7 @@ export async function PUT(
 
       await tx.block.deleteMany({ where: { pageId } });
 
-      if (blocks && Array.isArray(blocks)) {
+      if (blocks) {
         const cleanBlocks = sanitizeBlocks(blocks);
         await tx.block.createMany({
           data: cleanBlocks.map((block, i) => ({

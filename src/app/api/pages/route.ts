@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { slugify } from "@/lib/utils";
 import { sanitizeBlocks } from "@/lib/sanitize";
 import { Prisma } from "@prisma/client";
+import { parseBody, createPageSchema } from "@/lib/validations";
 
 export async function GET(req: Request) {
   try {
@@ -59,14 +60,11 @@ export async function POST(req: Request) {
       );
     }
 
-    const { title, siteId, templateBlocks } = body;
-
-    if (!title || !siteId) {
-      return NextResponse.json(
-        { error: "Title and siteId are required" },
-        { status: 400 }
-      );
+    const parsed = parseBody(createPageSchema, body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
+    const { title, siteId, templateBlocks } = parsed.data;
 
     const site = await db.site.findFirst({
       where: { id: siteId, userId: session.user.id },
@@ -96,7 +94,7 @@ export async function POST(req: Request) {
         },
       });
 
-      if (templateBlocks && Array.isArray(templateBlocks)) {
+      if (templateBlocks) {
         const cleanBlocks = sanitizeBlocks(templateBlocks);
         await tx.block.createMany({
           data: cleanBlocks.map((block, i: number) => ({

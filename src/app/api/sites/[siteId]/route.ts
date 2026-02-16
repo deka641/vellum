@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { parseBody, updateSiteSchema } from "@/lib/validations";
 
 export async function GET(
   _req: Request,
@@ -47,14 +48,19 @@ export async function PATCH(
 
     const { siteId } = await params;
 
-    let data;
+    let body;
     try {
-      data = await req.json();
+      body = await req.json();
     } catch {
       return NextResponse.json(
         { error: "Invalid JSON body" },
         { status: 400 }
       );
+    }
+
+    const parsed = parseBody(updateSiteSchema, body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
 
     const site = await db.site.findFirst({
@@ -68,8 +74,8 @@ export async function PATCH(
     const updated = await db.site.update({
       where: { id: siteId },
       data: {
-        name: data.name ?? site.name,
-        description: data.description ?? site.description,
+        name: parsed.data.name ?? site.name,
+        description: parsed.data.description ?? site.description,
       },
     });
 

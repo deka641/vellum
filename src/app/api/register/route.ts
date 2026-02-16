@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { hash } from "bcryptjs";
 import { db } from "@/lib/db";
+import { parseBody, registerSchema } from "@/lib/validations";
 
 export async function POST(req: Request) {
   try {
@@ -14,21 +15,11 @@ export async function POST(req: Request) {
       );
     }
 
-    const { name, email, password } = body;
-
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: "Email and password are required" },
-        { status: 400 }
-      );
+    const parsed = parseBody(registerSchema, body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
-
-    if (password.length < 6) {
-      return NextResponse.json(
-        { error: "Password must be at least 6 characters" },
-        { status: 400 }
-      );
-    }
+    const { name, email, password } = parsed.data;
 
     const existing = await db.user.findUnique({ where: { email } });
     if (existing) {

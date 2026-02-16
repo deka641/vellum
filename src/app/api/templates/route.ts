@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { sanitizeBlocks } from "@/lib/sanitize";
 import type { Prisma } from "@prisma/client";
+import { parseBody, createTemplateSchema } from "@/lib/validations";
 
 export async function GET() {
   try {
@@ -48,19 +49,19 @@ export async function POST(req: Request) {
       );
     }
 
-    const { name, description, category, blocks } = body;
-
-    if (!name) {
-      return NextResponse.json({ error: "Name is required" }, { status: 400 });
+    const parsed = parseBody(createTemplateSchema, body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
+    const { name, description, category, blocks } = parsed.data;
 
-    const sanitizedBlocks = Array.isArray(blocks) ? sanitizeBlocks(blocks) : [];
+    const sanitizedBlocks = blocks ? sanitizeBlocks(blocks) : [];
 
     const template = await db.template.create({
       data: {
         name,
         description: description || null,
-        category: category || "general",
+        category,
         blocks: sanitizedBlocks as unknown as Prisma.InputJsonValue,
         userId: session.user.id,
       },

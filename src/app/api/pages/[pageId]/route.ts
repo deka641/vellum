@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { parseBody, updatePageSchema } from "@/lib/validations";
 
 export async function GET(
   _req: Request,
@@ -51,14 +52,19 @@ export async function PATCH(
 
     const { pageId } = await params;
 
-    let data;
+    let body;
     try {
-      data = await req.json();
+      body = await req.json();
     } catch {
       return NextResponse.json(
         { error: "Invalid JSON body" },
         { status: 400 }
       );
+    }
+
+    const parsed = parseBody(updatePageSchema, body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
 
     const page = await db.page.findFirst({
@@ -75,8 +81,8 @@ export async function PATCH(
     const updated = await db.page.update({
       where: { id: pageId },
       data: {
-        title: data.title ?? page.title,
-        description: data.description ?? page.description,
+        title: parsed.data.title ?? page.title,
+        description: parsed.data.description ?? page.description,
       },
     });
 
