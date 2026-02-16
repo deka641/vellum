@@ -4,59 +4,90 @@ import { db } from "@/lib/db";
 import { slugify } from "@/lib/utils";
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const sites = await db.site.findMany({
+      where: { userId: session.user.id },
+      include: {
+        _count: { select: { pages: true } },
+      },
+      orderBy: { updatedAt: "desc" },
+    });
+
+    return NextResponse.json(sites);
+  } catch (error) {
+    console.error("GET /api/sites failed:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
-
-  const sites = await db.site.findMany({
-    where: { userId: session.user.id },
-    include: {
-      _count: { select: { pages: true } },
-    },
-    orderBy: { updatedAt: "desc" },
-  });
-
-  return NextResponse.json(sites);
 }
 
 export async function POST(req: Request) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    let body;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid JSON body" },
+        { status: 400 }
+      );
+    }
+
+    const { name, description } = body;
+
+    if (!name) {
+      return NextResponse.json({ error: "Name is required" }, { status: 400 });
+    }
+
+    const userId = session.user.id;
+
+    let slug = slugify(name);
+
+    const existing = await db.site.findUnique({ where: { slug } });
+    if (existing) {
+      slug = `${slug}-${Date.now().toString(36)}`;
+    }
+
+    const site = await db.$transaction(async (tx) => {
+      const s = await tx.site.create({
+        data: {
+          name,
+          slug,
+          description: description || null,
+          userId,
+        },
+      });
+
+      await tx.page.create({
+        data: {
+          title: "Home",
+          slug: "home",
+          isHomepage: true,
+          siteId: s.id,
+        },
+      });
+
+      return s;
+    });
+
+    return NextResponse.json(site, { status: 201 });
+  } catch (error) {
+    console.error("POST /api/sites failed:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
-
-  const { name, description } = await req.json();
-
-  if (!name) {
-    return NextResponse.json({ error: "Name is required" }, { status: 400 });
-  }
-
-  let slug = slugify(name);
-
-  const existing = await db.site.findUnique({ where: { slug } });
-  if (existing) {
-    slug = `${slug}-${Date.now().toString(36)}`;
-  }
-
-  const site = await db.site.create({
-    data: {
-      name,
-      slug,
-      description: description || null,
-      userId: session.user.id,
-    },
-  });
-
-  // Create a default homepage
-  await db.page.create({
-    data: {
-      title: "Home",
-      slug: "home",
-      isHomepage: true,
-      siteId: site.id,
-    },
-  });
-
-  return NextResponse.json(site, { status: 201 });
 }

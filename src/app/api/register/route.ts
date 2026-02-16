@@ -4,7 +4,17 @@ import { db } from "@/lib/db";
 
 export async function POST(req: Request) {
   try {
-    const { name, email, password } = await req.json();
+    let body;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid JSON body" },
+        { status: 400 }
+      );
+    }
+
+    const { name, email, password } = body;
 
     if (!email || !password) {
       return NextResponse.json(
@@ -44,7 +54,8 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json(user, { status: 201 });
-  } catch {
+  } catch (error) {
+    console.error("POST /api/register failed:", error);
     return NextResponse.json(
       { error: "Something went wrong" },
       { status: 500 }

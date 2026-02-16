@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
+import { requireAuth } from "@/lib/auth-helpers";
 import { PublishedPage } from "@/components/published/PublishedPage";
 
 interface Props {
@@ -7,10 +8,11 @@ interface Props {
 }
 
 export default async function PreviewPage({ params }: Props) {
+  const user = await requireAuth();
   const { pageId } = await params;
 
-  const page = await db.page.findUnique({
-    where: { id: pageId },
+  const page = await db.page.findFirst({
+    where: { id: pageId, site: { userId: user.id } },
     include: { blocks: { orderBy: { sortOrder: "asc" } } },
   });
 
