@@ -127,6 +127,111 @@ export default function SiteDetailPage() {
     }
   }
 
+  async function handlePublishPage(pageId: string) {
+    const res = await fetch(`/api/pages/${pageId}/publish`, { method: "POST" });
+    if (res.ok) {
+      setSite((prev) =>
+        prev
+          ? {
+              ...prev,
+              pages: prev.pages.map((p) =>
+                p.id === pageId ? { ...p, status: "PUBLISHED" as const } : p
+              ),
+            }
+          : null
+      );
+      toast("Page published");
+    } else {
+      toast("Failed to publish page", "error");
+    }
+  }
+
+  async function handleUnpublishPage(pageId: string) {
+    const res = await fetch(`/api/pages/${pageId}/publish`, { method: "DELETE" });
+    if (res.ok) {
+      setSite((prev) =>
+        prev
+          ? {
+              ...prev,
+              pages: prev.pages.map((p) =>
+                p.id === pageId ? { ...p, status: "DRAFT" as const } : p
+              ),
+            }
+          : null
+      );
+      toast("Page unpublished");
+    } else {
+      toast("Failed to unpublish page", "error");
+    }
+  }
+
+  async function handleDuplicatePage(pageId: string) {
+    try {
+      const blocksRes = await fetch(`/api/pages/${pageId}/blocks`);
+      if (!blocksRes.ok) {
+        toast("Failed to duplicate page", "error");
+        return;
+      }
+      const blocks = await blocksRes.json();
+
+      const sourcePage = site?.pages.find((p) => p.id === pageId);
+      if (!sourcePage || !site) return;
+
+      // Remap block IDs to new unique IDs, preserving parentId references for columns
+      const idMap = new Map<string, string>();
+      for (const block of blocks) {
+        const newId = crypto.randomUUID();
+        idMap.set(block.id, newId);
+      }
+
+      const templateBlocks = blocks.map((block: { id: string; type: string; content: unknown; settings: unknown; parentId: string | null }, i: number) => ({
+        id: idMap.get(block.id),
+        type: block.type,
+        content: block.content,
+        settings: block.settings,
+        sortOrder: i,
+        parentId: block.parentId ? idMap.get(block.parentId) || null : null,
+      }));
+
+      const res = await fetch("/api/pages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: `${sourcePage.title} (Copy)`,
+          siteId: site.id,
+          templateBlocks,
+        }),
+      });
+
+      if (res.ok) {
+        const newPage = await res.json();
+        setSite((prev) =>
+          prev
+            ? {
+                ...prev,
+                pages: [
+                  ...prev.pages,
+                  {
+                    id: newPage.id,
+                    title: newPage.title,
+                    slug: newPage.slug,
+                    status: newPage.status,
+                    isHomepage: newPage.isHomepage,
+                    updatedAt: newPage.updatedAt,
+                  },
+                ],
+              }
+            : null
+        );
+        toast("Page duplicated");
+      } else {
+        toast("Failed to duplicate page", "error");
+      }
+    } catch {
+      toast("Failed to duplicate page", "error");
+    }
+  }
+
   if (loading) {
     return (
       <>
@@ -189,7 +294,14 @@ export default function SiteDetailPage() {
             </Button>
           </div>
         ) : (
-          <PageList pages={site.pages} siteSlug={site.slug} onDelete={handleDeletePage} />
+          <PageList
+            pages={site.pages}
+            siteSlug={site.slug}
+            onDelete={handleDeletePage}
+            onPublish={handlePublishPage}
+            onUnpublish={handleUnpublishPage}
+            onDuplicate={handleDuplicatePage}
+          />
         )}
       </div>
 

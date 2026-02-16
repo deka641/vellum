@@ -142,6 +142,53 @@
   color: var(--color-text-tertiary);
 }
 
+/* --- Not Found --- */
+
+.notFound {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 400px;
+  padding: var(--space-16) var(--space-6);
+  gap: var(--space-4);
+}
+
+.notFoundTitle {
+  font-family: var(--font-heading);
+  font-size: var(--text-4xl);
+  font-weight: var(--weight-bold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.notFoundText {
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  color: var(--color-text-secondary);
+  max-width: 480px;
+  margin: 0;
+}
+
+.notFoundLink {
+  display: inline-block;
+  margin-top: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  background: var(--color-accent);
+  color: var(--color-surface);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  border-radius: var(--radius-md);
+  transition: background var(--duration-fast) var(--ease-out);
+}
+
+.notFoundLink:hover {
+  background: var(--color-accent-hover);
+}
+
 /* --- Responsive --- */
 
 @media (max-width: 768px) {

@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { MoreHorizontal, Trash2, FileText, Home, ExternalLink } from "lucide-react";
+import { MoreHorizontal, Trash2, FileText, Home, ExternalLink, Pencil, Globe, GlobeLock, Copy } from "lucide-react";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { IconButton } from "@/components/ui/IconButton/IconButton";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/Dropdown/Dropdown";
 import { formatRelativeDate } from "@/lib/utils";
@@ -26,9 +27,12 @@ interface PageListProps {
   pages: Page[];
   siteSlug: string;
   onDelete: (id: string) => void;
+  onPublish: (id: string) => void;
+  onUnpublish: (id: string) => void;
+  onDuplicate: (id: string) => void;
 }
 
-export function PageList({ pages, siteSlug, onDelete }: PageListProps) {
+export function PageList({ pages, siteSlug, onDelete, onPublish, onUnpublish, onDuplicate }: PageListProps) {
   return (
     <div className={styles.list}>
       {pages.map((page) => (
@@ -59,6 +63,12 @@ export function PageList({ pages, siteSlug, onDelete }: PageListProps) {
                 <IconButton icon={<MoreHorizontal />} label="Page options" size="sm" />
               </DropdownMenuTrigger>
               <DropdownMenuContent>
+                <DropdownMenuItem asChild>
+                  <Link href={`/editor/${page.id}`}>
+                    <Pencil size={16} />
+                    Edit
+                  </Link>
+                </DropdownMenuItem>
                 {page.status === "PUBLISHED" && (
                   <DropdownMenuItem asChild>
                     <a
@@ -67,10 +77,26 @@ export function PageList({ pages, siteSlug, onDelete }: PageListProps) {
                       rel="noopener noreferrer"
                     >
                       <ExternalLink size={16} />
-                      View page
+                      View published
                     </a>
                   </DropdownMenuItem>
                 )}
+                {page.status === "DRAFT" ? (
+                  <DropdownMenuItem onClick={() => onPublish(page.id)}>
+                    <Globe size={16} />
+                    Publish
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem onClick={() => onUnpublish(page.id)}>
+                    <GlobeLock size={16} />
+                    Unpublish
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onClick={() => onDuplicate(page.id)}>
+                  <Copy size={16} />
+                  Duplicate
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem danger onClick={() => onDelete(page.id)}>
                   <Trash2 size={16} />
                   Delete page

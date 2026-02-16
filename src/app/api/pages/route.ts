@@ -102,6 +102,7 @@ export async function POST(req: Request) {
         const cleanBlocks = sanitizeBlocks(templateBlocks);
         await tx.block.createMany({
           data: cleanBlocks.map((block, i: number) => ({
+            ...(block.id ? { id: block.id as string } : {}),
             type: block.type,
             content: (block.content || {}) as Prisma.InputJsonValue,
             settings: (block.settings || {}) as Prisma.InputJsonValue,

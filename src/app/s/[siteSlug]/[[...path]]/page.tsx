@@ -31,6 +31,36 @@ function findFirstImageSrc(blocks: BlockLike[]): string | undefined {
   return undefined;
 }
 
+function stripHtmlTags(html: string): string {
+  return html.replace(/<[^>]*>/g, "").trim();
+}
+
+function extractTextSnippet(blocks: BlockLike[], maxLength = 160): string | undefined {
+  for (const block of blocks) {
+    if (block.type === "text" && typeof block.content.html === "string") {
+      const text = stripHtmlTags(block.content.html);
+      if (text) {
+        return text.length > maxLength ? text.slice(0, maxLength - 1) + "\u2026" : text;
+      }
+    }
+    if (block.type === "heading" && typeof block.content.text === "string") {
+      const text = block.content.text.trim();
+      if (text) {
+        return text.length > maxLength ? text.slice(0, maxLength - 1) + "\u2026" : text;
+      }
+    }
+    if (block.type === "columns" && Array.isArray(block.content.columns)) {
+      for (const col of block.content.columns as Array<{ blocks?: BlockLike[] }>) {
+        if (Array.isArray(col.blocks)) {
+          const snippet = extractTextSnippet(col.blocks, maxLength);
+          if (snippet) return snippet;
+        }
+      }
+    }
+  }
+  return undefined;
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { siteSlug, path: pathSegments } = await params;
   const pageSlug = pathSegments?.[0] || "home";
@@ -47,12 +77,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const baseUrl = await getBaseUrl();
   const canonical = buildPageUrl(baseUrl, siteSlug, page.isHomepage, page.slug);
-  const description = page.description || site.description || undefined;
 
   const blockData = page.blocks.map((b) => ({
     type: b.type,
     content: b.content as Record<string, unknown>,
   }));
+
+  const description = page.description
+    || extractTextSnippet(blockData)
+    || (page.isHomepage ? site.description : undefined)
+    || undefined;
   const ogImage = findFirstImageSrc(blockData);
 
   return {
