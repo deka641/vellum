@@ -13,11 +13,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/Dropdown/Dropdown";
+import dynamic from "next/dynamic";
 import { useEditorStore } from "@/stores/editor-store";
 import { useAutosave } from "@/hooks/use-autosave";
-import { KeyboardShortcutsDialog } from "./KeyboardShortcutsDialog";
-import { SaveAsTemplateDialog } from "./SaveAsTemplateDialog";
 import styles from "./EditorToolbar.module.css";
+
+const KeyboardShortcutsDialog = dynamic(
+  () => import("./KeyboardShortcutsDialog").then((m) => m.KeyboardShortcutsDialog),
+  { ssr: false }
+);
+const SaveAsTemplateDialog = dynamic(
+  () => import("./SaveAsTemplateDialog").then((m) => m.SaveAsTemplateDialog),
+  { ssr: false }
+);
 
 function getRelativeTime(dateStr: string): string {
   const now = Date.now();

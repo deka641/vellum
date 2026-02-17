@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { slugify, generateId } from "@/lib/utils";
@@ -154,6 +155,7 @@ export async function POST(req: Request) {
       return p;
     });
 
+    revalidateTag("dashboard", { expire: 0 });
     return NextResponse.json(page, { status: 201 });
   } catch (error) {
     return apiError("POST /api/pages", error);

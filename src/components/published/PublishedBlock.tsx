@@ -90,6 +90,8 @@ export function PublishedBlock({ block, pageId }: PublishedBlockProps) {
             alt={(content.alt as string) || ""}
             className={styles.image}
             loading="lazy"
+            {...(typeof content.width === "number" && content.width > 0 ? { width: content.width } : {})}
+            {...(typeof content.height === "number" && content.height > 0 ? { height: content.height } : {})}
             style={{
               borderRadius: settings.rounded ? "var(--radius-lg)" : undefined,
               boxShadow: settings.shadow ? "var(--shadow-lg)" : undefined,

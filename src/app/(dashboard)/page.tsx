@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import { Globe, FileText, Send, Image as ImageIcon, Plus, Upload, LayoutTemplate, FileEdit, Inbox } from "lucide-react";
 import { requireAuth } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
@@ -7,49 +8,60 @@ import { GettingStarted } from "@/components/dashboard/GettingStarted";
 import { formatDate } from "@/lib/utils";
 import styles from "./home.module.css";
 
+const getDashboardData = unstable_cache(
+  async (userId: string) => {
+    const [siteCount, pageCount, publishedCount, submissionCount, mediaCount, recentPages, recentSubmissions, firstSite] =
+      await Promise.all([
+        db.site.count({ where: { userId } }),
+        db.page.count({ where: { site: { userId } } }),
+        db.page.count({ where: { site: { userId }, status: "PUBLISHED" } }),
+        db.formSubmission.count({
+          where: {
+            page: { site: { userId } },
+            createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
+          },
+        }),
+        db.media.count({ where: { userId } }),
+        db.page.findMany({
+          where: { site: { userId } },
+          orderBy: { updatedAt: "desc" },
+          take: 5,
+          select: {
+            id: true,
+            title: true,
+            status: true,
+            updatedAt: true,
+            site: { select: { name: true, id: true } },
+          },
+        }),
+        db.formSubmission.findMany({
+          where: { page: { site: { userId } } },
+          orderBy: { createdAt: "desc" },
+          take: 5,
+          select: {
+            id: true,
+            createdAt: true,
+            page: { select: { title: true } },
+          },
+        }),
+        db.site.findFirst({
+          where: { userId },
+          orderBy: { createdAt: "asc" },
+          select: { id: true },
+        }),
+      ]);
+
+    return { siteCount, pageCount, publishedCount, submissionCount, mediaCount, recentPages, recentSubmissions, firstSite };
+  },
+  ["dashboard"],
+  { revalidate: 30, tags: ["dashboard"] }
+);
+
 export default async function DashboardPage() {
   const user = await requireAuth();
 
-  const [siteCount, pageCount, publishedCount, submissionCount, mediaCount, recentPages, recentSubmissions, firstSite] =
-    await Promise.all([
-      db.site.count({ where: { userId: user.id } }),
-      db.page.count({ where: { site: { userId: user.id } } }),
-      db.page.count({ where: { site: { userId: user.id }, status: "PUBLISHED" } }),
-      db.formSubmission.count({
-        where: {
-          page: { site: { userId: user.id } },
-          createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
-        },
-      }),
-      db.media.count({ where: { userId: user.id } }),
-      db.page.findMany({
-        where: { site: { userId: user.id } },
-        orderBy: { updatedAt: "desc" },
-        take: 5,
-        select: {
-          id: true,
-          title: true,
-          status: true,
-          updatedAt: true,
-          site: { select: { name: true, id: true } },
-        },
-      }),
-      db.formSubmission.findMany({
-        where: { page: { site: { userId: user.id } } },
-        orderBy: { createdAt: "desc" },
-        take: 5,
-        select: {
-          id: true,
-          createdAt: true,
-          page: { select: { title: true } },
-        },
-      }),
-      db.site.findFirst({
-        where: { userId: user.id },
-        orderBy: { createdAt: "asc" },
-        select: { id: true },
-      }),
-    ]);
+  const { siteCount, pageCount, publishedCount, submissionCount, mediaCount, recentPages, recentSubmissions, firstSite } =
+    await getDashboardData(user.id);
 
   return (
     <>

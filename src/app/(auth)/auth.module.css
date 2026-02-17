@@ -77,6 +77,22 @@
   text-decoration: underline;
 }
 
+.forgotLink {
+  text-align: right;
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.forgotLink a {
+  color: var(--color-text-tertiary);
+  text-decoration: none;
+}
+
+.forgotLink a:hover {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
+
 .errorAlert {
   padding: var(--space-3);
   background: var(--color-error-light);

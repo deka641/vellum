@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import sanitize from "sanitize-html";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -83,6 +84,7 @@ export async function POST(
       },
     });
 
+    revalidateTag("dashboard", { expire: 0 });
     return NextResponse.json({ id: submission.id }, { status: 201 });
   } catch (error) {
     return apiError("POST /api/forms/[formId]", error);

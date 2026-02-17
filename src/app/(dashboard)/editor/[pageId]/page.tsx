@@ -1,20 +1,28 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
 import { useEditorStore } from "@/stores/editor-store";
 import { useAutosave } from "@/hooks/use-autosave";
 import { EditorToolbar } from "@/components/editor/EditorToolbar";
 import { EditorCanvas } from "@/components/editor/EditorCanvas";
 import { EditorSidebar } from "@/components/editor/EditorSidebar";
-import { ConflictBanner } from "@/components/editor/ConflictBanner";
-import { PublishSuccessDialog } from "@/components/editor/PublishSuccessDialog";
 import { useToast } from "@/components/ui/Toast/Toast";
 import { Skeleton } from "@/components/ui/Skeleton/Skeleton";
 import { Button } from "@/components/ui/Button/Button";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import type { EditorBlock } from "@/types/blocks";
 import styles from "./editor.module.css";
+
+const ConflictBanner = dynamic(
+  () => import("@/components/editor/ConflictBanner").then((m) => m.ConflictBanner),
+  { ssr: false }
+);
+const PublishSuccessDialog = dynamic(
+  () => import("@/components/editor/PublishSuccessDialog").then((m) => m.PublishSuccessDialog),
+  { ssr: false }
+);
 
 export default function EditorPage() {
   const params = useParams();

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { saveUploadedFile, UnsafeFileTypeError } from "@/lib/upload";
@@ -114,6 +115,7 @@ export async function POST(req: Request) {
         },
       });
 
+      revalidateTag("dashboard", { expire: 0 });
       return NextResponse.json(media, { status: 201 });
     } catch (error) {
       if (error instanceof UnsafeFileTypeError) {

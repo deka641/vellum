@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { parseBody, updatePageSchema } from "@/lib/validations";
@@ -167,6 +168,7 @@ export async function DELETE(
       });
     }
 
+    revalidateTag("dashboard", { expire: 0 });
     return NextResponse.json({ success: true });
   } catch (error) {
     return apiError("DELETE /api/pages/[pageId]", error);

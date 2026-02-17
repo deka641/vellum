@@ -20,8 +20,13 @@ export function Footer() {
             </div>
             <div className={styles.footerLinkGroup}>
               <h4 className={styles.footerLinkTitle}>Resources</h4>
-              <Link href="/login" className={styles.footerLink}>Templates</Link>
-              <Link href="/login" className={styles.footerLink}>Media Library</Link>
+              <Link href="/register" className={styles.footerLink}>Templates</Link>
+              <Link href="/register" className={styles.footerLink}>Media Library</Link>
+            </div>
+            <div className={styles.footerLinkGroup}>
+              <h4 className={styles.footerLinkTitle}>Legal</h4>
+              <Link href="/privacy" className={styles.footerLink}>Privacy Policy</Link>
+              <Link href="/terms" className={styles.footerLink}>Terms of Service</Link>
             </div>
           </div>
         </div>

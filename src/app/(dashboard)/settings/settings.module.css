@@ -30,3 +30,31 @@
   display: flex;
   justify-content: flex-end;
 }
+
+.errorState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-12) var(--space-4);
+  text-align: center;
+}
+
+.errorIcon {
+  color: var(--color-text-tertiary);
+}
+
+.errorTitle {
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-primary);
+  letter-spacing: normal;
+}
+
+.errorText {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  max-width: 360px;
+  line-height: var(--leading-relaxed);
+}

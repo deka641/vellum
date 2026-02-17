@@ -54,6 +54,8 @@ export function ImageBlock({ id, content, settings }: ImageBlockProps) {
               src: media.url,
               alt: media.alt || "",
               mediaId: media.id,
+              ...(media.width ? { width: media.width } : {}),
+              ...(media.height ? { height: media.height } : {}),
             });
           }}
         />

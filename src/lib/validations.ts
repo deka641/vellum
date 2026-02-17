@@ -182,6 +182,17 @@ export const formSubmissionSchema = z.object({
   data: z.record(z.string(), z.string().max(10000)),
 });
 
+// --- Password Reset ---
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().email().max(254),
+});
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1).max(200),
+  password: z.string().min(8).max(200),
+});
+
 // --- Block hierarchy validation ---
 
 const DISALLOWED_NESTED_TYPES = ["columns", "form", "video"];

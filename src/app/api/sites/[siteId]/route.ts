@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { apiError } from "@/lib/api-helpers";
@@ -120,6 +120,7 @@ export async function DELETE(
 
     await db.site.delete({ where: { id: siteId } });
 
+    revalidateTag("dashboard", { expire: 0 });
     return NextResponse.json({ success: true });
   } catch (error) {
     return apiError("DELETE /api/sites/[siteId]", error);

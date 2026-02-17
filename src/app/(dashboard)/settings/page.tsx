@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { Input } from "@/components/ui/Input/Input";
 import { Button } from "@/components/ui/Button/Button";
+import { Skeleton } from "@/components/ui/Skeleton/Skeleton";
 import { useToast } from "@/components/ui/Toast/Toast";
+import { AlertCircle, RefreshCw } from "lucide-react";
 import styles from "./settings.module.css";
 
 export default function UserSettingsPage() {
@@ -13,30 +15,39 @@ export default function UserSettingsPage() {
   const [email, setEmail] = useState("");
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
 
-  useEffect(() => {
-    fetch("/api/user/profile")
-      .then((res) => {
-        if (res.status === 405) {
-          // GET not implemented, use session data
-          return null;
-        }
-        return res.json();
-      })
-      .then((data) => {
-        if (data) {
-          setName(data.name || "");
-          setEmail(data.email || "");
-        }
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+  const loadProfile = useCallback(async () => {
+    setLoading(true);
+    setFetchError(false);
+    try {
+      const res = await fetch("/api/user/profile");
+      if (res.status === 405) {
+        // GET not implemented, use session data
+        return;
+      }
+      if (!res.ok) throw new Error("Failed to load profile");
+      const data = await res.json();
+      if (data) {
+        setName(data.name || "");
+        setEmail(data.email || "");
+      }
+    } catch (err) {
+      console.error("Failed to load profile:", err);
+      setFetchError(true);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
 
   async function handleSaveProfile(e: React.FormEvent) {
     e.preventDefault();
@@ -95,7 +106,46 @@ export default function UserSettingsPage() {
     }
   }
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <>
+        <Topbar title="Settings" description="Manage your profile and account" />
+        <div className={styles.content}>
+          <div className={styles.section}>
+            <Skeleton height={24} width={80} />
+            <Skeleton height={40} />
+            <Skeleton height={40} />
+          </div>
+          <div className={styles.section}>
+            <Skeleton height={24} width={140} />
+            <Skeleton height={40} />
+            <Skeleton height={40} />
+            <Skeleton height={40} />
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <>
+        <Topbar title="Settings" description="Manage your profile and account" />
+        <div className={styles.content}>
+          <div className={styles.errorState}>
+            <AlertCircle size={32} className={styles.errorIcon} />
+            <h3 className={styles.errorTitle}>Failed to load profile</h3>
+            <p className={styles.errorText}>
+              Something went wrong while loading your profile. Please try again.
+            </p>
+            <Button onClick={loadProfile} leftIcon={<RefreshCw size={16} />}>
+              Try again
+            </Button>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
