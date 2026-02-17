@@ -1,18 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { Image as ImageIcon, FolderOpen } from "lucide-react";
 import { useEditorStore } from "@/stores/editor-store";
 import { MediaPickerModal } from "@/components/editor/MediaPickerModal";
-import type { ImageContent } from "@/types/blocks";
+import type { ImageContent, BlockSettings } from "@/types/blocks";
 import styles from "./blocks.module.css";
 
 interface ImageBlockProps {
   id: string;
   content: ImageContent;
+  settings?: BlockSettings;
 }
 
-export function ImageBlock({ id, content }: ImageBlockProps) {
+export function ImageBlock({ id, content, settings }: ImageBlockProps) {
   const updateBlockContent = useEditorStore((s) => s.updateBlockContent);
   const [pickerOpen, setPickerOpen] = useState(false);
 
@@ -60,9 +61,20 @@ export function ImageBlock({ id, content }: ImageBlockProps) {
     );
   }
 
+  const imgStyle: CSSProperties = {
+    ...(settings?.width && { width: settings.width as string }),
+    ...(settings?.rounded && { borderRadius: "var(--radius-lg)" }),
+    ...(settings?.shadow && { boxShadow: "var(--shadow-lg)" }),
+  };
+
   return (
     <div className={styles.imageWrapper}>
-      <img src={content.src} alt={content.alt || ""} className={styles.image} />
+      <img
+        src={content.src}
+        alt={content.alt || ""}
+        className={styles.image}
+        style={imgStyle}
+      />
       {content.caption && (
         <p className={styles.imageCaption}>{content.caption}</p>
       )}

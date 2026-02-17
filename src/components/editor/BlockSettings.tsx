@@ -64,7 +64,7 @@ export function BlockSettings() {
   };
 
   const hasAlign = ["heading", "text", "button", "quote", "social"].includes(block.type);
-  const hasStyle = ["heading", "text", "button", "image", "columns", "quote", "code"].includes(block.type);
+  const hasStyle = ["heading", "text", "button", "image", "columns", "quote", "code", "divider", "video"].includes(block.type);
 
   return (
     <div className={styles.panel}>
@@ -196,6 +196,44 @@ export function BlockSettings() {
                 <span className={styles.label}>Open in new tab</span>
               </label>
             )}
+            <div className={styles.separator} />
+            <div className={styles.field}>
+              <label className={styles.label}>Width</label>
+              <div className={styles.buttonGroup}>
+                {([
+                  { label: "25%", value: "25%" },
+                  { label: "50%", value: "50%" },
+                  { label: "75%", value: "75%" },
+                  { label: "100%", value: "" },
+                ] as const).map((w) => (
+                  <button
+                    key={w.label}
+                    className={`${styles.alignBtn} ${
+                      (block.settings.width || "") === w.value ? styles.active : ""
+                    }`}
+                    onClick={() => handleSettingsUpdate(block.id, { width: w.value || undefined })}
+                  >
+                    {w.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <label className={styles.checkboxRow}>
+              <input
+                type="checkbox"
+                checked={block.settings.rounded === true}
+                onChange={(e) => handleSettingsUpdate(block.id, { rounded: e.target.checked || undefined })}
+              />
+              <span className={styles.label}>Rounded corners</span>
+            </label>
+            <label className={styles.checkboxRow}>
+              <input
+                type="checkbox"
+                checked={block.settings.shadow === true}
+                onChange={(e) => handleSettingsUpdate(block.id, { shadow: e.target.checked || undefined })}
+              />
+              <span className={styles.label}>Shadow</span>
+            </label>
           </>
         )}
 
@@ -243,14 +281,36 @@ export function BlockSettings() {
 
         {/* Video-specific */}
         {block.type === "video" && (
-          <Input
-            label="Video URL"
-            value={(block.content as VideoContent).url}
-            onChange={(e) =>
-              handleContentUpdate(block.id, { url: e.target.value })
-            }
-            placeholder="YouTube or Vimeo URL"
-          />
+          <>
+            <Input
+              label="Video URL"
+              value={(block.content as VideoContent).url}
+              onChange={(e) =>
+                handleContentUpdate(block.id, { url: e.target.value })
+              }
+              placeholder="YouTube or Vimeo URL"
+            />
+            <div className={styles.field}>
+              <label className={styles.label}>Aspect ratio</label>
+              <div className={styles.buttonGroup}>
+                {([
+                  { label: "16:9", value: "16/9" },
+                  { label: "4:3", value: "4/3" },
+                  { label: "1:1", value: "1/1" },
+                ] as const).map((ar) => (
+                  <button
+                    key={ar.label}
+                    className={`${styles.alignBtn} ${
+                      ((block.settings.aspectRatio as string) || "16/9") === ar.value ? styles.active : ""
+                    }`}
+                    onClick={() => handleSettingsUpdate(block.id, { aspectRatio: ar.value })}
+                  >
+                    {ar.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
         )}
 
         {/* Code-specific */}
@@ -275,22 +335,41 @@ export function BlockSettings() {
 
         {/* Divider-specific */}
         {block.type === "divider" && (
-          <div className={styles.field}>
-            <label className={styles.label}>Style</label>
-            <div className={styles.buttonGroup}>
-              {(["solid", "dashed", "dotted"] as const).map((s) => (
-                <button
-                  key={s}
-                  className={`${styles.alignBtn} ${
-                    (block.settings.style || "solid") === s ? styles.active : ""
-                  }`}
-                  onClick={() => handleSettingsUpdate(block.id, { style: s })}
-                >
-                  {s}
-                </button>
-              ))}
+          <>
+            <div className={styles.field}>
+              <label className={styles.label}>Style</label>
+              <div className={styles.buttonGroup}>
+                {(["solid", "dashed", "dotted"] as const).map((s) => (
+                  <button
+                    key={s}
+                    className={`${styles.alignBtn} ${
+                      (block.settings.style || "solid") === s ? styles.active : ""
+                    }`}
+                    onClick={() => handleSettingsUpdate(block.id, { style: s })}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+            <div className={styles.field}>
+              <label className={styles.label}>Color</label>
+              <div className={styles.colorRow}>
+                <input
+                  type="color"
+                  className={styles.colorInput}
+                  value={(block.settings.color as string) || "#d4d0cb"}
+                  onChange={(e) => handleSettingsUpdate(block.id, { color: e.target.value })}
+                />
+                <span className={styles.colorHex}>{(block.settings.color as string) || "default"}</span>
+                {block.settings.color && (
+                  <button className={styles.clearBtn} onClick={() => handleSettingsUpdate(block.id, { color: undefined })}>
+                    clear
+                  </button>
+                )}
+              </div>
+            </div>
+          </>
         )}
 
         {/* Quote-specific */}
@@ -307,6 +386,30 @@ export function BlockSettings() {
                   onClick={() => handleContentUpdate(block.id, { style: s })}
                 >
                   {s}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Columns-specific */}
+        {block.type === "columns" && (
+          <div className={styles.field}>
+            <label className={styles.label}>Gap</label>
+            <div className={styles.buttonGroup}>
+              {([
+                { label: "S", value: "12px" },
+                { label: "M", value: "24px" },
+                { label: "L", value: "48px" },
+              ] as const).map((g) => (
+                <button
+                  key={g.label}
+                  className={`${styles.alignBtn} ${
+                    ((block.settings.gap as string) || "24px") === g.value ? styles.active : ""
+                  }`}
+                  onClick={() => handleSettingsUpdate(block.id, { gap: g.value })}
+                >
+                  {g.label}
                 </button>
               ))}
             </div>

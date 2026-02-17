@@ -8,6 +8,7 @@ import { MediaUploader } from "@/components/media/MediaUploader";
 import { Skeleton } from "@/components/ui/Skeleton/Skeleton";
 import { Button } from "@/components/ui/Button/Button";
 import { useToast } from "@/components/ui/Toast/Toast";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog/ConfirmDialog";
 import styles from "./media-page.module.css";
 import mediaStyles from "@/components/media/media.module.css";
 
@@ -35,6 +36,8 @@ export default function MediaPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
   const { toast } = useToast();
 
   // Debounce search input
@@ -75,15 +78,20 @@ export default function MediaPage() {
     fetchMedia();
   }, [fetchMedia]);
 
-  async function handleDelete(id: string) {
-    if (!confirm("Delete this file?")) return;
-    const res = await fetch(`/api/media/${id}`, { method: "DELETE" });
+  function handleDelete(id: string) {
+    setDeleteTarget(id);
+  }
+
+  async function confirmDeleteFile() {
+    if (!deleteTarget) return;
+    const res = await fetch(`/api/media/${deleteTarget}`, { method: "DELETE" });
     if (res.ok) {
       toast("File deleted");
       fetchMedia();
     } else {
       toast("Failed to delete file", "error");
     }
+    setDeleteTarget(null);
   }
 
   function handleToggleSelect(id: string) {
@@ -95,10 +103,12 @@ export default function MediaPage() {
     });
   }
 
-  async function handleBulkDelete() {
+  function handleBulkDelete() {
     if (selectedIds.size === 0) return;
-    if (!confirm(`Delete ${selectedIds.size} selected file(s)?`)) return;
+    setConfirmBulkDelete(true);
+  }
 
+  async function confirmBulkDeleteFiles() {
     const ids = Array.from(selectedIds);
     try {
       const res = await fetch("/api/media/bulk-delete", {
@@ -238,6 +248,24 @@ export default function MediaPage() {
           </>
         )}
       </div>
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        title="Delete file"
+        description="Are you sure you want to delete this file?"
+        confirmLabel="Delete"
+        variant="danger"
+        onConfirm={confirmDeleteFile}
+      />
+      <ConfirmDialog
+        open={confirmBulkDelete}
+        onOpenChange={setConfirmBulkDelete}
+        title="Delete selected files"
+        description={`Are you sure you want to delete ${selectedIds.size} selected file(s)?`}
+        confirmLabel="Delete all"
+        variant="danger"
+        onConfirm={confirmBulkDeleteFiles}
+      />
     </>
   );
 }

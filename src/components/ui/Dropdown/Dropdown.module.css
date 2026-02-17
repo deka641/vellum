@@ -73,3 +73,12 @@
     transform: translateY(0);
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .content {
+    animation: none;
+  }
+  .item {
+    transition-duration: 0.01ms;
+  }
+}

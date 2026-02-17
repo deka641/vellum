@@ -17,6 +17,7 @@ import {
   DialogFooter,
 } from "@/components/ui/Dialog/Dialog";
 import { Input } from "@/components/ui/Input/Input";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog/ConfirmDialog";
 import styles from "./site-detail.module.css";
 import dialogStyles from "@/components/ui/Dialog/Dialog.module.css";
 
@@ -62,6 +63,8 @@ export default function SiteDetailPage() {
   const [statusFilter, setStatusFilter] = useState<"ALL" | "DRAFT" | "PUBLISHED">("ALL");
   const [showTrash, setShowTrash] = useState(false);
   const [trashedPages, setTrashedPages] = useState<PageItem[]>([]);
+  const [deletePageId, setDeletePageId] = useState<string | null>(null);
+  const [permDeletePageId, setPermDeletePageId] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`/api/sites/${params.siteId}`)
@@ -130,14 +133,17 @@ export default function SiteDetailPage() {
     } catch { /* ignore */ }
   }
 
-  async function handleDeletePage(pageId: string) {
-    if (!confirm("Move this page to trash?")) return;
+  function handleDeletePage(pageId: string) {
+    setDeletePageId(pageId);
+  }
 
-    const res = await fetch(`/api/pages/${pageId}`, { method: "DELETE" });
+  async function confirmDeletePage() {
+    if (!deletePageId) return;
+    const res = await fetch(`/api/pages/${deletePageId}`, { method: "DELETE" });
     if (res.ok) {
-      const deletedPage = site?.pages.find((p) => p.id === pageId);
+      const deletedPage = site?.pages.find((p) => p.id === deletePageId);
       setSite((prev) =>
-        prev ? { ...prev, pages: prev.pages.filter((p) => p.id !== pageId) } : null
+        prev ? { ...prev, pages: prev.pages.filter((p) => p.id !== deletePageId) } : null
       );
       if (deletedPage) {
         setTrashedPages((prev) => [...prev, { ...deletedPage, deletedAt: new Date().toISOString(), status: "DRAFT" }]);
@@ -146,6 +152,7 @@ export default function SiteDetailPage() {
     } else {
       toast("Failed to delete page", "error");
     }
+    setDeletePageId(null);
   }
 
   async function handleRestorePage(pageId: string) {
@@ -162,16 +169,20 @@ export default function SiteDetailPage() {
     }
   }
 
-  async function handlePermanentDelete(pageId: string) {
-    if (!confirm("Permanently delete this page? This cannot be undone.")) return;
+  function handlePermanentDelete(pageId: string) {
+    setPermDeletePageId(pageId);
+  }
 
-    const res = await fetch(`/api/pages/${pageId}?permanent=true`, { method: "DELETE" });
+  async function confirmPermanentDelete() {
+    if (!permDeletePageId) return;
+    const res = await fetch(`/api/pages/${permDeletePageId}?permanent=true`, { method: "DELETE" });
     if (res.ok) {
-      setTrashedPages((prev) => prev.filter((p) => p.id !== pageId));
+      setTrashedPages((prev) => prev.filter((p) => p.id !== permDeletePageId));
       toast("Page permanently deleted");
     } else {
       toast("Failed to delete page", "error");
     }
+    setPermDeletePageId(null);
   }
 
   async function handlePublishPage(pageId: string) {
@@ -470,6 +481,24 @@ export default function SiteDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <ConfirmDialog
+        open={deletePageId !== null}
+        onOpenChange={(open) => { if (!open) setDeletePageId(null); }}
+        title="Move to trash"
+        description="Move this page to trash? You can restore it later."
+        confirmLabel="Move to trash"
+        variant="danger"
+        onConfirm={confirmDeletePage}
+      />
+      <ConfirmDialog
+        open={permDeletePageId !== null}
+        onOpenChange={(open) => { if (!open) setPermDeletePageId(null); }}
+        title="Permanently delete"
+        description="Permanently delete this page? This cannot be undone."
+        confirmLabel="Delete forever"
+        variant="danger"
+        onConfirm={confirmPermanentDelete}
+      />
     </>
   );
 }

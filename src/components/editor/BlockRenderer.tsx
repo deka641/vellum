@@ -29,7 +29,7 @@ function BlockContent({ block }: BlockRendererProps) {
     case "text":
       return <TextBlock id={block.id} content={block.content as TextContent} settings={block.settings} />;
     case "image":
-      return <ImageBlock id={block.id} content={block.content as ImageContent} />;
+      return <ImageBlock id={block.id} content={block.content as ImageContent} settings={block.settings} />;
     case "button":
       return <ButtonBlock id={block.id} content={block.content as ButtonContent} />;
     case "spacer":

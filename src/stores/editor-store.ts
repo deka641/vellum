@@ -227,9 +227,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   duplicateBlock: (id) =>
     set((state) => {
-      const index = state.blocks.findIndex((b) => b.id === id);
-      if (index === -1) return state;
-
       function cloneBlock(block: EditorBlock): EditorBlock {
         const cloned = structuredClone(block);
         cloned.id = generateId();
@@ -242,16 +239,46 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         return cloned;
       }
 
-      const duplicate = cloneBlock(state.blocks[index]);
-      const newBlocks = [...state.blocks];
-      newBlocks.splice(index + 1, 0, duplicate);
-      return {
-        blocks: newBlocks,
-        selectedBlockId: duplicate.id,
-        isDirty: true,
-        saveError: null,
-        ...pushHistory({ ...state, blocks: newBlocks }),
-      };
+      // Try top-level first
+      const topIndex = state.blocks.findIndex((b) => b.id === id);
+      if (topIndex !== -1) {
+        const duplicate = cloneBlock(state.blocks[topIndex]);
+        const newBlocks = [...state.blocks];
+        newBlocks.splice(topIndex + 1, 0, duplicate);
+        return {
+          blocks: newBlocks,
+          selectedBlockId: duplicate.id,
+          isDirty: true,
+          saveError: null,
+          ...pushHistory({ ...state, blocks: newBlocks }),
+        };
+      }
+
+      // Search inside column children
+      for (const block of state.blocks) {
+        if (block.type !== "columns") continue;
+        const cols = (block.content as ColumnsContent).columns;
+        for (let ci = 0; ci < cols.length; ci++) {
+          const colBlocks = cols[ci].blocks;
+          const idx = colBlocks.findIndex((cb) => cb.id === id);
+          if (idx === -1) continue;
+          const duplicate = cloneBlock(colBlocks[idx]);
+          const newCols = structuredClone(cols);
+          newCols[ci].blocks.splice(idx + 1, 0, duplicate);
+          const newBlocks = state.blocks.map((b) =>
+            b.id === block.id ? { ...b, content: { columns: newCols } } : b
+          );
+          return {
+            blocks: newBlocks,
+            selectedBlockId: duplicate.id,
+            isDirty: true,
+            saveError: null,
+            ...pushHistory({ ...state, blocks: newBlocks }),
+          };
+        }
+      }
+
+      return state;
     }),
 
   setPreviewMode: (mode) => set({ previewMode: mode }),

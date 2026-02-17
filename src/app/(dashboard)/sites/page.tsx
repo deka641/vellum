@@ -8,6 +8,7 @@ import { SiteCard } from "@/components/dashboard/SiteCard";
 import { Button } from "@/components/ui/Button/Button";
 import { Skeleton } from "@/components/ui/Skeleton/Skeleton";
 import { useToast } from "@/components/ui/Toast/Toast";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog/ConfirmDialog";
 import styles from "./sites.module.css";
 
 interface Site {
@@ -22,6 +23,7 @@ interface Site {
 export default function SitesPage() {
   const [sites, setSites] = useState<Site[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteSiteId, setDeleteSiteId] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -31,16 +33,20 @@ export default function SitesPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  async function handleDelete(id: string) {
-    if (!confirm("Are you sure you want to delete this site?")) return;
+  function handleDelete(id: string) {
+    setDeleteSiteId(id);
+  }
 
-    const res = await fetch(`/api/sites/${id}`, { method: "DELETE" });
+  async function confirmDeleteSite() {
+    if (!deleteSiteId) return;
+    const res = await fetch(`/api/sites/${deleteSiteId}`, { method: "DELETE" });
     if (res.ok) {
-      setSites((prev) => prev.filter((s) => s.id !== id));
+      setSites((prev) => prev.filter((s) => s.id !== deleteSiteId));
       toast("Site deleted");
     } else {
       toast("Failed to delete site", "error");
     }
+    setDeleteSiteId(null);
   }
 
   return (
@@ -78,6 +84,15 @@ export default function SitesPage() {
           </div>
         )}
       </div>
+      <ConfirmDialog
+        open={deleteSiteId !== null}
+        onOpenChange={(open) => { if (!open) setDeleteSiteId(null); }}
+        title="Delete site"
+        description="Are you sure you want to delete this site? This cannot be undone."
+        confirmLabel="Delete"
+        variant="danger"
+        onConfirm={confirmDeleteSite}
+      />
     </>
   );
 }

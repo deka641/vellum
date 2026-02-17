@@ -79,6 +79,25 @@ export default function EditorPage() {
           duplicateBlock(selectedBlockId);
         }
       }
+      if (e.altKey && (e.key === "ArrowUp" || e.key === "ArrowDown")) {
+        const target = e.target as HTMLElement;
+        const isEditing =
+          target.isContentEditable ||
+          target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.closest(".tiptap");
+        if (isEditing) return;
+        const { selectedBlockId, blocks, moveBlock } = useEditorStore.getState();
+        if (!selectedBlockId) return;
+        const index = blocks.findIndex((b) => b.id === selectedBlockId);
+        if (index === -1) return;
+        e.preventDefault();
+        if (e.key === "ArrowUp" && index > 0) {
+          moveBlock(index, index - 1);
+        } else if (e.key === "ArrowDown" && index < blocks.length - 1) {
+          moveBlock(index, index + 1);
+        }
+      }
       if (e.key === "Escape") {
         useEditorStore.getState().selectBlock(null);
       }

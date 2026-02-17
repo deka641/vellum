@@ -58,3 +58,12 @@
   padding-top: var(--space-4);
   border-top: 1px solid var(--color-border-light);
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition-duration: 0.01ms;
+  }
+  .hover:hover {
+    transform: none;
+  }
+}

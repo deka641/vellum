@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { X, CheckCircle, AlertCircle, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import styles from "./Toast.module.css";
@@ -32,6 +32,7 @@ export function useToast() {
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const prefersReducedMotion = useReducedMotion();
 
   const addToast = useCallback((message: string, variant: ToastVariant = "success", action?: ToastAction) => {
     const id = Math.random().toString(36).slice(2);
@@ -59,10 +60,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           {toasts.map((t) => (
             <motion.div
               key={t.id}
-              initial={{ opacity: 0, y: 16, scale: 0.95 }}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 16, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -8, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
+              exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -8, scale: 0.95 }}
+              transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2 }}
               className={cn(styles.toast, styles[t.variant])}
             >
               <span className={styles.icon}>{icons[t.variant]}</span>

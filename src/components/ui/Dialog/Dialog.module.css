@@ -90,3 +90,15 @@
     transform: translate(-50%, -50%) scale(1);
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay {
+    animation: none;
+  }
+  .content {
+    animation: none;
+  }
+  .close {
+    transition-duration: 0.01ms;
+  }
+}

@@ -9,6 +9,7 @@ import { Input, Textarea } from "@/components/ui/Input/Input";
 import { Button } from "@/components/ui/Button/Button";
 import { useToast } from "@/components/ui/Toast/Toast";
 import { ThemeConfigurator } from "@/components/dashboard/ThemeConfigurator";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog/ConfirmDialog";
 import { DEFAULT_THEME, parseSiteTheme, type SiteTheme } from "@/lib/theme";
 import styles from "./settings.module.css";
 
@@ -26,6 +27,7 @@ export default function SiteSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [uploadingFavicon, setUploadingFavicon] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const faviconInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -101,8 +103,6 @@ export default function SiteSettingsPage() {
   }
 
   async function handleDelete() {
-    if (!confirm("Are you sure you want to delete this site? This cannot be undone.")) return;
-
     const res = await fetch(`/api/sites/${params.siteId}`, { method: "DELETE" });
     if (res.ok) {
       toast("Site deleted");
@@ -254,11 +254,20 @@ export default function SiteSettingsPage() {
         <div className={styles.dangerZone}>
           <h3>Danger Zone</h3>
           <p>Permanently delete this site and all its pages.</p>
-          <Button variant="danger" onClick={handleDelete}>
+          <Button variant="danger" onClick={() => setConfirmDelete(true)}>
             Delete this site
           </Button>
         </div>
       </div>
+      <ConfirmDialog
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        title="Delete site"
+        description="Are you sure you want to delete this site? This cannot be undone."
+        confirmLabel="Delete site"
+        variant="danger"
+        onConfirm={handleDelete}
+      />
     </>
   );
 }

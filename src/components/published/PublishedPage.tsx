@@ -20,7 +20,7 @@ export function PublishedPage({ title, blocks, pageId }: PublishedPageProps) {
   return (
     <div className={styles.page}>
       <div className={styles.container}>
-        {blocks.map((block) => (
+        {blocks.filter(b => !b.parentId).map((block) => (
           <SafePublishedBlock key={block.id} block={block} pageId={pageId} />
         ))}
       </div>

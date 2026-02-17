@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Settings2, X } from "lucide-react";
 import { useEditorStore } from "@/stores/editor-store";
 import { AddBlockMenu } from "./AddBlockMenu";
@@ -25,6 +25,12 @@ export function EditorSidebar({ mobileOpen, onMobileToggle }: EditorSidebarProps
   }
 
   // Auto-switch to settings when a block is selected
+  useEffect(() => {
+    if (selectedBlockId) {
+      setActiveTab("settings");
+    }
+  }, [selectedBlockId]);
+
   const showSettings = selectedBlockId && activeTab === "settings";
 
   return (
