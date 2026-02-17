@@ -19,6 +19,7 @@ export async function GET(
     const page = await db.page.findFirst({
       where: {
         id: pageId,
+        deletedAt: null,
         site: { userId: session.user.id },
       },
       include: {
@@ -130,7 +131,7 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ pageId: string }> }
 ) {
   try {
@@ -143,6 +144,8 @@ export async function DELETE(
     if (!rl.success) return rateLimitResponse(rl);
 
     const { pageId } = await params;
+    const { searchParams } = new URL(req.url);
+    const permanent = searchParams.get("permanent") === "true";
 
     const page = await db.page.findFirst({
       where: {
@@ -155,7 +158,14 @@ export async function DELETE(
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    await db.page.delete({ where: { id: pageId } });
+    if (permanent) {
+      await db.page.delete({ where: { id: pageId } });
+    } else {
+      await db.page.update({
+        where: { id: pageId },
+        data: { deletedAt: new Date(), status: "DRAFT" },
+      });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

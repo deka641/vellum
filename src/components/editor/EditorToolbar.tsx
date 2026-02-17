@@ -1,7 +1,8 @@
 "use client";
 
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Eye, ExternalLink, Save, Undo2, Redo2, Loader2, AlertCircle, AlertTriangle, Monitor, Tablet, Smartphone } from "lucide-react";
+import { ArrowLeft, Eye, ExternalLink, Save, Undo2, Redo2, Loader2, AlertCircle, AlertTriangle, Monitor, Tablet, Smartphone, Check } from "lucide-react";
 import { Button } from "@/components/ui/Button/Button";
 import { IconButton } from "@/components/ui/IconButton/IconButton";
 import { Badge } from "@/components/ui/Badge/Badge";
@@ -10,6 +11,34 @@ import { useAutosave } from "@/hooks/use-autosave";
 import { KeyboardShortcutsDialog } from "./KeyboardShortcutsDialog";
 import { SaveAsTemplateDialog } from "./SaveAsTemplateDialog";
 import styles from "./EditorToolbar.module.css";
+
+function getRelativeTime(dateStr: string): string {
+  const now = Date.now();
+  const then = new Date(dateStr).getTime();
+  const diffSec = Math.floor((now - then) / 1000);
+  if (diffSec < 10) return "just now";
+  if (diffSec < 60) return `${diffSec}s ago`;
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h ago`;
+  return `${Math.floor(diffHr / 24)}d ago`;
+}
+
+function useRelativeTime(dateStr: string | null): string {
+  const [text, setText] = useState(() => dateStr ? getRelativeTime(dateStr) : "");
+  const update = useCallback(() => {
+    if (dateStr) setText(getRelativeTime(dateStr));
+  }, [dateStr]);
+
+  useEffect(() => {
+    update();
+    const id = setInterval(update, 30_000);
+    return () => clearInterval(id);
+  }, [update]);
+
+  return text;
+}
 
 interface EditorToolbarProps {
   siteId: string;
@@ -21,10 +50,11 @@ interface EditorToolbarProps {
 
 export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, onPublish }: EditorToolbarProps) {
   const router = useRouter();
-  const { pageTitle, pageSlug, setPageTitle, isDirty, isSaving, saveError, conflict, undo, redo, previewMode, setPreviewMode } =
+  const { pageTitle, pageSlug, setPageTitle, isDirty, isSaving, saveError, conflict, undo, redo, previewMode, setPreviewMode, lastSavedAt } =
     useEditorStore();
   const { save } = useAutosave();
   const hasConflict = conflict !== null;
+  const relativeTime = useRelativeTime(lastSavedAt);
 
   return (
     <div className={styles.toolbar}>
@@ -71,7 +101,13 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, onPubl
           <span className={styles.saveStatus}>Unsaved changes</span>
         )}
         {!hasConflict && !isSaving && !saveError && !isDirty && (
-          <span className={styles.saveStatus}>Saved</span>
+          <span
+            className={`${styles.saveStatus} ${styles.saveDone}`}
+            title={lastSavedAt ? new Date(lastSavedAt).toLocaleString() : undefined}
+          >
+            <Check size={14} />
+            Saved{relativeTime ? ` ${relativeTime}` : ""}
+          </span>
         )}
         <IconButton icon={<Undo2 />} label="Undo (Ctrl+Z)" onClick={undo} />
         <IconButton icon={<Redo2 />} label="Redo (Ctrl+Shift+Z)" onClick={redo} />

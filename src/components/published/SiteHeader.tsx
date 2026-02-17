@@ -29,7 +29,7 @@ export function SiteHeader({ siteName, homeHref, navItems }: SiteHeaderProps) {
   }
 
   return (
-    <header className={styles.header}>
+    <header className={styles.header} role="banner">
       <div className={styles.headerInner}>
         <Link href={homeHref} className={styles.siteName}>
           {siteName}
@@ -37,7 +37,7 @@ export function SiteHeader({ siteName, homeHref, navItems }: SiteHeaderProps) {
 
         {navItems.length > 0 && (
           <>
-            <nav className={styles.desktopNav}>
+            <nav className={styles.desktopNav} aria-label="Site navigation">
               {navItems.map((item) => (
                 <Link
                   key={item.href}
@@ -62,7 +62,7 @@ export function SiteHeader({ siteName, homeHref, navItems }: SiteHeaderProps) {
       </div>
 
       {navItems.length > 0 && (
-        <nav className={`${styles.mobileNav} ${mobileOpen ? styles.mobileNavOpen : ""}`}>
+        <nav className={`${styles.mobileNav} ${mobileOpen ? styles.mobileNavOpen : ""}`} aria-label="Site navigation">
           {navItems.map((item) => (
             <Link
               key={item.href}

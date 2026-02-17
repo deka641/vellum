@@ -69,7 +69,7 @@ export const blockDefinitions: Record<BlockType, BlockDefinition> = {
     label: "Columns",
     icon: "Columns",
     category: "layout",
-    defaultContent: { columns: [{ blocks: [] }, { blocks: [] }] },
+    defaultContent: { columns: [{ blocks: [] }, { blocks: [] }], columnWidths: [50, 50] },
     defaultSettings: { gap: "24px" },
   },
   video: {

@@ -10,7 +10,8 @@ export default auth((req) => {
     pathname.startsWith("/sites") ||
     pathname.startsWith("/editor") ||
     pathname.startsWith("/media") ||
-    pathname.startsWith("/templates");
+    pathname.startsWith("/templates") ||
+    pathname.startsWith("/settings");
 
   if (isAuthRoute && isLoggedIn) {
     return NextResponse.redirect(new URL("/sites", req.nextUrl));

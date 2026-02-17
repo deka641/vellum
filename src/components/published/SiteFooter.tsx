@@ -24,7 +24,7 @@ export function SiteFooter({ siteName, footer }: SiteFooterProps) {
   const showBranding = footer?.showBranding !== false;
 
   return (
-    <footer className={styles.footer}>
+    <footer className={styles.footer} role="contentinfo">
       <div className={styles.footerInner}>
         <span className={styles.footerText}>{text}</span>
         {links.length > 0 && (

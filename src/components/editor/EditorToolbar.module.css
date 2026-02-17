@@ -64,6 +64,10 @@
   animation: spin 1s linear infinite;
 }
 
+.saveDone {
+  color: var(--color-success, #16a34a);
+}
+
 .saveError {
   color: var(--color-error, #dc2626);
 }

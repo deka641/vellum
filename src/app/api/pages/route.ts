@@ -29,8 +29,9 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Site not found" }, { status: 404 });
     }
 
+    const includeDeleted = searchParams.get("includeDeleted") === "true";
     const pages = await db.page.findMany({
-      where: { siteId },
+      where: { siteId, ...(includeDeleted ? {} : { deletedAt: null }) },
       orderBy: { sortOrder: "asc" },
     });
 

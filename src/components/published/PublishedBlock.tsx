@@ -148,11 +148,13 @@ export function PublishedBlock({ block, pageId }: PublishedBlockProps) {
       const columns = (content.columns || []) as Array<{
         blocks: BlockData[];
       }>;
+      const columnWidths = content.columnWidths as number[] | undefined;
       return (
         <div
           className={styles.columns}
           style={{
             gap: (settings.gap as string) || "24px",
+            ...(columnWidths ? { gridTemplateColumns: columnWidths.map(w => `${w}%`).join(" ") } : {}),
             ...(settings.backgroundColor ? { backgroundColor: settings.backgroundColor as string } : {}),
           }}
         >

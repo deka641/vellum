@@ -142,3 +142,54 @@
   color: var(--color-text-tertiary);
   line-height: var(--leading-normal);
 }
+
+/* Trash */
+.trashTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-primary);
+  letter-spacing: normal;
+  margin-bottom: var(--space-4);
+}
+
+.trashList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.trashItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.trashItemInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.trashItemTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-primary);
+}
+
+.trashItemMeta {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+}
+
+.trashItemActions {
+  display: flex;
+  gap: var(--space-2);
+}

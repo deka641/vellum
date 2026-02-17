@@ -5,6 +5,34 @@
   background: var(--color-surface);
 }
 
+.skipLink {
+  position: absolute;
+  left: -10000px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  z-index: 9999;
+  padding: var(--space-3) var(--space-6);
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+
+.skipLink:focus {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: auto;
+  height: auto;
+  overflow: visible;
+}
+
 .main {
   flex: 1;
 }

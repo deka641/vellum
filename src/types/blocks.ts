@@ -49,6 +49,7 @@ export interface ColumnData {
 
 export interface ColumnsContent {
   columns: ColumnData[];
+  columnWidths?: number[];
 }
 
 export interface VideoContent {

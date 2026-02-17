@@ -45,6 +45,7 @@ export default async function PublishedSiteLayout({ params, children }: Props) {
 
   return (
     <div className={styles.layout} style={themeVars as React.CSSProperties}>
+      <a href="#main-content" className={styles.skipLink}>Skip to content</a>
       {site.favicon && <link rel="icon" href={sanitizeUrl(site.favicon)} />}
       {fontPreset?.googleFontsUrl && (
         <>
@@ -55,7 +56,7 @@ export default async function PublishedSiteLayout({ params, children }: Props) {
       )}
       <WebSiteJsonLd name={site.name} description={site.description} url={siteUrl} />
       <SiteHeader siteName={site.name} homeHref={homeHref} navItems={navItems} />
-      <main className={styles.main}>{children}</main>
+      <main id="main-content" className={styles.main}>{children}</main>
       <SiteFooter siteName={site.name} footer={site.footer as Record<string, unknown> | null} />
     </div>
   );

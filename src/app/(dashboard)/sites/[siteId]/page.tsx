@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Plus, FileText, ArrowLeft, Navigation2, ExternalLink, Search, Send } from "lucide-react";
+import { Plus, FileText, ArrowLeft, Navigation2, ExternalLink, Search, Send, Trash2, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { PageList } from "@/components/dashboard/PageList";
@@ -20,19 +20,22 @@ import { Input } from "@/components/ui/Input/Input";
 import styles from "./site-detail.module.css";
 import dialogStyles from "@/components/ui/Dialog/Dialog.module.css";
 
+interface PageItem {
+  id: string;
+  title: string;
+  slug: string;
+  status: "DRAFT" | "PUBLISHED";
+  isHomepage: boolean;
+  updatedAt: string;
+  deletedAt: string | null;
+}
+
 interface SiteDetail {
   id: string;
   name: string;
   slug: string;
   description: string | null;
-  pages: Array<{
-    id: string;
-    title: string;
-    slug: string;
-    status: "DRAFT" | "PUBLISHED";
-    isHomepage: boolean;
-    updatedAt: string;
-  }>;
+  pages: PageItem[];
 }
 
 interface Template {
@@ -57,6 +60,8 @@ export default function SiteDetailPage() {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "DRAFT" | "PUBLISHED">("ALL");
+  const [showTrash, setShowTrash] = useState(false);
+  const [trashedPages, setTrashedPages] = useState<PageItem[]>([]);
 
   useEffect(() => {
     fetch(`/api/sites/${params.siteId}`)
@@ -115,15 +120,55 @@ export default function SiteDetailPage() {
     }
   }
 
+  async function loadTrashedPages() {
+    try {
+      const res = await fetch(`/api/pages?siteId=${params.siteId}&includeDeleted=true`);
+      if (res.ok) {
+        const pages = await res.json();
+        setTrashedPages(pages.filter((p: PageItem) => p.deletedAt !== null));
+      }
+    } catch { /* ignore */ }
+  }
+
   async function handleDeletePage(pageId: string) {
-    if (!confirm("Are you sure you want to delete this page?")) return;
+    if (!confirm("Move this page to trash?")) return;
 
     const res = await fetch(`/api/pages/${pageId}`, { method: "DELETE" });
     if (res.ok) {
+      const deletedPage = site?.pages.find((p) => p.id === pageId);
       setSite((prev) =>
         prev ? { ...prev, pages: prev.pages.filter((p) => p.id !== pageId) } : null
       );
-      toast("Page deleted");
+      if (deletedPage) {
+        setTrashedPages((prev) => [...prev, { ...deletedPage, deletedAt: new Date().toISOString(), status: "DRAFT" }]);
+      }
+      toast("Page moved to trash");
+    } else {
+      toast("Failed to delete page", "error");
+    }
+  }
+
+  async function handleRestorePage(pageId: string) {
+    const res = await fetch(`/api/pages/${pageId}/restore`, { method: "POST" });
+    if (res.ok) {
+      const restored = await res.json();
+      setTrashedPages((prev) => prev.filter((p) => p.id !== pageId));
+      setSite((prev) =>
+        prev ? { ...prev, pages: [...prev.pages, { ...restored, deletedAt: null }] } : null
+      );
+      toast("Page restored");
+    } else {
+      toast("Failed to restore page", "error");
+    }
+  }
+
+  async function handlePermanentDelete(pageId: string) {
+    if (!confirm("Permanently delete this page? This cannot be undone.")) return;
+
+    const res = await fetch(`/api/pages/${pageId}?permanent=true`, { method: "DELETE" });
+    if (res.ok) {
+      setTrashedPages((prev) => prev.filter((p) => p.id !== pageId));
+      toast("Page permanently deleted");
     } else {
       toast("Failed to delete page", "error");
     }
@@ -220,6 +265,7 @@ export default function SiteDetailPage() {
                     status: newPage.status,
                     isHomepage: newPage.isHomepage,
                     updatedAt: newPage.updatedAt,
+                    deletedAt: null,
                   },
                 ],
               }
@@ -284,6 +330,18 @@ export default function SiteDetailPage() {
                 View site
               </Button>
             </a>
+            <Button
+              variant={showTrash ? "primary" : "secondary"}
+              leftIcon={<Trash2 size={16} />}
+              size="sm"
+              onClick={() => {
+                const next = !showTrash;
+                setShowTrash(next);
+                if (next) loadTrashedPages();
+              }}
+            >
+              Trash
+            </Button>
             <Button leftIcon={<Plus size={16} />} size="sm" onClick={handleOpenNewPage}>
               New page
             </Button>
@@ -291,7 +349,50 @@ export default function SiteDetailPage() {
         }
       />
       <div className={styles.content}>
-        {site.pages.length === 0 ? (
+        {showTrash ? (
+          <div>
+            <h3 className={styles.trashTitle}>
+              <Trash2 size={18} />
+              Trash
+            </h3>
+            {trashedPages.length === 0 ? (
+              <div className={styles.empty}>
+                <Trash2 size={48} strokeWidth={1} />
+                <h3>Trash is empty</h3>
+                <p>Deleted pages will appear here</p>
+              </div>
+            ) : (
+              <div className={styles.trashList}>
+                {trashedPages.map((page) => (
+                  <div key={page.id} className={styles.trashItem}>
+                    <div className={styles.trashItemInfo}>
+                      <span className={styles.trashItemTitle}>{page.title}</span>
+                      <span className={styles.trashItemMeta}>/{page.slug}</span>
+                    </div>
+                    <div className={styles.trashItemActions}>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        leftIcon={<RotateCcw size={14} />}
+                        onClick={() => handleRestorePage(page.id)}
+                      >
+                        Restore
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        leftIcon={<Trash2 size={14} />}
+                        onClick={() => handlePermanentDelete(page.id)}
+                      >
+                        Delete forever
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : site.pages.length === 0 ? (
           <div className={styles.empty}>
             <FileText size={48} strokeWidth={1} />
             <h3>No pages yet</h3>

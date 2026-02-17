@@ -191,22 +191,81 @@ function ColumnDropZone({
   );
 }
 
-export function ColumnsBlock({ id, content, settings }: ColumnsBlockProps) {
+const TWO_COL_PRESETS: number[][] = [
+  [50, 50], [66, 34], [34, 66], [75, 25], [25, 75],
+];
+const THREE_COL_PRESETS: number[][] = [
+  [33, 33, 34], [50, 25, 25], [25, 50, 25], [25, 25, 50],
+];
+
+function PresetLabel({ widths }: { widths: number[] }) {
   return (
-    <div
-      className={styles.columns}
-      style={{ gap: settings.gap || "24px" }}
-      onClick={(e) => e.stopPropagation()}
-    >
-      {content.columns.map((col, i) => (
-        <div key={i} className={styles.column}>
-          <ColumnDropZone
-            parentId={id}
-            colIndex={i}
-            blocks={col.blocks}
-          />
-        </div>
+    <span className={styles.presetLabel}>
+      {widths.map((w, i) => (
+        <span key={i} className={styles.presetBar} style={{ flex: w }} />
       ))}
+    </span>
+  );
+}
+
+export function ColumnsBlock({ id, content, settings }: ColumnsBlockProps) {
+  const updateBlockContent = useEditorStore((s) => s.updateBlockContent);
+  const colCount = content.columns.length;
+  const widths = content.columnWidths || content.columns.map(() => Math.floor(100 / colCount));
+  const presets = colCount === 3 ? THREE_COL_PRESETS : TWO_COL_PRESETS;
+
+  function setWidths(newWidths: number[]) {
+    updateBlockContent(id, { columnWidths: newWidths });
+  }
+
+  function toggleColumnCount() {
+    if (colCount === 2) {
+      const newCols = [...content.columns, { blocks: [] }];
+      updateBlockContent(id, { columns: newCols, columnWidths: [33, 33, 34] });
+    } else {
+      const merged = [...content.columns[1].blocks, ...content.columns.slice(2).flatMap(c => c.blocks)];
+      const newCols = [content.columns[0], { blocks: merged }];
+      updateBlockContent(id, { columns: newCols, columnWidths: [50, 50] });
+    }
+  }
+
+  return (
+    <div onClick={(e) => e.stopPropagation()}>
+      <div className={styles.columnPresets}>
+        {presets.map((preset, i) => {
+          const isActive = preset.every((w, j) => widths[j] === w);
+          return (
+            <button
+              key={i}
+              className={`${styles.presetBtn} ${isActive ? styles.presetBtnActive : ""}`}
+              onClick={(e) => { e.stopPropagation(); setWidths(preset); }}
+              title={preset.join("/")}
+            >
+              <PresetLabel widths={preset} />
+            </button>
+          );
+        })}
+        <button
+          className={styles.columnCountToggle}
+          onClick={(e) => { e.stopPropagation(); toggleColumnCount(); }}
+        >
+          {colCount === 2 ? "3 cols" : "2 cols"}
+        </button>
+      </div>
+      <div
+        className={styles.columns}
+        style={{ gap: settings.gap || "24px", gridTemplateColumns: widths.map(w => `${w}%`).join(" ") }}
+      >
+        {content.columns.map((col, i) => (
+          <div key={i} className={styles.column}>
+            <ColumnDropZone
+              parentId={id}
+              colIndex={i}
+              blocks={col.blocks}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

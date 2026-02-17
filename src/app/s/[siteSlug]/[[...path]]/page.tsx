@@ -71,7 +71,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!site) return {};
 
   const page = await db.page.findFirst({
-    where: { siteId: site.id, slug: pageSlug, status: "PUBLISHED" },
+    where: { siteId: site.id, slug: pageSlug, status: "PUBLISHED", deletedAt: null },
     include: { blocks: { orderBy: { sortOrder: "asc" } } },
   });
 
@@ -122,7 +122,7 @@ export default async function PublicSitePage({ params }: Props) {
   if (!site) notFound();
 
   const page = await db.page.findFirst({
-    where: { siteId: site.id, slug: pageSlug, status: "PUBLISHED" },
+    where: { siteId: site.id, slug: pageSlug, status: "PUBLISHED", deletedAt: null },
     include: { blocks: { orderBy: { sortOrder: "asc" } } },
   });
 

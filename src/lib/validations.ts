@@ -40,12 +40,25 @@ const blockSchema = z.object({
   parentId: z.string().nullable().optional(),
 });
 
+// --- Reserved slugs ---
+
+export const RESERVED_SLUGS = [
+  "api", "admin", "editor", "login", "register", "settings",
+  "media", "templates", "preview", "s", "uploads", "_next",
+];
+
 // --- Sites ---
 
 export const createSiteSchema = z.object({
   name: z.string().min(1).max(200),
   description: z.string().max(2000).nullable().optional(),
-});
+}).refine(
+  (data) => {
+    const slug = data.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+    return !RESERVED_SLUGS.includes(slug);
+  },
+  { message: "This name would create a reserved URL slug. Please choose a different name.", path: ["name"] }
+);
 
 const hexColorSchema = z.string().regex(/^#[0-9a-fA-F]{6}$/);
 
@@ -99,6 +112,7 @@ export const updatePageSchema = z.object({
   description: z.string().max(2000).nullable().optional(),
   slug: z.string().min(1).max(200)
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug must be lowercase letters, numbers, and hyphens")
+    .refine((s) => !RESERVED_SLUGS.includes(s), "This slug is reserved and cannot be used")
     .optional(),
 });
 
@@ -114,6 +128,10 @@ export const updateBlocksSchema = z.object({
 
 export const updateMediaSchema = z.object({
   alt: z.string().max(1000),
+});
+
+export const bulkDeleteMediaSchema = z.object({
+  ids: z.array(z.string().min(1)).min(1).max(100),
 });
 
 // --- Templates ---

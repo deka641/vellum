@@ -49,12 +49,16 @@ model Page {
   site            Site             @relation(fields: [siteId], references: [id], onDelete: Cascade)
   blocks          Block[]
   formSubmissions FormSubmission[]
+  deletedAt       DateTime?
   publishedAt     DateTime?
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 
   @@unique([siteId, slug])
   @@index([siteId])
+  @@index([siteId, status])
+  @@index([siteId, sortOrder])
+  @@index([siteId, deletedAt])
 }
 
 enum PageStatus {
@@ -76,6 +80,7 @@ model Block {
 
   @@index([pageId])
   @@index([parentId])
+  @@index([pageId, sortOrder])
 }
 
 model Template {
@@ -88,6 +93,8 @@ model Template {
   isSystem    Boolean  @default(false)
   userId      String?
   createdAt   DateTime @default(now())
+
+  @@index([userId])
 }
 
 model FormSubmission {
@@ -100,6 +107,7 @@ model FormSubmission {
 
   @@index([pageId])
   @@index([blockId])
+  @@index([pageId, createdAt])
 }
 
 model Media {
@@ -116,4 +124,5 @@ model Media {
   createdAt DateTime @default(now())
 
   @@index([userId])
+  @@index([userId, createdAt])
 }

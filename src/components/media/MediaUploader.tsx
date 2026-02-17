@@ -10,34 +10,53 @@ interface MediaUploaderProps {
 }
 
 export function MediaUploader({ onUpload }: MediaUploaderProps) {
-  const [uploading, setUploading] = useState(false);
+  const [uploadState, setUploadState] = useState<{
+    active: boolean;
+    current: number;
+    total: number;
+  }>({ active: false, current: 0, total: 0 });
   const [dragOver, setDragOver] = useState(false);
   const { toast } = useToast();
 
-  const handleFile = useCallback(
-    async (file: File) => {
-      setUploading(true);
-      const formData = new FormData();
-      formData.append("file", file);
+  const handleFiles = useCallback(
+    async (files: File[]) => {
+      if (files.length === 0) return;
+      setUploadState({ active: true, current: 0, total: files.length });
 
-      try {
-        const res = await fetch("/api/media", {
-          method: "POST",
-          body: formData,
-        });
+      let succeeded = 0;
+      let failed = 0;
 
-        if (res.ok) {
-          const media = await res.json();
-          onUpload(media);
-          toast("File uploaded");
-        } else {
-          const data = await res.json();
-          toast(data.error || "Upload failed", "error");
+      for (let i = 0; i < files.length; i++) {
+        setUploadState({ active: true, current: i + 1, total: files.length });
+        const formData = new FormData();
+        formData.append("file", files[i]);
+
+        try {
+          const res = await fetch("/api/media", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (res.ok) {
+            const media = await res.json();
+            onUpload(media);
+            succeeded++;
+          } else {
+            const data = await res.json();
+            toast(data.error || `Failed to upload ${files[i].name}`, "error");
+            failed++;
+          }
+        } catch {
+          toast(`Failed to upload ${files[i].name}`, "error");
+          failed++;
         }
-      } catch {
-        toast("Upload failed", "error");
-      } finally {
-        setUploading(false);
+      }
+
+      setUploadState({ active: false, current: 0, total: 0 });
+      if (succeeded > 0 && files.length > 1) {
+        toast(`${succeeded} file(s) uploaded${failed > 0 ? `, ${failed} failed` : ""}`);
+      } else if (succeeded === 1 && files.length === 1) {
+        toast("File uploaded");
       }
     },
     [onUpload, toast]
@@ -54,14 +73,22 @@ export function MediaUploader({ onUpload }: MediaUploaderProps) {
       onDrop={(e) => {
         e.preventDefault();
         setDragOver(false);
-        const file = e.dataTransfer.files[0];
-        if (file) handleFile(file);
+        const files = Array.from(e.dataTransfer.files);
+        if (files.length > 0) handleFiles(files);
       }}
     >
-      {uploading ? (
+      {uploadState.active ? (
         <>
           <Loader2 size={24} className={styles.spinner} />
-          <span>Uploading...</span>
+          <span>Uploading {uploadState.current}/{uploadState.total}...</span>
+          <div className={styles.uploadProgress}>
+            <div className={styles.uploadProgressBar}>
+              <div
+                className={styles.uploadProgressFill}
+                style={{ width: `${(uploadState.current / uploadState.total) * 100}%` }}
+              />
+            </div>
+          </div>
         </>
       ) : (
         <>
@@ -70,10 +97,12 @@ export function MediaUploader({ onUpload }: MediaUploaderProps) {
           <input
             type="file"
             className={styles.fileInput}
-            accept="image/*,video/*"
+            accept="image/*,video/*,.pdf"
+            multiple
             onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) handleFile(file);
+              const files = Array.from(e.target.files || []);
+              if (files.length > 0) handleFiles(files);
+              e.target.value = "";
             }}
           />
         </>

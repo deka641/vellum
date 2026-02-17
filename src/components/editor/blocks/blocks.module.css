@@ -223,6 +223,66 @@
   margin: var(--space-2) 0;
 }
 
+/* Column Presets */
+.columnPresets {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: var(--space-2);
+  padding: var(--space-1);
+}
+
+.presetBtn {
+  padding: 4px 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.presetBtn:hover {
+  border-color: var(--color-accent);
+}
+
+.presetBtnActive {
+  border-color: var(--color-accent);
+  background: var(--color-accent-light);
+}
+
+.presetLabel {
+  display: flex;
+  gap: 2px;
+  width: 32px;
+  height: 14px;
+}
+
+.presetBar {
+  background: var(--color-text-tertiary);
+  border-radius: 1px;
+  min-width: 4px;
+}
+
+.presetBtnActive .presetBar {
+  background: var(--color-accent);
+}
+
+.columnCountToggle {
+  margin-left: auto;
+  padding: 4px 8px;
+  font-size: var(--text-xs);
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.columnCountToggle:hover {
+  background: var(--color-accent-light);
+}
+
 /* Columns */
 .columns {
   display: grid;
@@ -464,6 +524,21 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius-sm);
+}
+
+.formFieldDragHandle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  color: var(--color-text-tertiary);
+  cursor: grab;
+  flex-shrink: 0;
+}
+
+.formFieldDragHandle:hover {
+  color: var(--color-text-primary);
 }
 
 .formFieldLabel {
