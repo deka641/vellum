@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { unlink } from "fs/promises";
-import path from "path";
 import { parseBody, updateMediaSchema } from "@/lib/validations";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
+import { safeMediaFilePath } from "@/lib/upload";
 
 export async function PATCH(
   req: Request,
@@ -83,11 +83,14 @@ export async function DELETE(
     }
 
     // Delete file from disk
-    try {
-      const filepath = path.join(process.cwd(), "public", media.url);
-      await unlink(filepath);
-    } catch {
-      // File may already be deleted
+    const filepath = safeMediaFilePath(media.url);
+    if (filepath) {
+      try {
+        await unlink(filepath);
+      } catch (err: unknown) {
+        if ((err as NodeJS.ErrnoException).code !== "ENOENT")
+          console.error("Failed to delete media file:", err);
+      }
     }
 
     await db.media.delete({ where: { id: mediaId } });

@@ -5,6 +5,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Trash2, Copy, Eye, EyeOff } from "lucide-react";
 import { useEditorStore } from "@/stores/editor-store";
+import { useToast } from "@/components/ui/Toast/Toast";
 import { cn } from "@/lib/utils";
 import styles from "./BlockWrapper.module.css";
 
@@ -14,7 +15,8 @@ interface BlockWrapperProps {
 }
 
 export function BlockWrapper({ id, children }: BlockWrapperProps) {
-  const { selectedBlockId, selectBlock, removeBlock, duplicateBlock, blocks, updateBlockSettings } = useEditorStore();
+  const { selectedBlockId, selectBlock, removeBlock, duplicateBlock, blocks, updateBlockSettings, undo } = useEditorStore();
+  const { toast } = useToast();
   const isSelected = selectedBlockId === id;
   const block = blocks.find((b) => b.id === id);
   const isHidden = block?.settings.hidden === true;
@@ -54,6 +56,7 @@ export function BlockWrapper({ id, children }: BlockWrapperProps) {
           className={styles.dragHandle}
           {...attributes}
           {...listeners}
+          aria-label="Drag to reorder block"
         >
           <GripVertical size={14} />
         </button>
@@ -64,6 +67,7 @@ export function BlockWrapper({ id, children }: BlockWrapperProps) {
             duplicateBlock(id);
           }}
           title="Duplicate block"
+          aria-label="Duplicate block"
         >
           <Copy size={14} />
         </button>
@@ -74,6 +78,7 @@ export function BlockWrapper({ id, children }: BlockWrapperProps) {
             updateBlockSettings(id, { hidden: !isHidden });
           }}
           title={isHidden ? "Show block" : "Hide block"}
+          aria-label={isHidden ? "Show block" : "Hide block"}
         >
           {isHidden ? <EyeOff size={14} /> : <Eye size={14} />}
         </button>
@@ -82,8 +87,16 @@ export function BlockWrapper({ id, children }: BlockWrapperProps) {
           onClick={(e) => {
             e.stopPropagation();
             removeBlock(id);
+            const idx = useEditorStore.getState().historyIndex;
+            toast("Block deleted", "info", {
+              label: "Undo",
+              onClick: () => {
+                if (useEditorStore.getState().historyIndex === idx) undo();
+              },
+            });
           }}
           title="Delete block"
+          aria-label="Delete block"
         >
           <Trash2 size={14} />
         </button>

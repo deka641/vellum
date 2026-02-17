@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { parseBody, bulkDeleteMediaSchema } from "@/lib/validations";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { unlink } from "fs/promises";
-import { join } from "path";
+import { safeMediaFilePath } from "@/lib/upload";
 
 export async function POST(req: Request) {
   try {
@@ -44,11 +44,14 @@ export async function POST(req: Request) {
 
     // Delete files from disk
     for (const item of media) {
-      try {
-        const filePath = join(process.cwd(), "public", item.url);
-        await unlink(filePath);
-      } catch {
-        // File may already be deleted, continue
+      const filePath = safeMediaFilePath(item.url);
+      if (filePath) {
+        try {
+          await unlink(filePath);
+        } catch (err: unknown) {
+          if ((err as NodeJS.ErrnoException).code !== "ENOENT")
+            console.error("Failed to delete media file:", err);
+        }
       }
     }
 

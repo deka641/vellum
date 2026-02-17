@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Eye, Code } from "lucide-react";
 import { useEditorStore } from "@/stores/editor-store";
+import { sanitizeEmbedHtml } from "@/lib/sanitize";
 import type { CodeContent, BlockSettings } from "@/types/blocks";
 import styles from "./blocks.module.css";
 
@@ -37,7 +38,7 @@ export function CodeBlock({ id, content }: CodeBlockProps) {
       {showPreview ? (
         <div
           className={styles.codePreview}
-          dangerouslySetInnerHTML={{ __html: content.code || "<p style='color:#999;text-align:center'>No code to preview</p>" }}
+          dangerouslySetInnerHTML={{ __html: sanitizeEmbedHtml(content.code) || "<p style='color:#999;text-align:center'>No code to preview</p>" }}
         />
       ) : (
         <textarea

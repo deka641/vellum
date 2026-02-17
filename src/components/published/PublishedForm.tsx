@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, useRef, type FormEvent } from "react";
 import styles from "./published.module.css";
 
 interface FormField {
@@ -20,10 +20,31 @@ interface PublishedFormProps {
   successMessage: string;
 }
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export function PublishedForm({ blockId, pageId, fields, submitText, successMessage }: PublishedFormProps) {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const formRef = useRef<HTMLFormElement>(null);
+
+  function validateFields(formData: FormData): Record<string, string> {
+    const errors: Record<string, string> = {};
+    for (const field of fields) {
+      const value = formData.get(field.id)?.toString()?.trim() || "";
+
+      if (field.required && !value && field.type !== "checkbox") {
+        errors[field.id] = "This field is required";
+        continue;
+      }
+
+      if (field.type === "email" && value && !EMAIL_REGEX.test(value)) {
+        errors[field.id] = "Please enter a valid email address";
+      }
+    }
+    return errors;
+  }
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -31,6 +52,20 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
     setError("");
 
     const formData = new FormData(e.currentTarget);
+
+    const errors = validateFields(formData);
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setSubmitting(false);
+      // Scroll to first error
+      const firstErrorId = Object.keys(errors)[0];
+      const el = document.getElementById(firstErrorId);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+
+    setFieldErrors({});
+
     const data: Record<string, string> = {};
     for (const field of fields) {
       if (field.type === "checkbox") {
@@ -60,6 +95,16 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
     }
   }
 
+  function clearFieldError(fieldId: string) {
+    if (fieldErrors[fieldId]) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next[fieldId];
+        return next;
+      });
+    }
+  }
+
   if (submitted) {
     return (
       <div className={styles.formBlock}>
@@ -68,11 +113,102 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
     );
   }
 
+  function renderField(field: FormField) {
+    const hasError = Boolean(fieldErrors[field.id]);
+    const errorClass = hasError ? ` ${styles.formInputError}` : "";
+
+    switch (field.type) {
+      case "textarea":
+        return (
+          <>
+            <textarea
+              id={field.id}
+              name={field.id}
+              className={`${styles.formTextarea}${errorClass}`}
+              placeholder={field.placeholder}
+              rows={4}
+              required={field.required}
+              onChange={() => clearFieldError(field.id)}
+            />
+            {hasError && <span className={styles.formError}>{fieldErrors[field.id]}</span>}
+          </>
+        );
+      case "select":
+        return (
+          <>
+            <select
+              id={field.id}
+              name={field.id}
+              className={`${styles.formSelect}${errorClass}`}
+              required={field.required}
+              onChange={() => clearFieldError(field.id)}
+            >
+              <option value="">{field.placeholder || "Select..."}</option>
+              {(field.options || []).map((opt, i) => (
+                <option key={i} value={opt}>{opt}</option>
+              ))}
+            </select>
+            {hasError && <span className={styles.formError}>{fieldErrors[field.id]}</span>}
+          </>
+        );
+      case "radio":
+        return (
+          <>
+            <fieldset className={styles.formRadioGroup} role="radiogroup" aria-required={field.required}>
+              <legend className={styles.srOnly}>{field.label}</legend>
+              {(field.options || []).map((opt, i) => (
+                <label key={i} className={styles.formRadioLabel}>
+                  <input
+                    type="radio"
+                    name={field.id}
+                    value={opt}
+                    required={field.required}
+                    onChange={() => clearFieldError(field.id)}
+                  />
+                  {opt}
+                </label>
+              ))}
+            </fieldset>
+            {hasError && <span className={styles.formError}>{fieldErrors[field.id]}</span>}
+          </>
+        );
+      case "checkbox":
+        return (
+          <div className={styles.formCheckboxField}>
+            <label className={styles.formCheckboxLabel}>
+              <input
+                type="checkbox"
+                id={field.id}
+                name={field.id}
+                value="yes"
+              />
+              {field.placeholder || "Yes"}
+            </label>
+          </div>
+        );
+      default:
+        return (
+          <>
+            <input
+              id={field.id}
+              name={field.id}
+              type={field.type}
+              className={`${styles.formInput}${errorClass}`}
+              placeholder={field.placeholder}
+              required={field.required}
+              onChange={() => clearFieldError(field.id)}
+            />
+            {hasError && <span className={styles.formError}>{fieldErrors[field.id]}</span>}
+          </>
+        );
+    }
+  }
+
   return (
-    <form className={styles.formBlock} onSubmit={handleSubmit}>
+    <form className={styles.formBlock} onSubmit={handleSubmit} ref={formRef} noValidate>
       {fields.map((field) => (
         <div key={field.id} className={styles.formField}>
-          <label className={styles.formLabel} htmlFor={field.id}>
+          <label className={styles.formLabel} htmlFor={field.id} id={field.id + "-label"}>
             {field.label}
             {field.required && <span className={styles.formRequired}>*</span>}
           </label>
@@ -85,75 +221,4 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
       </button>
     </form>
   );
-}
-
-function renderField(field: FormField) {
-  switch (field.type) {
-    case "textarea":
-      return (
-        <textarea
-          id={field.id}
-          name={field.id}
-          className={styles.formTextarea}
-          placeholder={field.placeholder}
-          rows={4}
-          required={field.required}
-        />
-      );
-    case "select":
-      return (
-        <select
-          id={field.id}
-          name={field.id}
-          className={styles.formSelect}
-          required={field.required}
-        >
-          <option value="">{field.placeholder || "Select..."}</option>
-          {(field.options || []).map((opt, i) => (
-            <option key={i} value={opt}>{opt}</option>
-          ))}
-        </select>
-      );
-    case "radio":
-      return (
-        <div className={styles.formRadioGroup}>
-          {(field.options || []).map((opt, i) => (
-            <label key={i} className={styles.formRadioLabel}>
-              <input
-                type="radio"
-                name={field.id}
-                value={opt}
-                required={field.required}
-              />
-              {opt}
-            </label>
-          ))}
-        </div>
-      );
-    case "checkbox":
-      return (
-        <div className={styles.formCheckboxField}>
-          <label className={styles.formCheckboxLabel}>
-            <input
-              type="checkbox"
-              id={field.id}
-              name={field.id}
-              value="yes"
-            />
-            {field.placeholder || "Yes"}
-          </label>
-        </div>
-      );
-    default:
-      return (
-        <input
-          id={field.id}
-          name={field.id}
-          type={field.type}
-          className={styles.formInput}
-          placeholder={field.placeholder}
-          required={field.required}
-        />
-      );
-  }
 }

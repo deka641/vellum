@@ -77,29 +77,9 @@ export function SubmissionsClient({ siteId, pages }: SubmissionsClientProps) {
   }, [submissions, search]);
 
   function exportCsv() {
-    if (filtered.length === 0) return;
-
-    const allKeys = new Set<string>();
-    filtered.forEach((sub) => Object.keys(sub.data).forEach((k) => allKeys.add(k)));
-    const headers = ["Page", "Date", ...Array.from(allKeys)];
-
-    const rows = filtered.map((sub) => {
-      const row = [
-        sub.page.title,
-        new Date(sub.createdAt).toISOString(),
-        ...Array.from(allKeys).map((k) => sub.data[k] || ""),
-      ];
-      return row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",");
-    });
-
-    const csv = [headers.join(","), ...rows].join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `submissions-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const params = new URLSearchParams();
+    if (pageFilter) params.set("pageId", pageFilter);
+    window.open(`/api/sites/${siteId}/submissions/export?${params}`, "_blank");
   }
 
   return (
@@ -130,7 +110,6 @@ export function SubmissionsClient({ siteId, pages }: SubmissionsClientProps) {
           size="sm"
           leftIcon={<Download size={14} />}
           onClick={exportCsv}
-          disabled={filtered.length === 0}
         >
           Export CSV
         </Button>

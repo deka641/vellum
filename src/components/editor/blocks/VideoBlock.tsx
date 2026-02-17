@@ -1,6 +1,7 @@
 "use client";
 
-import { Play } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Play, AlertTriangle } from "lucide-react";
 import { useEditorStore } from "@/stores/editor-store";
 import type { VideoContent, BlockSettings } from "@/types/blocks";
 import styles from "./blocks.module.css";
@@ -38,7 +39,13 @@ function getEmbedUrl(url: string): string | null {
 
 export function VideoBlock({ id, content, settings }: VideoBlockProps) {
   const updateBlockContent = useEditorStore((s) => s.updateBlockContent);
+  const [inputValue, setInputValue] = useState(content.url || "");
   const embedUrl = content.url ? getEmbedUrl(content.url) : null;
+  const hasInvalidUrl = Boolean(content.url) && !embedUrl;
+
+  useEffect(() => {
+    setInputValue(content.url || "");
+  }, [content.url]);
 
   if (!content.url || !embedUrl) {
     return (
@@ -47,8 +54,10 @@ export function VideoBlock({ id, content, settings }: VideoBlockProps) {
         <span>Add a video</span>
         <input
           type="text"
-          className={styles.imageUrlInput}
+          className={`${styles.imageUrlInput} ${hasInvalidUrl ? styles.videoInputError : ""}`}
           placeholder="Paste YouTube or Vimeo URL..."
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               const url = e.currentTarget.value.trim();
@@ -57,6 +66,24 @@ export function VideoBlock({ id, content, settings }: VideoBlockProps) {
           }}
           onClick={(e) => e.stopPropagation()}
         />
+        {hasInvalidUrl && (
+          <>
+            <div className={styles.videoError}>
+              <AlertTriangle size={14} />
+              <span>Only YouTube and Vimeo URLs are supported</span>
+            </div>
+            <button
+              className={styles.videoClearBtn}
+              onClick={(e) => {
+                e.stopPropagation();
+                updateBlockContent(id, { url: "" });
+                setInputValue("");
+              }}
+            >
+              Clear URL
+            </button>
+          </>
+        )}
       </div>
     );
   }

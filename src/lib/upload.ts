@@ -2,6 +2,13 @@ import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { generateId } from "./utils";
 
+export function safeMediaFilePath(url: string): string | null {
+  const uploadsDir = path.resolve(process.cwd(), "public", "uploads");
+  const resolved = path.resolve(process.cwd(), "public", url.startsWith("/") ? url.slice(1) : url);
+  if (!resolved.startsWith(uploadsDir + path.sep)) return null;
+  return resolved;
+}
+
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
 
 const ALLOWED_EXTENSIONS = new Set([

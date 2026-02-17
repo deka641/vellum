@@ -8,14 +8,20 @@ import styles from "./Toast.module.css";
 
 type ToastVariant = "success" | "error" | "info";
 
+interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+
 interface Toast {
   id: string;
   message: string;
   variant: ToastVariant;
+  action?: ToastAction;
 }
 
 interface ToastContextType {
-  toast: (message: string, variant?: ToastVariant) => void;
+  toast: (message: string, variant?: ToastVariant, action?: ToastAction) => void;
 }
 
 const ToastContext = createContext<ToastContextType>({ toast: () => {} });
@@ -27,12 +33,12 @@ export function useToast() {
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const addToast = useCallback((message: string, variant: ToastVariant = "success") => {
+  const addToast = useCallback((message: string, variant: ToastVariant = "success", action?: ToastAction) => {
     const id = Math.random().toString(36).slice(2);
-    setToasts((prev) => [...prev, { id, message, variant }]);
+    setToasts((prev) => [...prev, { id, message, variant, action }]);
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 4000);
+    }, action ? 5000 : 4000);
   }, []);
 
   const removeToast = useCallback((id: string) => {
@@ -61,6 +67,17 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             >
               <span className={styles.icon}>{icons[t.variant]}</span>
               <span className={styles.message}>{t.message}</span>
+              {t.action && (
+                <button
+                  className={styles.action}
+                  onClick={() => {
+                    t.action!.onClick();
+                    removeToast(t.id);
+                  }}
+                >
+                  {t.action.label}
+                </button>
+              )}
               <button
                 className={styles.close}
                 onClick={() => removeToast(t.id)}

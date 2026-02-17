@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
-import { Image as ImageIcon, Search, CheckSquare, Trash2 } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
+import { Image as ImageIcon, Search, CheckSquare, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { MediaGrid } from "@/components/media/MediaGrid";
 import { MediaUploader } from "@/components/media/MediaUploader";
@@ -28,37 +28,59 @@ export default function MediaPage() {
   const [items, setItems] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<MediaTypeFilter>("all");
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
   const { toast } = useToast();
 
+  // Debounce search input
   useEffect(() => {
-    fetch("/api/media")
-      .then((res) => res.json())
-      .then((data) => setItems(data.media || []))
-      .finally(() => setLoading(false));
-  }, []);
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
-  const filteredItems = useMemo(() => {
-    return items.filter((item) => {
-      const q = searchQuery.toLowerCase();
-      const matchesSearch = !q || item.filename.toLowerCase().includes(q);
-      if (!matchesSearch) return false;
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, typeFilter]);
 
-      if (typeFilter === "all") return true;
-      if (typeFilter === "images") return item.mimeType.startsWith("image/");
-      if (typeFilter === "videos") return item.mimeType.startsWith("video/");
-      return !item.mimeType.startsWith("image/") && !item.mimeType.startsWith("video/");
-    });
-  }, [items, searchQuery, typeFilter]);
+  const fetchMedia = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({ page: String(page) });
+      if (debouncedSearch) params.set("search", debouncedSearch);
+      if (typeFilter !== "all") params.set("type", typeFilter);
+
+      const res = await fetch(`/api/media?${params}`);
+      if (res.ok) {
+        const data = await res.json();
+        setItems(data.media || []);
+        setTotalPages(data.pages || 1);
+        setTotal(data.total || 0);
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setLoading(false);
+    }
+  }, [page, debouncedSearch, typeFilter]);
+
+  useEffect(() => {
+    fetchMedia();
+  }, [fetchMedia]);
 
   async function handleDelete(id: string) {
     if (!confirm("Delete this file?")) return;
     const res = await fetch(`/api/media/${id}`, { method: "DELETE" });
     if (res.ok) {
-      setItems((prev) => prev.filter((m) => m.id !== id));
       toast("File deleted");
+      fetchMedia();
     } else {
       toast("Failed to delete file", "error");
     }
@@ -85,10 +107,10 @@ export default function MediaPage() {
         body: JSON.stringify({ ids }),
       });
       if (res.ok) {
-        setItems((prev) => prev.filter((m) => !selectedIds.has(m.id)));
         setSelectedIds(new Set());
         setSelectionMode(false);
         toast(`${ids.length} file(s) deleted`);
+        fetchMedia();
       } else {
         toast("Failed to delete files", "error");
       }
@@ -116,18 +138,16 @@ export default function MediaPage() {
       <Topbar title="Media Library" description="Upload and manage your files" />
       <div className={styles.content}>
         <MediaUploader
-          onUpload={(media) =>
-            setItems((prev) => [media as unknown as MediaItem, ...prev])
-          }
+          onUpload={() => { fetchMedia(); }}
         />
 
-        {loading ? (
+        {loading && items.length === 0 ? (
           <div className={styles.loading}>
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <Skeleton key={i} height={160} />
             ))}
           </div>
-        ) : items.length === 0 ? (
+        ) : total === 0 && !debouncedSearch && typeFilter === "all" ? (
           <div className={styles.empty}>
             <ImageIcon size={48} strokeWidth={1} />
             <h3>No media yet</h3>
@@ -170,13 +190,39 @@ export default function MediaPage() {
               </Button>
             </div>
             <MediaGrid
-              items={filteredItems}
+              items={items}
               onDelete={handleDelete}
               onUpdateAlt={handleUpdateAlt}
               selectionMode={selectionMode}
               selectedIds={selectedIds}
               onToggleSelect={handleToggleSelect}
             />
+            {totalPages > 1 && (
+              <div className={styles.pagination}>
+                <span className={styles.paginationInfo}>
+                  {total} file{total !== 1 ? "s" : ""}
+                </span>
+                <div className={styles.paginationControls}>
+                  <button
+                    className={styles.paginationBtn}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page <= 1}
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  <span className={styles.paginationPage}>
+                    {page} / {totalPages}
+                  </span>
+                  <button
+                    className={styles.paginationBtn}
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page >= totalPages}
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
             {selectionMode && selectedIds.size > 0 && (
               <div className={mediaStyles.bulkBar}>
                 <span className={mediaStyles.bulkBarCount}>{selectedIds.size} selected</span>

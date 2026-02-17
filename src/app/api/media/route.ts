@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { saveUploadedFile, UnsafeFileTypeError } from "@/lib/upload";
 import { getImageDimensions, optimizeImage } from "@/lib/image";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
+import type { Prisma } from "@prisma/client";
 
 export async function GET(req: Request) {
   try {
@@ -15,15 +16,37 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get("page") || "1");
     const limit = 24;
+    const search = searchParams.get("search")?.trim() || "";
+    const type = searchParams.get("type") || "";
+
+    const where: Prisma.MediaWhereInput = { userId: session.user.id };
+
+    if (search) {
+      where.OR = [
+        { filename: { contains: search, mode: "insensitive" } },
+        { alt: { contains: search, mode: "insensitive" } },
+      ];
+    }
+
+    if (type === "images") {
+      where.mimeType = { startsWith: "image/" };
+    } else if (type === "videos") {
+      where.mimeType = { startsWith: "video/" };
+    } else if (type === "documents") {
+      where.NOT = [
+        { mimeType: { startsWith: "image/" } },
+        { mimeType: { startsWith: "video/" } },
+      ];
+    }
 
     const [media, total] = await Promise.all([
       db.media.findMany({
-        where: { userId: session.user.id },
+        where,
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * limit,
         take: limit,
       }),
-      db.media.count({ where: { userId: session.user.id } }),
+      db.media.count({ where }),
     ]);
 
     return NextResponse.json({
