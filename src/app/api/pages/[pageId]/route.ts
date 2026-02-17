@@ -158,6 +158,13 @@ export async function DELETE(
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
+    if (page.isHomepage) {
+      return NextResponse.json(
+        { error: "Cannot delete the homepage. Set another page as the homepage first." },
+        { status: 400 }
+      );
+    }
+
     if (permanent) {
       await db.page.delete({ where: { id: pageId } });
     } else {

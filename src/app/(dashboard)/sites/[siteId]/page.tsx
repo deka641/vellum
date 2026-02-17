@@ -134,6 +134,11 @@ export default function SiteDetailPage() {
   }
 
   function handleDeletePage(pageId: string) {
+    const page = site?.pages.find((p) => p.id === pageId);
+    if (page?.isHomepage) {
+      toast("Cannot delete the homepage", "error");
+      return;
+    }
     setDeletePageId(pageId);
   }
 

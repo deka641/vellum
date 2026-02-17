@@ -86,12 +86,19 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
 
       if (res.ok) {
         setSubmitted(true);
+      } else if (res.status === 429) {
+        const retryAfter = res.headers.get("Retry-After");
+        setError(`Too many submissions. Please wait ${retryAfter ? `${retryAfter} seconds` : "a moment"} before trying again.`);
       } else {
-        const body = await res.json();
+        const body = await res.json().catch(() => ({}));
         setError(body.error || "Something went wrong. Please try again.");
       }
-    } catch {
-      setError("Something went wrong. Please try again.");
+    } catch (err) {
+      if (err instanceof TypeError) {
+        setError("Could not reach the server. Please check your connection and try again.");
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -111,6 +118,18 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
     return (
       <div className={styles.formBlock}>
         <p className={styles.formSuccess}>{successMessage || "Thank you! Your submission has been received."}</p>
+        <button
+          type="button"
+          className={styles.formResetBtn}
+          onClick={() => {
+            setSubmitted(false);
+            setError("");
+            setFieldErrors({});
+            formRef.current?.reset();
+          }}
+        >
+          Submit another response
+        </button>
       </div>
     );
   }

@@ -1,10 +1,12 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
+import { AlertTriangle } from "lucide-react";
 import {
   COLOR_PRESETS,
   FONT_PRESETS,
   generateThemeVariables,
+  validateThemeContrast,
   type SiteTheme,
   type FontPreset,
 } from "@/lib/theme";
@@ -63,6 +65,8 @@ export function ThemeConfigurator({ theme, onChange }: Props) {
     },
     [theme, onChange]
   );
+
+  const contrastResults = useMemo(() => validateThemeContrast(theme), [theme]);
 
   return (
     <div className={styles.section}>
@@ -157,6 +161,30 @@ export function ThemeConfigurator({ theme, onChange }: Props) {
           </div>
         ))}
       </div>
+
+      {/* Contrast Warnings */}
+      {contrastResults.some((r) => r.level === "fail" || r.level === "aa-large") && (
+        <div className={styles.contrastWarning}>
+          <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 2 }} />
+          <div>
+            <strong>Contrast issues detected</strong>
+            {contrastResults
+              .filter((r) => r.level === "fail")
+              .map((r) => (
+                <div key={r.pair} className={styles.contrastFail}>
+                  {r.pair}: {r.ratio.toFixed(1)}:1 &mdash; Fails WCAG AA
+                </div>
+              ))}
+            {contrastResults
+              .filter((r) => r.level === "aa-large")
+              .map((r) => (
+                <div key={r.pair} className={styles.contrastWarn}>
+                  {r.pair}: {r.ratio.toFixed(1)}:1 &mdash; Passes only for large text
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
 
       {/* Font Presets */}
       <h3 className={styles.subsectionTitle}>Font Pairing</h3>

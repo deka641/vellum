@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { X, CheckCircle, AlertCircle, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -34,16 +34,29 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const prefersReducedMotion = useReducedMotion();
 
+  const activeMessagesRef = useRef(new Set<string>());
+
   const addToast = useCallback((message: string, variant: ToastVariant = "success", action?: ToastAction) => {
+    const key = `${variant}:${message}`;
+    if (activeMessagesRef.current.has(key)) return;
+
     const id = Math.random().toString(36).slice(2);
+    activeMessagesRef.current.add(key);
     setToasts((prev) => [...prev, { id, message, variant, action }]);
     setTimeout(() => {
+      activeMessagesRef.current.delete(key);
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, action ? 5000 : 4000);
   }, []);
 
   const removeToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
+    setToasts((prev) => {
+      const toast = prev.find((t) => t.id === id);
+      if (toast) {
+        activeMessagesRef.current.delete(`${toast.variant}:${toast.message}`);
+      }
+      return prev.filter((t) => t.id !== id);
+    });
   }, []);
 
   const icons: Record<ToastVariant, ReactNode> = {

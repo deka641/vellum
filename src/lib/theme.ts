@@ -217,6 +217,45 @@ function getLuminance(hex: string): number {
   return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
 }
 
+// --- WCAG Contrast Checking ---
+
+export function getContrastRatio(hex1: string, hex2: string): number {
+  const l1 = getLuminance(hex1);
+  const l2 = getLuminance(hex2);
+  const lighter = Math.max(l1, l2);
+  const darker = Math.min(l1, l2);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+export type ContrastLevel = "fail" | "aa-large" | "aa" | "aaa";
+
+export function getContrastLevel(ratio: number): ContrastLevel {
+  if (ratio >= 7) return "aaa";
+  if (ratio >= 4.5) return "aa";
+  if (ratio >= 3) return "aa-large";
+  return "fail";
+}
+
+export interface ContrastResult {
+  pair: string;
+  ratio: number;
+  level: ContrastLevel;
+}
+
+export function validateThemeContrast(theme: SiteTheme): ContrastResult[] {
+  const checks = [
+    { pair: "Text on Background", fg: theme.colors.text, bg: theme.colors.background },
+    { pair: "Text on Surface", fg: theme.colors.text, bg: theme.colors.surface },
+    { pair: "Primary on Background", fg: theme.colors.primary, bg: theme.colors.background },
+    { pair: "Primary on Surface", fg: theme.colors.primary, bg: theme.colors.surface },
+  ];
+
+  return checks.map(({ pair, fg, bg }) => {
+    const ratio = getContrastRatio(fg, bg);
+    return { pair, ratio, level: getContrastLevel(ratio) };
+  });
+}
+
 // --- Theme Variable Generation ---
 
 export function generateThemeVariables(

@@ -117,6 +117,35 @@
   width: 100px;
 }
 
+/* --- Contrast Warnings --- */
+
+.contrastWarning {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: #FEF3C7;
+  border: 1px solid #F59E0B;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  color: #92400E;
+  margin-bottom: var(--space-6);
+}
+
+.contrastWarning strong {
+  display: block;
+  margin-bottom: var(--space-1);
+}
+
+.contrastFail {
+  color: #991B1B;
+  font-size: var(--text-xs);
+}
+
+.contrastWarn {
+  color: #92400E;
+  font-size: var(--text-xs);
+}
+
 /* --- Font Presets --- */
 
 .fontGrid {

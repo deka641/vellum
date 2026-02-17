@@ -43,6 +43,23 @@ export async function PATCH(
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
+    // Verify all page IDs belong to this site
+    const pageIds = parsed.data.pages.map((p) => p.id);
+    const matchingPages = await db.page.count({
+      where: {
+        id: { in: pageIds },
+        siteId,
+        deletedAt: null,
+      },
+    });
+
+    if (matchingPages !== pageIds.length) {
+      return NextResponse.json(
+        { error: "One or more page IDs do not belong to this site" },
+        { status: 400 }
+      );
+    }
+
     await db.$transaction(
       parsed.data.pages.map((page) =>
         db.page.updateMany({
