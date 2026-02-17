@@ -190,6 +190,12 @@ function sanitizeBlockContent(block: BlockLike): BlockLike {
   const content = { ...block.content };
 
   switch (block.type) {
+    case "heading":
+      if (typeof content.text === "string") {
+        content.text = sanitize(content.text, { allowedTags: [], allowedAttributes: {} });
+      }
+      break;
+
     case "text":
       if (typeof content.html === "string") {
         content.html = sanitizeRichHtml(content.html);
@@ -197,6 +203,9 @@ function sanitizeBlockContent(block: BlockLike): BlockLike {
       break;
 
     case "button":
+      if (typeof content.text === "string") {
+        content.text = sanitize(content.text, { allowedTags: [], allowedAttributes: {} });
+      }
       if (typeof content.url === "string") {
         content.url = sanitizeUrl(content.url);
       }

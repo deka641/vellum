@@ -142,7 +142,7 @@ export const updateNavigationSchema = z.object({
 export const registerSchema = z.object({
   name: z.string().max(200).optional().default(""),
   email: z.string().email().max(254),
-  password: z.string().min(6).max(200),
+  password: z.string().min(8).max(200),
 });
 
 // --- User Profile ---

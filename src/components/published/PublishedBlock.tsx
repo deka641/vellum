@@ -179,6 +179,8 @@ export function PublishedBlock({ block, pageId }: PublishedBlockProps) {
         >
           <iframe
             src={embedUrl}
+            title="Embedded video"
+            loading="lazy"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
             className={styles.videoIframe}

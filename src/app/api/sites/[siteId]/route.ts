@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { parseBody, updateSiteSchema } from "@/lib/validations";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
+import { sanitizeUrl } from "@/lib/sanitize";
 
 export async function GET(
   _req: Request,
@@ -82,7 +83,7 @@ export async function PATCH(
         name: parsed.data.name ?? site.name,
         description: parsed.data.description ?? site.description,
         ...(parsed.data.theme !== undefined && { theme: parsed.data.theme }),
-        ...(parsed.data.favicon !== undefined && { favicon: parsed.data.favicon }),
+        ...(parsed.data.favicon !== undefined && { favicon: parsed.data.favicon ? sanitizeUrl(parsed.data.favicon) : parsed.data.favicon }),
         ...(parsed.data.footer !== undefined && { footer: parsed.data.footer }),
       },
     });

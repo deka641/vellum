@@ -7,6 +7,8 @@ import { IconButton } from "@/components/ui/IconButton/IconButton";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { useEditorStore } from "@/stores/editor-store";
 import { useAutosave } from "@/hooks/use-autosave";
+import { KeyboardShortcutsDialog } from "./KeyboardShortcutsDialog";
+import { SaveAsTemplateDialog } from "./SaveAsTemplateDialog";
 import styles from "./EditorToolbar.module.css";
 
 interface EditorToolbarProps {
@@ -73,6 +75,7 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, onPubl
         )}
         <IconButton icon={<Undo2 />} label="Undo (Ctrl+Z)" onClick={undo} />
         <IconButton icon={<Redo2 />} label="Redo (Ctrl+Shift+Z)" onClick={redo} />
+        <KeyboardShortcutsDialog />
         <div className={styles.divider} />
         <div className={styles.previewToggle}>
           <button
@@ -116,6 +119,7 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, onPubl
             }}
           />
         )}
+        <SaveAsTemplateDialog />
         <Button size="sm" onClick={() => { save(); }} disabled={hasConflict}>
           <Save size={14} />
           Save

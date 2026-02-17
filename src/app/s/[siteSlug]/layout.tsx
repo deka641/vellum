@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { getBaseUrl } from "@/lib/url";
+import { sanitizeUrl } from "@/lib/sanitize";
 import { parseSiteTheme, generateThemeVariables, FONT_PRESETS } from "@/lib/theme";
 import { SiteHeader } from "@/components/published/SiteHeader";
 import { SiteFooter } from "@/components/published/SiteFooter";
@@ -44,7 +45,7 @@ export default async function PublishedSiteLayout({ params, children }: Props) {
 
   return (
     <div className={styles.layout} style={themeVars as React.CSSProperties}>
-      {site.favicon && <link rel="icon" href={site.favicon} />}
+      {site.favicon && <link rel="icon" href={sanitizeUrl(site.favicon)} />}
       {fontPreset?.googleFontsUrl && (
         <>
           <link rel="preconnect" href="https://fonts.googleapis.com" />

@@ -15,9 +15,11 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { Plus } from "lucide-react";
+import { type BlockType } from "@/types/blocks";
 import { useEditorStore } from "@/stores/editor-store";
 import { BlockWrapper } from "./BlockWrapper";
 import { BlockRenderer } from "./BlockRenderer";
+import { InlineAddButton } from "./InlineAddButton";
 import styles from "./EditorCanvas.module.css";
 
 interface EditorCanvasProps {
@@ -31,7 +33,7 @@ const previewWidths = {
 } as const;
 
 export function EditorCanvas({ onAddBlock }: EditorCanvasProps) {
-  const { blocks, moveBlock, selectBlock, previewMode } = useEditorStore();
+  const { blocks, moveBlock, addBlock, selectBlock, previewMode } = useEditorStore();
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -81,10 +83,13 @@ export function EditorCanvas({ onAddBlock }: EditorCanvasProps) {
               items={blocks.map((b) => b.id)}
               strategy={verticalListSortingStrategy}
             >
-              {blocks.map((block) => (
-                <BlockWrapper key={block.id} id={block.id}>
-                  <BlockRenderer block={block} />
-                </BlockWrapper>
+              {blocks.map((block, index) => (
+                <div key={block.id}>
+                  <InlineAddButton onAdd={(type: BlockType) => addBlock(type, index)} />
+                  <BlockWrapper id={block.id}>
+                    <BlockRenderer block={block} />
+                  </BlockWrapper>
+                </div>
               ))}
             </SortableContext>
           </DndContext>
