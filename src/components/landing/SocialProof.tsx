@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Blocks, FileText, Palette, Quote } from "lucide-react";
 import styles from "./landing.module.css";
@@ -7,9 +8,9 @@ import styles from "./landing.module.css";
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const stats = [
-  { icon: <Blocks size={20} />, value: "12", label: "Block Types" },
-  { icon: <FileText size={20} />, value: "Unlimited", label: "Pages & Sites" },
-  { icon: <Palette size={20} />, value: "6", label: "Theme Presets" },
+  { icon: <Blocks size={20} />, value: 12, display: "12", label: "Block Types" },
+  { icon: <FileText size={20} />, value: null, display: "Unlimited", label: "Pages & Sites" },
+  { icon: <Palette size={20} />, value: 6, display: "6", label: "Theme Presets" },
 ];
 
 const testimonials = [
@@ -30,6 +31,61 @@ const testimonials = [
   },
 ];
 
+function AnimatedCounter({ value, display }: { value: number | null; display: string }) {
+  const [count, setCount] = useState(0);
+  const [hasAnimated, setHasAnimated] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const shouldReduceMotion = useReducedMotion();
+
+  const animate = useCallback(() => {
+    if (hasAnimated || value === null) return;
+    const target = value;
+    setHasAnimated(true);
+
+    if (shouldReduceMotion) {
+      setCount(target);
+      return;
+    }
+
+    const duration = 1200;
+    const start = performance.now();
+    function step(now: number) {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setCount(Math.round(eased * target));
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }, [value, hasAnimated, shouldReduceMotion]);
+
+  useEffect(() => {
+    if (!ref.current || value === null) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          animate();
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.5 }
+    );
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [animate, value]);
+
+  if (value === null) {
+    return <div className={styles.socialProofStatValue}>{display}</div>;
+  }
+
+  return (
+    <div ref={ref} className={styles.socialProofStatValue}>
+      {hasAnimated ? count : 0}
+    </div>
+  );
+}
+
 export function SocialProof() {
   const shouldReduceMotion = useReducedMotion();
 
@@ -48,7 +104,7 @@ export function SocialProof() {
             transition={{ ...fadeUp.transition, delay: i * 0.1 }}
           >
             <div className={styles.socialProofStatIcon}>{stat.icon}</div>
-            <div className={styles.socialProofStatValue}>{stat.value}</div>
+            <AnimatedCounter value={stat.value} display={stat.display} />
             <div className={styles.socialProofStatLabel}>{stat.label}</div>
           </motion.div>
         ))}

@@ -43,7 +43,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No matching files found" }, { status: 404 });
     }
 
-    // Delete files from disk
+    // Delete DB records first in a transaction to prevent data loss
+    await db.$transaction(async (tx) => {
+      await tx.media.deleteMany({
+        where: { id: { in: media.map((m) => m.id) }, userId },
+      });
+    });
+
+    // Then delete files from disk — orphaned files are harmless, lost DB entries are not
     for (const item of media) {
       const filePath = safeMediaFilePath(item.url);
       if (filePath) {
@@ -51,15 +58,10 @@ export async function POST(req: Request) {
           await unlink(filePath);
         } catch (err: unknown) {
           if ((err as NodeJS.ErrnoException).code !== "ENOENT")
-            console.error("Failed to delete media file:", err);
+            console.error("Failed to delete media file (orphaned):", err);
         }
       }
     }
-
-    // Delete DB records
-    await db.media.deleteMany({
-      where: { id: { in: media.map((m) => m.id) }, userId },
-    });
 
     return NextResponse.json({ deleted: media.length });
   } catch (error) {

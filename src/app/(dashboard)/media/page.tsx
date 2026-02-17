@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Image as ImageIcon, Search, CheckSquare, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Image as ImageIcon, Search, CheckSquare, Trash2, ChevronLeft, ChevronRight, AlertCircle, RefreshCw } from "lucide-react";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { MediaGrid } from "@/components/media/MediaGrid";
 import { MediaUploader } from "@/components/media/MediaUploader";
@@ -28,6 +28,7 @@ type MediaTypeFilter = "all" | "images" | "videos" | "documents";
 export default function MediaPage() {
   const [items, setItems] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<MediaTypeFilter>("all");
@@ -55,6 +56,7 @@ export default function MediaPage() {
 
   const fetchMedia = useCallback(async () => {
     setLoading(true);
+    setFetchError(false);
     try {
       const params = new URLSearchParams({ page: String(page) });
       if (debouncedSearch) params.set("search", debouncedSearch);
@@ -66,9 +68,12 @@ export default function MediaPage() {
         setItems(data.media || []);
         setTotalPages(data.pages || 1);
         setTotal(data.total || 0);
+      } else {
+        setFetchError(true);
       }
-    } catch {
-      // silently fail
+    } catch (e) {
+      console.error("Failed to fetch media:", e);
+      setFetchError(true);
     } finally {
       setLoading(false);
     }
@@ -156,6 +161,17 @@ export default function MediaPage() {
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <Skeleton key={i} height={160} />
             ))}
+          </div>
+        ) : fetchError ? (
+          <div className={styles.empty}>
+            <div className={styles.emptyIconCircle} style={{ background: "var(--color-error-light, #FEF2F2)", color: "var(--color-error, #DC2626)" }}>
+              <AlertCircle size={28} strokeWidth={1.5} />
+            </div>
+            <h3>Failed to load media</h3>
+            <p>Something went wrong. Please try again.</p>
+            <Button variant="secondary" size="sm" leftIcon={<RefreshCw size={14} />} onClick={fetchMedia}>
+              Retry
+            </Button>
           </div>
         ) : total === 0 && !debouncedSearch && typeFilter === "all" ? (
           <div className={styles.empty}>

@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { sanitizeRichHtml, sanitizeUrl, sanitizeImageSrc, getSafeVideoEmbedUrl, sanitizeEmbedHtml } from "@/lib/sanitize";
 import { PublishedForm } from "./PublishedForm";
+import { ImageLightbox } from "./ImageLightbox";
 import styles from "./published.module.css";
 
 interface BlockData {
@@ -112,7 +113,12 @@ export function PublishedBlock({ block, pageId }: PublishedBlockProps) {
               {imgContent}
             </a>
           ) : (
-            imgContent
+            <ImageLightbox
+              src={sanitizeImageSrc(content.src as string)}
+              alt={(content.alt as string) || ""}
+            >
+              {imgContent}
+            </ImageLightbox>
           )}
         </figure>
       );

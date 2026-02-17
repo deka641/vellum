@@ -79,18 +79,19 @@ export async function DELETE(
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    // Delete file from disk
+    // Delete DB record first to prevent data loss if filesystem delete fails
+    await db.media.delete({ where: { id: mediaId } });
+
+    // Then delete file from disk — orphaned files are harmless, lost DB entries are not
     const filepath = safeMediaFilePath(media.url);
     if (filepath) {
       try {
         await unlink(filepath);
       } catch (err: unknown) {
         if ((err as NodeJS.ErrnoException).code !== "ENOENT")
-          console.error("Failed to delete media file:", err);
+          console.error("Failed to delete media file (orphaned):", err);
       }
     }
-
-    await db.media.delete({ where: { id: mediaId } });
 
     return NextResponse.json({ success: true });
   } catch (error) {

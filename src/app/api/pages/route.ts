@@ -131,15 +131,22 @@ export async function POST(req: Request) {
         }
       } else if (templateBlocks) {
         const cleanBlocks = sanitizeBlocks(templateBlocks);
+        // Remap all IDs to prevent collisions when the same template is used multiple times
+        const idMap = new Map<string, string>();
+        for (const block of cleanBlocks) {
+          if (block.id) {
+            idMap.set(block.id as string, generateId());
+          }
+        }
         await tx.block.createMany({
           data: cleanBlocks.map((block, i: number) => ({
-            ...(block.id ? { id: block.id as string } : {}),
+            id: block.id ? idMap.get(block.id as string)! : generateId(),
             type: block.type,
             content: (block.content || {}) as Prisma.InputJsonValue,
             settings: (block.settings || {}) as Prisma.InputJsonValue,
             sortOrder: i,
             pageId: p.id,
-            parentId: (block.parentId as string) || null,
+            parentId: block.parentId ? idMap.get(block.parentId as string) || null : null,
           })),
         });
       }

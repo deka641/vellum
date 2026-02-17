@@ -18,7 +18,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Plus } from "lucide-react";
+import { Plus, Type, AlignLeft, Image as ImageIcon, Columns2, Sparkles } from "lucide-react";
 import { type BlockType } from "@/types/blocks";
 import { useEditorStore } from "@/stores/editor-store";
 import { BlockWrapper } from "./BlockWrapper";
@@ -98,11 +98,40 @@ export function EditorCanvas({ onAddBlock }: EditorCanvasProps) {
       >
         {blocks.length === 0 ? (
           <div className={styles.empty}>
-            <p>Your page is empty</p>
-            <span>Add a block from the sidebar or click below</span>
-            <button className={styles.addButton} onClick={onAddBlock}>
-              <Plus size={20} />
-              Add your first block
+            <div className={styles.emptyIcon}>
+              <Sparkles size={32} />
+            </div>
+            <p>Start building your page</p>
+            <span>Pick a block type to get started</span>
+            <div className={styles.quickBlocks}>
+              {[
+                { type: "heading" as BlockType, icon: <Type size={20} />, label: "Heading" },
+                { type: "text" as BlockType, icon: <AlignLeft size={20} />, label: "Text" },
+                { type: "image" as BlockType, icon: <ImageIcon size={20} />, label: "Image" },
+                { type: "columns" as BlockType, icon: <Columns2 size={20} />, label: "Columns" },
+              ].map((item) => (
+                <button
+                  key={item.type}
+                  className={styles.quickBlock}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    addBlock(item.type);
+                  }}
+                >
+                  <div className={styles.quickBlockIcon}>{item.icon}</div>
+                  <span>{item.label}</span>
+                </button>
+              ))}
+            </div>
+            <button
+              className={styles.addButton}
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddBlock();
+              }}
+            >
+              <Plus size={16} />
+              Or choose from all blocks
             </button>
           </div>
         ) : (

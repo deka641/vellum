@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEditorStore } from "@/stores/editor-store";
 import { useAutosave } from "@/hooks/use-autosave";
 import { EditorToolbar } from "@/components/editor/EditorToolbar";
@@ -11,13 +11,17 @@ import { ConflictBanner } from "@/components/editor/ConflictBanner";
 import { PublishSuccessDialog } from "@/components/editor/PublishSuccessDialog";
 import { useToast } from "@/components/ui/Toast/Toast";
 import { Skeleton } from "@/components/ui/Skeleton/Skeleton";
+import { Button } from "@/components/ui/Button/Button";
+import { AlertCircle, RefreshCw } from "lucide-react";
 import type { EditorBlock } from "@/types/blocks";
 import styles from "./editor.module.css";
 
 export default function EditorPage() {
   const params = useParams();
+  const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<"not-found" | "server-error" | null>(null);
   const [siteId, setSiteId] = useState("");
   const [siteSlug, setSiteSlug] = useState("");
   const [isHomepage, setIsHomepage] = useState(false);
@@ -27,37 +31,43 @@ export default function EditorPage() {
   const { setPage, addBlock, isDirty, pageSlug } = useEditorStore();
   const { save, forceSave } = useAutosave();
 
-  useEffect(() => {
-    async function loadPage() {
-      try {
-        const res = await fetch(`/api/pages/${params.pageId}`);
-        if (!res.ok) throw new Error("Failed to load page");
-        const data = await res.json();
-
-        setSiteId(data.site.id);
-        setSiteSlug(data.site.slug);
-        setIsHomepage(data.isHomepage);
-        setPageStatus(data.status);
-
-        const blocks: EditorBlock[] = data.blocks.map(
-          (b: { id: string; type: string; content: unknown; settings: unknown; parentId: string | null }) => ({
-            id: b.id,
-            type: b.type,
-            content: b.content,
-            settings: b.settings,
-            parentId: b.parentId,
-          })
-        );
-
-        setPage(data.id, data.title, blocks, data.updatedAt, data.description, data.slug);
-      } catch {
-        toast("Failed to load page", "error");
-      } finally {
-        setLoading(false);
+  const loadPage = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const res = await fetch(`/api/pages/${params.pageId}`);
+      if (!res.ok) {
+        setLoadError(res.status === 404 ? "not-found" : "server-error");
+        return;
       }
+      const data = await res.json();
+
+      setSiteId(data.site.id);
+      setSiteSlug(data.site.slug);
+      setIsHomepage(data.isHomepage);
+      setPageStatus(data.status);
+
+      const blocks: EditorBlock[] = data.blocks.map(
+        (b: { id: string; type: string; content: unknown; settings: unknown; parentId: string | null }) => ({
+          id: b.id,
+          type: b.type,
+          content: b.content,
+          settings: b.settings,
+          parentId: b.parentId,
+        })
+      );
+
+      setPage(data.id, data.title, blocks, data.updatedAt, data.description, data.slug);
+    } catch {
+      setLoadError("server-error");
+    } finally {
+      setLoading(false);
     }
+  }, [params.pageId, setPage]);
+
+  useEffect(() => {
     loadPage();
-  }, [params.pageId, setPage, toast]);
+  }, [loadPage]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -160,6 +170,44 @@ export default function EditorPage() {
       <div className={styles.loadingContainer}>
         <Skeleton height={56} />
         <Skeleton height={600} />
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className={styles.errorContainer}>
+        <div className={styles.errorCard}>
+          <div className={styles.errorIcon}>
+            <AlertCircle size={32} />
+          </div>
+          {loadError === "not-found" ? (
+            <>
+              <h2 className={styles.errorTitle}>Page not found</h2>
+              <p className={styles.errorText}>
+                This page may have been deleted or you don&apos;t have access to it.
+              </p>
+              <Button onClick={() => router.push("/sites")}>
+                Back to sites
+              </Button>
+            </>
+          ) : (
+            <>
+              <h2 className={styles.errorTitle}>Failed to load page</h2>
+              <p className={styles.errorText}>
+                Something went wrong while loading this page. Please try again.
+              </p>
+              <div className={styles.errorActions}>
+                <Button onClick={loadPage} leftIcon={<RefreshCw size={16} />}>
+                  Try again
+                </Button>
+                <Button variant="ghost" onClick={() => router.push("/sites")}>
+                  Back to sites
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     );
   }

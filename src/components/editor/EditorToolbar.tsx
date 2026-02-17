@@ -99,10 +99,14 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, onPubl
           </span>
         )}
         {!hasConflict && !isSaving && saveError && (
-          <span className={`${styles.saveStatus} ${styles.saveError}`}>
+          <button
+            className={`${styles.saveStatus} ${styles.saveError} ${styles.saveErrorBtn}`}
+            onClick={() => save()}
+            title="Click to retry saving"
+          >
             <AlertCircle size={14} />
-            Save failed
-          </span>
+            Save failed — click to retry
+          </button>
         )}
         {!hasConflict && !isSaving && !saveError && isDirty && (
           <span className={styles.saveStatus}>Unsaved changes</span>

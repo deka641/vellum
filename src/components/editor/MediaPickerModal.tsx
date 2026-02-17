@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, AlertCircle, RefreshCw } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -31,6 +31,7 @@ interface MediaPickerModalProps {
 export function MediaPickerModal({ open, onOpenChange, onSelect }: MediaPickerModalProps) {
   const [items, setItems] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -49,6 +50,7 @@ export function MediaPickerModal({ open, onOpenChange, onSelect }: MediaPickerMo
 
   const fetchMedia = useCallback(async () => {
     setLoading(true);
+    setFetchError(false);
     try {
       const params = new URLSearchParams({ page: String(page) });
       if (debouncedSearch) params.set("search", debouncedSearch);
@@ -57,9 +59,12 @@ export function MediaPickerModal({ open, onOpenChange, onSelect }: MediaPickerMo
         const data = await res.json();
         setItems(data.media || []);
         setTotalPages(data.pages || 1);
+      } else {
+        setFetchError(true);
       }
-    } catch {
-      // silently fail
+    } catch (e) {
+      console.error("Failed to fetch media:", e);
+      setFetchError(true);
     } finally {
       setLoading(false);
     }
@@ -127,6 +132,32 @@ export function MediaPickerModal({ open, onOpenChange, onSelect }: MediaPickerMo
           <p style={{ textAlign: "center", padding: "2rem", color: "var(--color-text-tertiary)", fontSize: "var(--text-sm)" }}>
             Loading media...
           </p>
+        ) : fetchError ? (
+          <div style={{ textAlign: "center", padding: "2rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
+            <AlertCircle size={24} style={{ color: "var(--color-error, #DC2626)" }} />
+            <p style={{ color: "var(--color-text-secondary)", fontSize: "var(--text-sm)", margin: 0 }}>
+              Failed to load media
+            </p>
+            <button
+              type="button"
+              onClick={fetchMedia}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "6px 12px",
+                fontSize: "var(--text-sm)",
+                color: "var(--color-accent)",
+                background: "var(--color-accent-light)",
+                border: "none",
+                borderRadius: "var(--radius-md)",
+                cursor: "pointer",
+              }}
+            >
+              <RefreshCw size={14} />
+              Retry
+            </button>
+          </div>
         ) : items.length === 0 ? (
           <p style={{ textAlign: "center", padding: "2rem", color: "var(--color-text-tertiary)", fontSize: "var(--text-sm)" }}>
             {debouncedSearch ? `No results for "${debouncedSearch}"` : "No media files yet. Upload one above."}

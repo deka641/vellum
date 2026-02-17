@@ -77,7 +77,9 @@ export default function SiteDetailPage() {
     fetch("/api/templates")
       .then((res) => res.json())
       .then(setTemplates)
-      .catch(() => {});
+      .catch((e) => {
+        console.warn("Failed to load templates:", e);
+      });
   }, []);
 
   function handleOpenNewPage() {
@@ -130,7 +132,10 @@ export default function SiteDetailPage() {
         const pages = await res.json();
         setTrashedPages(pages.filter((p: PageItem) => p.deletedAt !== null));
       }
-    } catch { /* ignore */ }
+    } catch (e) {
+      console.error("Failed to load trashed pages:", e);
+      toast("Failed to load trash", "error");
+    }
   }
 
   function handleDeletePage(pageId: string) {

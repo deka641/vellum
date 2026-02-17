@@ -1,0 +1,145 @@
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  margin-bottom: var(--space-6);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
+.title {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-primary);
+  letter-spacing: normal;
+}
+
+.progress {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  font-weight: var(--weight-medium);
+}
+
+.progressBar {
+  height: 4px;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-bottom: var(--space-4);
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--color-accent);
+  border-radius: var(--radius-full);
+  transition: width 0.5s ease-out;
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: inherit;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+
+.step:hover {
+  background: var(--color-bg-secondary);
+}
+
+.stepDone {
+  opacity: 0.6;
+}
+
+.stepCheck {
+  flex-shrink: 0;
+}
+
+.checkDone {
+  color: var(--color-success, #16a34a);
+}
+
+.checkPending {
+  color: var(--color-border);
+}
+
+.stepIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: var(--color-accent-light);
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.stepDone .stepIcon {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-tertiary);
+}
+
+.stepContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stepLabel {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-primary);
+}
+
+.stepDone .stepLabel {
+  text-decoration: line-through;
+  color: var(--color-text-tertiary);
+}
+
+.stepDesc {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+}
+
+/* Done state */
+.doneHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.doneIcon {
+  color: var(--color-success, #16a34a);
+  flex-shrink: 0;
+}
+
+.doneTitle {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-primary);
+  letter-spacing: normal;
+}
+
+.doneText {
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+  margin-top: 2px;
+}

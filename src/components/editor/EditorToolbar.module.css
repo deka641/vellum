@@ -75,6 +75,20 @@
   color: var(--color-error, #dc2626);
 }
 
+.saveErrorBtn {
+  background: var(--color-error-light, #FEF2F2);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: var(--space-1) var(--space-2);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+
+.saveErrorBtn:hover {
+  background: #FECACA;
+}
+
 .saveConflict {
   color: var(--color-warning);
 }

@@ -3,13 +3,14 @@ import { Globe, FileText, Send, Image as ImageIcon, Plus, Upload, LayoutTemplate
 import { requireAuth } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import { Topbar } from "@/components/dashboard/Topbar";
+import { GettingStarted } from "@/components/dashboard/GettingStarted";
 import { formatDate } from "@/lib/utils";
 import styles from "./home.module.css";
 
 export default async function DashboardPage() {
   const user = await requireAuth();
 
-  const [siteCount, pageCount, publishedCount, submissionCount, mediaCount, recentPages, recentSubmissions] =
+  const [siteCount, pageCount, publishedCount, submissionCount, mediaCount, recentPages, recentSubmissions, firstSite] =
     await Promise.all([
       db.site.count({ where: { userId: user.id } }),
       db.page.count({ where: { site: { userId: user.id } } }),
@@ -43,12 +44,23 @@ export default async function DashboardPage() {
           page: { select: { title: true } },
         },
       }),
+      db.site.findFirst({
+        where: { userId: user.id },
+        orderBy: { createdAt: "asc" },
+        select: { id: true },
+      }),
     ]);
 
   return (
     <>
       <Topbar title={`Welcome back${user.name ? `, ${user.name}` : ""}`} />
       <div className={styles.content}>
+        <GettingStarted
+          siteCount={siteCount}
+          pageCount={pageCount}
+          publishedCount={publishedCount}
+          firstSiteId={firstSite?.id}
+        />
         <div className={styles.stats}>
           <div className={styles.statCard}>
             <div className={`${styles.statIcon} ${styles.statIconAccent}`}><Globe size={20} /></div>
