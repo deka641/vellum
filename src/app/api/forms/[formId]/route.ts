@@ -25,13 +25,18 @@ export async function POST(
       );
     }
 
-    const { data, pageId } = body as { data: Record<string, unknown>; pageId: string };
+    const { data, pageId, _hp } = body as { data: Record<string, unknown>; pageId: string; _hp?: string };
 
     if (!data || typeof data !== "object" || !pageId) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
       );
+    }
+
+    // Honeypot spam check — silently succeed without storing
+    if (_hp) {
+      return NextResponse.json({ id: "ok" }, { status: 201 });
     }
 
     // Verify the page exists and is published

@@ -7,6 +7,7 @@ export default auth((req) => {
 
   const isAuthRoute = pathname.startsWith("/login") || pathname.startsWith("/register");
   const isProtectedRoute =
+    pathname === "/" ||
     pathname.startsWith("/sites") ||
     pathname.startsWith("/editor") ||
     pathname.startsWith("/media") ||

@@ -1,9 +1,21 @@
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { type Metadata } from "next";
 import { db } from "@/lib/db";
 import { getBaseUrl, buildPageUrl } from "@/lib/url";
 import { PublishedPage } from "@/components/published/PublishedPage";
 import { WebPageJsonLd } from "@/components/published/JsonLd";
+
+const getSite = cache((slug: string) =>
+  db.site.findUnique({ where: { slug } })
+);
+
+const getPage = cache((siteId: string, pageSlug: string) =>
+  db.page.findFirst({
+    where: { siteId, slug: pageSlug, status: "PUBLISHED", deletedAt: null },
+    include: { blocks: { orderBy: { sortOrder: "asc" } } },
+  })
+);
 
 export const revalidate = 3600;
 
@@ -67,13 +79,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { siteSlug, path: pathSegments } = await params;
   const pageSlug = pathSegments?.[0] || "home";
 
-  const site = await db.site.findUnique({ where: { slug: siteSlug } });
+  const site = await getSite(siteSlug);
   if (!site) return {};
 
-  const page = await db.page.findFirst({
-    where: { siteId: site.id, slug: pageSlug, status: "PUBLISHED", deletedAt: null },
-    include: { blocks: { orderBy: { sortOrder: "asc" } } },
-  });
+  const page = await getPage(site.id, pageSlug);
 
   if (!page) return {};
 
@@ -118,13 +127,10 @@ export default async function PublicSitePage({ params }: Props) {
   const { siteSlug, path: pathSegments } = await params;
   const pageSlug = pathSegments?.[0] || "home";
 
-  const site = await db.site.findUnique({ where: { slug: siteSlug } });
+  const site = await getSite(siteSlug);
   if (!site) notFound();
 
-  const page = await db.page.findFirst({
-    where: { siteId: site.id, slug: pageSlug, status: "PUBLISHED", deletedAt: null },
-    include: { blocks: { orderBy: { sortOrder: "asc" } } },
-  });
+  const page = await getPage(site.id, pageSlug);
 
   if (!page) notFound();
 

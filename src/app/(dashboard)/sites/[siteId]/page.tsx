@@ -214,31 +214,8 @@ export default function SiteDetailPage() {
 
   async function handleDuplicatePage(pageId: string) {
     try {
-      const blocksRes = await fetch(`/api/pages/${pageId}/blocks`);
-      if (!blocksRes.ok) {
-        toast("Failed to duplicate page", "error");
-        return;
-      }
-      const blocks = await blocksRes.json();
-
       const sourcePage = site?.pages.find((p) => p.id === pageId);
       if (!sourcePage || !site) return;
-
-      // Remap block IDs to new unique IDs, preserving parentId references for columns
-      const idMap = new Map<string, string>();
-      for (const block of blocks) {
-        const newId = crypto.randomUUID();
-        idMap.set(block.id, newId);
-      }
-
-      const templateBlocks = blocks.map((block: { id: string; type: string; content: unknown; settings: unknown; parentId: string | null }, i: number) => ({
-        id: idMap.get(block.id),
-        type: block.type,
-        content: block.content,
-        settings: block.settings,
-        sortOrder: i,
-        parentId: block.parentId ? idMap.get(block.parentId) || null : null,
-      }));
 
       const res = await fetch("/api/pages", {
         method: "POST",
@@ -246,7 +223,7 @@ export default function SiteDetailPage() {
         body: JSON.stringify({
           title: `${sourcePage.title} (Copy)`,
           siteId: site.id,
-          templateBlocks,
+          sourcePageId: pageId,
         }),
       });
 

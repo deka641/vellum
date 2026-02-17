@@ -11,12 +11,15 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ className, label, error, hint, id, ...props }, ref) => {
     const inputId = id || props.name;
+    const errorId = inputId ? `${inputId}-error` : undefined;
+    const hintId = inputId ? `${inputId}-hint` : undefined;
+    const describedBy = error ? errorId : hint ? hintId : undefined;
     return (
       <div className={cn(styles.wrapper, error && styles.error, className)}>
         {label && <label htmlFor={inputId} className={styles.label}>{label}</label>}
-        <input ref={ref} id={inputId} className={styles.input} {...props} />
-        {error && <span className={styles.errorMessage}>{error}</span>}
-        {hint && !error && <span className={styles.hint}>{hint}</span>}
+        <input ref={ref} id={inputId} className={styles.input} aria-invalid={!!error || undefined} aria-describedby={describedBy} {...props} />
+        {error && <span id={errorId} className={styles.errorMessage}>{error}</span>}
+        {hint && !error && <span id={hintId} className={styles.hint}>{hint}</span>}
       </div>
     );
   }
@@ -32,12 +35,15 @@ interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ className, label, error, hint, id, ...props }, ref) => {
     const inputId = id || props.name;
+    const errorId = inputId ? `${inputId}-error` : undefined;
+    const hintId = inputId ? `${inputId}-hint` : undefined;
+    const describedBy = error ? errorId : hint ? hintId : undefined;
     return (
       <div className={cn(styles.wrapper, error && styles.error, className)}>
         {label && <label htmlFor={inputId} className={styles.label}>{label}</label>}
-        <textarea ref={ref} id={inputId} className={cn(styles.input, styles.textarea)} {...props} />
-        {error && <span className={styles.errorMessage}>{error}</span>}
-        {hint && !error && <span className={styles.hint}>{hint}</span>}
+        <textarea ref={ref} id={inputId} className={cn(styles.input, styles.textarea)} aria-invalid={!!error || undefined} aria-describedby={describedBy} {...props} />
+        {error && <span id={errorId} className={styles.errorMessage}>{error}</span>}
+        {hint && !error && <span id={hintId} className={styles.hint}>{hint}</span>}
       </div>
     );
   }

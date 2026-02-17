@@ -75,11 +75,13 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
       }
     }
 
+    const honeypotValue = formData.get("website_url")?.toString() || "";
+
     try {
       const res = await fetch(`/api/forms/${blockId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data, pageId }),
+        body: JSON.stringify({ data, pageId, _hp: honeypotValue }),
       });
 
       if (res.ok) {
@@ -116,6 +118,7 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
   function renderField(field: FormField) {
     const hasError = Boolean(fieldErrors[field.id]);
     const errorClass = hasError ? ` ${styles.formInputError}` : "";
+    const errorId = `${field.id}-error`;
 
     switch (field.type) {
       case "textarea":
@@ -128,9 +131,11 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
               placeholder={field.placeholder}
               rows={4}
               required={field.required}
+              aria-invalid={hasError || undefined}
+              aria-describedby={hasError ? errorId : undefined}
               onChange={() => clearFieldError(field.id)}
             />
-            {hasError && <span className={styles.formError}>{fieldErrors[field.id]}</span>}
+            {hasError && <span id={errorId} className={styles.formError}>{fieldErrors[field.id]}</span>}
           </>
         );
       case "select":
@@ -141,6 +146,8 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
               name={field.id}
               className={`${styles.formSelect}${errorClass}`}
               required={field.required}
+              aria-invalid={hasError || undefined}
+              aria-describedby={hasError ? errorId : undefined}
               onChange={() => clearFieldError(field.id)}
             >
               <option value="">{field.placeholder || "Select..."}</option>
@@ -148,7 +155,7 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
                 <option key={i} value={opt}>{opt}</option>
               ))}
             </select>
-            {hasError && <span className={styles.formError}>{fieldErrors[field.id]}</span>}
+            {hasError && <span id={errorId} className={styles.formError}>{fieldErrors[field.id]}</span>}
           </>
         );
       case "radio":
@@ -169,7 +176,7 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
                 </label>
               ))}
             </fieldset>
-            {hasError && <span className={styles.formError}>{fieldErrors[field.id]}</span>}
+            {hasError && <span id={errorId} className={styles.formError}>{fieldErrors[field.id]}</span>}
           </>
         );
       case "checkbox":
@@ -196,9 +203,11 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
               className={`${styles.formInput}${errorClass}`}
               placeholder={field.placeholder}
               required={field.required}
+              aria-invalid={hasError || undefined}
+              aria-describedby={hasError ? errorId : undefined}
               onChange={() => clearFieldError(field.id)}
             />
-            {hasError && <span className={styles.formError}>{fieldErrors[field.id]}</span>}
+            {hasError && <span id={errorId} className={styles.formError}>{fieldErrors[field.id]}</span>}
           </>
         );
     }
@@ -206,6 +215,10 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
 
   return (
     <form className={styles.formBlock} onSubmit={handleSubmit} ref={formRef} noValidate>
+      <div className={styles.honeypot} aria-hidden="true">
+        <label htmlFor={`${blockId}_hp`}>Do not fill this field</label>
+        <input type="text" id={`${blockId}_hp`} name="website_url" tabIndex={-1} autoComplete="off" />
+      </div>
       {fields.map((field) => (
         <div key={field.id} className={styles.formField}>
           <label className={styles.formLabel} htmlFor={field.id} id={field.id + "-label"}>

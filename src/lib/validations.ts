@@ -105,6 +105,7 @@ export const createPageSchema = z.object({
   title: z.string().min(1).max(200),
   siteId: z.string().min(1),
   templateBlocks: z.array(templateBlockSchema).optional(),
+  sourcePageId: z.string().min(1).optional(),
 });
 
 export const updatePageSchema = z.object({
@@ -180,3 +181,34 @@ export const changePasswordSchema = z.object({
 export const formSubmissionSchema = z.object({
   data: z.record(z.string(), z.string().max(10000)),
 });
+
+// --- Block hierarchy validation ---
+
+const DISALLOWED_NESTED_TYPES = ["columns", "form", "video"];
+
+interface BlockLike {
+  type: string;
+  content: Record<string, unknown>;
+}
+
+export function validateBlockHierarchy(
+  blocks: BlockLike[]
+): { valid: boolean; error?: string } {
+  for (const block of blocks) {
+    if (block.type === "columns") {
+      const columns = (block.content.columns || []) as Array<{ blocks?: BlockLike[] }>;
+      for (const col of columns) {
+        if (!Array.isArray(col.blocks)) continue;
+        for (const nested of col.blocks) {
+          if (DISALLOWED_NESTED_TYPES.includes(nested.type)) {
+            return {
+              valid: false,
+              error: `Block type "${nested.type}" is not allowed inside columns`,
+            };
+          }
+        }
+      }
+    }
+  }
+  return { valid: true };
+}

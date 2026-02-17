@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { slugify } from "@/lib/utils";
+import { slugify, generateId } from "@/lib/utils";
 import { sanitizeBlocks } from "@/lib/sanitize";
 import { Prisma } from "@prisma/client";
-import { parseBody, createPageSchema } from "@/lib/validations";
+import { parseBody, createPageSchema, validateBlockHierarchy } from "@/lib/validations";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function GET(req: Request) {
@@ -69,7 +69,14 @@ export async function POST(req: Request) {
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
-    const { title, siteId, templateBlocks } = parsed.data;
+    const { title, siteId, templateBlocks, sourcePageId } = parsed.data;
+
+    if (templateBlocks) {
+      const hierarchy = validateBlockHierarchy(templateBlocks as Array<{ type: string; content: Record<string, unknown> }>);
+      if (!hierarchy.valid) {
+        return NextResponse.json({ error: hierarchy.error }, { status: 400 });
+      }
+    }
 
     const site = await db.site.findFirst({
       where: { id: siteId, userId: session.user.id },
@@ -99,7 +106,33 @@ export async function POST(req: Request) {
         },
       });
 
-      if (templateBlocks) {
+      if (sourcePageId) {
+        // Server-side page duplication: clone blocks from source page
+        const sourcePage = await tx.page.findFirst({
+          where: { id: sourcePageId, site: { userId: session.user!.id! } },
+          include: { blocks: { orderBy: { sortOrder: "asc" } } },
+        });
+
+        if (sourcePage && sourcePage.blocks.length > 0) {
+          // Remap IDs to new unique IDs, preserving parentId references
+          const idMap = new Map<string, string>();
+          for (const block of sourcePage.blocks) {
+            idMap.set(block.id, generateId());
+          }
+
+          await tx.block.createMany({
+            data: sourcePage.blocks.map((block, i) => ({
+              id: idMap.get(block.id)!,
+              type: block.type,
+              content: (block.content || {}) as Prisma.InputJsonValue,
+              settings: (block.settings || {}) as Prisma.InputJsonValue,
+              sortOrder: i,
+              pageId: p.id,
+              parentId: block.parentId ? idMap.get(block.parentId) || null : null,
+            })),
+          });
+        }
+      } else if (templateBlocks) {
         const cleanBlocks = sanitizeBlocks(templateBlocks);
         await tx.block.createMany({
           data: cleanBlocks.map((block, i: number) => ({

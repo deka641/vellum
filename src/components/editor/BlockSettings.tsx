@@ -410,6 +410,44 @@ export function BlockSettings() {
                 </div>
               </div>
             </div>
+
+            <div className={styles.field}>
+              <label className={styles.label}>Margin</label>
+              <div className={styles.paddingRow}>
+                <div className={styles.paddingField}>
+                  <span className={styles.paddingLabel}>Top</span>
+                  <select
+                    className={styles.paddingInput}
+                    value={block.settings.marginTop || ""}
+                    onChange={(e) => handleSettingsUpdate(block.id, { marginTop: e.target.value || undefined })}
+                  >
+                    <option value="">0</option>
+                    <option value="8px">8px</option>
+                    <option value="16px">16px</option>
+                    <option value="24px">24px</option>
+                    <option value="32px">32px</option>
+                    <option value="48px">48px</option>
+                    <option value="64px">64px</option>
+                  </select>
+                </div>
+                <div className={styles.paddingField}>
+                  <span className={styles.paddingLabel}>Bottom</span>
+                  <select
+                    className={styles.paddingInput}
+                    value={block.settings.marginBottom || ""}
+                    onChange={(e) => handleSettingsUpdate(block.id, { marginBottom: e.target.value || undefined })}
+                  >
+                    <option value="">0</option>
+                    <option value="8px">8px</option>
+                    <option value="16px">16px</option>
+                    <option value="24px">24px</option>
+                    <option value="32px">32px</option>
+                    <option value="48px">48px</option>
+                    <option value="64px">64px</option>
+                  </select>
+                </div>
+              </div>
+            </div>
           </>
         )}
       </div>

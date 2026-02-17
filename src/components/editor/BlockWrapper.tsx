@@ -34,6 +34,8 @@ export function BlockWrapper({ id, children }: BlockWrapperProps) {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
+    ...(block?.settings.marginTop ? { marginTop: block.settings.marginTop } : {}),
+    ...(block?.settings.marginBottom ? { marginBottom: block.settings.marginBottom } : {}),
   };
 
   return (

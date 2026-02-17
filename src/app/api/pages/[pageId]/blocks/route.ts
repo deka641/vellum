@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { sanitizeBlocks } from "@/lib/sanitize";
 import type { Prisma } from "@prisma/client";
-import { parseBody, updateBlocksSchema } from "@/lib/validations";
+import { parseBody, updateBlocksSchema, validateBlockHierarchy } from "@/lib/validations";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function GET(
@@ -67,6 +67,14 @@ export async function PUT(
       return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
     const { blocks, title, expectedUpdatedAt } = parsed.data;
+
+    if (blocks) {
+      const hierarchy = validateBlockHierarchy(blocks as Array<{ type: string; content: Record<string, unknown> }>);
+      if (!hierarchy.valid) {
+        return NextResponse.json({ error: hierarchy.error }, { status: 400 });
+      }
+    }
+
     const userId = session.user.id;
 
     const result = await db.$transaction(async (tx) => {

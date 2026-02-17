@@ -124,6 +124,8 @@ export interface BlockSettings {
   fontSize?: string;
   paddingY?: string;
   paddingX?: string;
+  marginTop?: string;
+  marginBottom?: string;
   hidden?: boolean;
 }
 

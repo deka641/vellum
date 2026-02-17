@@ -113,7 +113,7 @@ export function useAutosave() {
         const message = err instanceof Error ? err.message : "Save failed";
 
         if (attempt < MAX_RETRIES - 1) {
-          const delay = BASE_DELAY * Math.pow(2, attempt);
+          const delay = Math.min(BASE_DELAY * Math.pow(2, attempt), 30000);
           toast(`Save failed, retrying... (${attempt + 2}/${MAX_RETRIES})`, "info");
           await new Promise((resolve) => setTimeout(resolve, delay));
         } else {

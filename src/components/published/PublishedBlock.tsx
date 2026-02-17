@@ -28,6 +28,8 @@ function buildBlockStyle(settings: Record<string, unknown>): CSSProperties {
     style.paddingLeft = settings.paddingX;
     style.paddingRight = settings.paddingX;
   }
+  if (settings.marginTop && typeof settings.marginTop === "string") style.marginTop = settings.marginTop;
+  if (settings.marginBottom && typeof settings.marginBottom === "string") style.marginBottom = settings.marginBottom;
   return style;
 }
 
@@ -104,6 +106,7 @@ export function PublishedBlock({ block, pageId }: PublishedBlockProps) {
           {imgLink && imgLink !== "#" ? (
             <a
               href={imgLink}
+              aria-label={(content.alt as string) || "Image link"}
               {...(content.linkNewTab ? { target: "_blank", rel: "noopener noreferrer" } : {})}
             >
               {imgContent}
@@ -292,6 +295,7 @@ export function PublishedBlock({ block, pageId }: PublishedBlockProps) {
               target="_blank"
               rel="noopener noreferrer"
               title={link.platform}
+              aria-label={link.platform}
             >
               <SocialIcon platform={link.platform} />
               {socialStyle === "pills" && (
