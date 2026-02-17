@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readFile, stat } from "fs/promises";
 import path from "path";
+import { apiError } from "@/lib/api-helpers";
 
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
 
@@ -68,10 +69,6 @@ export async function GET(
     ) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-    console.error("GET /api/uploads/[filename] failed:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("GET /api/uploads/[filename]", error);
   }
 }

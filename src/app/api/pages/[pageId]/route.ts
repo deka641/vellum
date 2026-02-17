@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { parseBody, updatePageSchema } from "@/lib/validations";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
+import { apiError } from "@/lib/api-helpers";
 
 export async function GET(
   _req: Request,
@@ -34,11 +35,7 @@ export async function GET(
 
     return NextResponse.json(page);
   } catch (error) {
-    console.error("GET /api/pages/[pageId] failed:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("GET /api/pages/[pageId]", error);
   }
 }
 
@@ -122,11 +119,7 @@ export async function PATCH(
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.error("PATCH /api/pages/[pageId] failed:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("PATCH /api/pages/[pageId]", error);
   }
 }
 
@@ -176,10 +169,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("DELETE /api/pages/[pageId] failed:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("DELETE /api/pages/[pageId]", error);
   }
 }

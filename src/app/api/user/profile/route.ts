@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { apiError } from "@/lib/api-helpers";
 import { parseBody, updateProfileSchema } from "@/lib/validations";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
@@ -22,11 +23,7 @@ export async function GET() {
 
     return NextResponse.json(user);
   } catch (error) {
-    console.error("GET /api/user/profile failed:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("GET /api/user/profile", error);
   }
 }
 
@@ -85,10 +82,6 @@ export async function PATCH(req: Request) {
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.error("PATCH /api/user/profile failed:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("PATCH /api/user/profile", error);
   }
 }

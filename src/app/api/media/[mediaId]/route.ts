@@ -5,6 +5,7 @@ import { unlink } from "fs/promises";
 import { parseBody, updateMediaSchema } from "@/lib/validations";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { safeMediaFilePath } from "@/lib/upload";
+import { apiError } from "@/lib/api-helpers";
 
 export async function PATCH(
   req: Request,
@@ -51,11 +52,7 @@ export async function PATCH(
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.error("PATCH /api/media/[mediaId] failed:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("PATCH /api/media/[mediaId]", error);
   }
 }
 
@@ -97,10 +94,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("DELETE /api/media/[mediaId] failed:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("DELETE /api/media/[mediaId]", error);
   }
 }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { apiError } from "@/lib/api-helpers";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function POST(
@@ -48,11 +49,7 @@ export async function POST(
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.error("POST /api/pages/[pageId]/publish failed:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("POST /api/pages/[pageId]/publish", error);
   }
 }
 
@@ -100,10 +97,6 @@ export async function DELETE(
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.error("DELETE /api/pages/[pageId]/publish failed:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("DELETE /api/pages/[pageId]/publish", error);
   }
 }

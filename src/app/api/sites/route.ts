@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { apiError } from "@/lib/api-helpers";
 import { slugify } from "@/lib/utils";
 import { parseBody, createSiteSchema } from "@/lib/validations";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
@@ -22,11 +23,7 @@ export async function GET() {
 
     return NextResponse.json(sites);
   } catch (error) {
-    console.error("GET /api/sites failed:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("GET /api/sites", error);
   }
 }
 
@@ -89,10 +86,6 @@ export async function POST(req: Request) {
 
     return NextResponse.json(site, { status: 201 });
   } catch (error) {
-    console.error("POST /api/sites failed:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("POST /api/sites", error);
   }
 }

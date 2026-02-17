@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
+import { apiError } from "@/lib/api-helpers";
 
 const BATCH_SIZE = 500;
 
@@ -139,10 +140,6 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error("GET /api/sites/[siteId]/submissions/export failed:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("GET /api/sites/[siteId]/submissions/export", error);
   }
 }

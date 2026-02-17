@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { saveUploadedFile, UnsafeFileTypeError } from "@/lib/upload";
 import { getImageDimensions, optimizeImage } from "@/lib/image";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
+import { apiError } from "@/lib/api-helpers";
 import type { Prisma } from "@prisma/client";
 
 export async function GET(req: Request) {
@@ -14,9 +15,10 @@ export async function GET(req: Request) {
     }
 
     const { searchParams } = new URL(req.url);
-    const page = parseInt(searchParams.get("page") || "1");
+    const rawPage = parseInt(searchParams.get("page") || "1", 10);
+    const page = isNaN(rawPage) ? 1 : Math.max(1, Math.min(rawPage, 10000));
     const limit = 24;
-    const search = searchParams.get("search")?.trim() || "";
+    const search = (searchParams.get("search")?.trim() || "").slice(0, 200);
     const type = searchParams.get("type") || "";
 
     const where: Prisma.MediaWhereInput = { userId: session.user.id };
@@ -56,11 +58,7 @@ export async function GET(req: Request) {
       page,
     });
   } catch (error) {
-    console.error("GET /api/media failed:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("GET /api/media", error);
   }
 }
 
@@ -131,10 +129,6 @@ export async function POST(req: Request) {
       );
     }
   } catch (error) {
-    console.error("POST /api/media failed:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("POST /api/media", error);
   }
 }

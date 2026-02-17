@@ -8,6 +8,7 @@ import { EditorToolbar } from "@/components/editor/EditorToolbar";
 import { EditorCanvas } from "@/components/editor/EditorCanvas";
 import { EditorSidebar } from "@/components/editor/EditorSidebar";
 import { ConflictBanner } from "@/components/editor/ConflictBanner";
+import { PublishSuccessDialog } from "@/components/editor/PublishSuccessDialog";
 import { useToast } from "@/components/ui/Toast/Toast";
 import { Skeleton } from "@/components/ui/Skeleton/Skeleton";
 import type { EditorBlock } from "@/types/blocks";
@@ -22,6 +23,7 @@ export default function EditorPage() {
   const [isHomepage, setIsHomepage] = useState(false);
   const [pageStatus, setPageStatus] = useState<"DRAFT" | "PUBLISHED">("DRAFT");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [publishDialogOpen, setPublishDialogOpen] = useState(false);
   const { setPage, addBlock, isDirty, pageSlug } = useEditorStore();
   const { save, forceSave } = useAutosave();
 
@@ -144,7 +146,7 @@ export default function EditorPage() {
         if (data.updatedAt) {
           useEditorStore.getState().setLastSavedAt(data.updatedAt);
         }
-        toast("Page published!");
+        setPublishDialogOpen(true);
       } else {
         toast("Failed to publish", "error");
       }
@@ -179,6 +181,15 @@ export default function EditorPage() {
           onMobileToggle={() => setSidebarOpen((o) => !o)}
         />
       </div>
+      <PublishSuccessDialog
+        open={publishDialogOpen}
+        onOpenChange={setPublishDialogOpen}
+        pageUrl={
+          typeof window !== "undefined"
+            ? `${window.location.origin}${isHomepage ? `/s/${siteSlug}` : `/s/${siteSlug}/${pageSlug}`}`
+            : ""
+        }
+      />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { apiError } from "@/lib/api-helpers";
 import { sanitizeBlocks } from "@/lib/sanitize";
 import type { Prisma } from "@prisma/client";
 import { parseBody, createTemplateSchema } from "@/lib/validations";
@@ -25,11 +26,7 @@ export async function GET() {
 
     return NextResponse.json(templates);
   } catch (error) {
-    console.error("GET /api/templates failed:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("GET /api/templates", error);
   }
 }
 
@@ -73,10 +70,6 @@ export async function POST(req: Request) {
 
     return NextResponse.json(template, { status: 201 });
   } catch (error) {
-    console.error("POST /api/templates failed:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("POST /api/templates", error);
   }
 }

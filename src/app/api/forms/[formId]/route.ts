@@ -3,6 +3,7 @@ import sanitize from "sanitize-html";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { rateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
+import { apiError } from "@/lib/api-helpers";
 
 export async function POST(
   req: Request,
@@ -51,6 +52,18 @@ export async function POST(
       );
     }
 
+    // Verify the block exists on this page and is a form block
+    const formBlock = await db.block.findFirst({
+      where: { id: blockId, pageId, type: "form" },
+    });
+
+    if (!formBlock) {
+      return NextResponse.json(
+        { error: "Form not found" },
+        { status: 404 }
+      );
+    }
+
     // Sanitize all values
     const sanitizedData: Record<string, string> = {};
     for (const [key, value] of Object.entries(data)) {
@@ -72,11 +85,7 @@ export async function POST(
 
     return NextResponse.json({ id: submission.id }, { status: 201 });
   } catch (error) {
-    console.error("POST /api/forms/[formId] failed:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("POST /api/forms/[formId]", error);
   }
 }
 
@@ -116,10 +125,6 @@ export async function GET(
 
     return NextResponse.json({ submissions });
   } catch (error) {
-    console.error("GET /api/forms/[formId] failed:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("GET /api/forms/[formId]", error);
   }
 }

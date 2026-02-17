@@ -3,6 +3,7 @@ import { hash } from "bcryptjs";
 import { db } from "@/lib/db";
 import { parseBody, registerSchema } from "@/lib/validations";
 import { rateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
+import { apiError } from "@/lib/api-helpers";
 
 export async function POST(req: Request) {
   try {
@@ -51,10 +52,6 @@ export async function POST(req: Request) {
 
     return NextResponse.json(user, { status: 201 });
   } catch (error) {
-    console.error("POST /api/register failed:", error);
-    return NextResponse.json(
-      { error: "Something went wrong" },
-      { status: 500 }
-    );
+    return apiError("POST /api/register", error);
   }
 }

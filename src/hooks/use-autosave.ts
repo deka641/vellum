@@ -48,18 +48,30 @@ export function useAutosave() {
 
     if (res.status === 409) {
       const data = await res.json().catch(() => ({}));
-      if (data.serverState) {
-        setConflict({
-          serverBlocks: data.serverState.blocks.map((b: { id: string; type: string; content: unknown; settings: unknown; parentId: string | null }) => ({
-            id: b.id,
-            type: b.type,
-            content: b.content,
-            settings: b.settings,
-            parentId: b.parentId,
-          })),
-          serverTitle: data.serverState.title,
-          serverUpdatedAt: data.serverState.updatedAt,
-        });
+      if (data.serverState && Array.isArray(data.serverState.blocks)) {
+        // Validate each block has required fields before putting in store
+        const validBlocks = data.serverState.blocks.every(
+          (b: unknown) =>
+            b != null &&
+            typeof b === "object" &&
+            "id" in b && typeof (b as Record<string, unknown>).id === "string" &&
+            "type" in b && typeof (b as Record<string, unknown>).type === "string"
+        );
+        if (validBlocks && typeof data.serverState.title === "string" && typeof data.serverState.updatedAt === "string") {
+          setConflict({
+            serverBlocks: data.serverState.blocks.map((b: { id: string; type: string; content: unknown; settings: unknown; parentId: string | null }) => ({
+              id: b.id,
+              type: b.type,
+              content: b.content ?? {},
+              settings: b.settings ?? {},
+              parentId: b.parentId ?? null,
+            })),
+            serverTitle: data.serverState.title,
+            serverUpdatedAt: data.serverState.updatedAt,
+          });
+        } else {
+          throw new Error("Server returned invalid conflict data");
+        }
       }
       return { success: false, conflict: true };
     }

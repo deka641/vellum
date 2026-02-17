@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { apiError } from "@/lib/api-helpers";
 import { parseBody, updateSiteSchema } from "@/lib/validations";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { sanitizeUrl } from "@/lib/sanitize";
@@ -31,11 +32,7 @@ export async function GET(
 
     return NextResponse.json(site);
   } catch (error) {
-    console.error("GET /api/sites/[siteId] failed:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("GET /api/sites/[siteId]", error);
   }
 }
 
@@ -94,11 +91,7 @@ export async function PATCH(
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.error("PATCH /api/sites/[siteId] failed:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("PATCH /api/sites/[siteId]", error);
   }
 }
 
@@ -129,10 +122,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("DELETE /api/sites/[siteId] failed:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("DELETE /api/sites/[siteId]", error);
   }
 }

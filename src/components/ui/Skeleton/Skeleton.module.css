@@ -1,7 +1,22 @@
 .skeleton {
   background: var(--color-bg-secondary);
   border-radius: var(--radius-md);
-  animation: pulse 1.5s ease-in-out infinite;
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 100%
+  );
+  animation: shimmer 1.5s ease-in-out infinite;
+  background-size: 200% 100%;
 }
 
 .rounded {
@@ -14,17 +29,18 @@
   gap: var(--space-2);
 }
 
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
   }
-  50% {
-    opacity: 0.4;
+  100% {
+    background-position: -200% 0;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .skeleton {
+  .skeleton::after {
     animation: none;
+    display: none;
   }
 }

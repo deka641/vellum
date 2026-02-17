@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { compare, hash } from "bcryptjs";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { apiError } from "@/lib/api-helpers";
 import { parseBody, changePasswordSchema } from "@/lib/validations";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
@@ -52,10 +53,6 @@ export async function PUT(req: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("PUT /api/user/password failed:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("PUT /api/user/password", error);
   }
 }

@@ -5,6 +5,7 @@ import { parseBody, bulkDeleteMediaSchema } from "@/lib/validations";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { unlink } from "fs/promises";
 import { safeMediaFilePath } from "@/lib/upload";
+import { apiError } from "@/lib/api-helpers";
 
 export async function POST(req: Request) {
   try {
@@ -62,10 +63,6 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ deleted: media.length });
   } catch (error) {
-    console.error("POST /api/media/bulk-delete failed:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("POST /api/media/bulk-delete", error);
   }
 }

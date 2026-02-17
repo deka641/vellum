@@ -1,37 +1,29 @@
 import Link from "next/link";
+import { ArrowLeft, Home } from "lucide-react";
+import styles from "./not-found.module.css";
 
 export default function RootNotFound() {
   return (
     <html lang="en">
-      <body style={{
-        fontFamily: "system-ui, sans-serif",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        minHeight: "100vh",
-        margin: 0,
-        background: "#faf8f5",
-        color: "#2d2926",
-      }}>
-        <div style={{ textAlign: "center", maxWidth: 400, padding: 24 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 600, marginBottom: 8 }}>
-            404 - Page not found
-          </h1>
-          <p style={{ fontSize: 14, color: "#6b6560", marginBottom: 24, lineHeight: 1.6 }}>
-            The page you&apos;re looking for doesn&apos;t exist.
+      <body className={styles.page}>
+        <div className={styles.container}>
+          <Link href="/" className={styles.brand}>Vellum</Link>
+          <div className={styles.errorCode}>404</div>
+          <h1 className={styles.title}>Page not found</h1>
+          <p className={styles.description}>
+            This page seems to have wandered off.
+            The link may be broken, or the page may have been moved.
           </p>
-          <Link href="/login" style={{
-            display: "inline-block",
-            padding: "8px 20px",
-            background: "#c5a572",
-            color: "#fff",
-            borderRadius: 8,
-            textDecoration: "none",
-            fontSize: 14,
-            fontWeight: 500,
-          }}>
-            Go to login
-          </Link>
+          <div className={styles.actions}>
+            <Link href="/sites" className={styles.primaryLink}>
+              <ArrowLeft size={16} />
+              Go to Dashboard
+            </Link>
+            <Link href="/" className={styles.secondaryLink}>
+              <Home size={16} />
+              Homepage
+            </Link>
+          </div>
         </div>
       </body>
     </html>

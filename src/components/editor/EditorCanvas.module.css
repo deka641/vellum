@@ -4,6 +4,7 @@
   background: var(--color-bg-secondary);
   display: flex;
   justify-content: center;
+  align-items: flex-start;
   padding: var(--space-8);
   min-height: 0;
 }
@@ -80,4 +81,15 @@
   border-color: var(--color-accent);
   color: var(--color-accent);
   background: var(--color-accent-light);
+}
+
+.dragOverlay {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  opacity: 0.85;
+  padding: var(--space-4);
+  pointer-events: none;
+  max-width: 720px;
+  overflow: hidden;
 }

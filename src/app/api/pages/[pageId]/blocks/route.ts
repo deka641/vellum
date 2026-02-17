@@ -5,6 +5,7 @@ import { sanitizeBlocks } from "@/lib/sanitize";
 import type { Prisma } from "@prisma/client";
 import { parseBody, updateBlocksSchema, validateBlockHierarchy } from "@/lib/validations";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
+import { apiError } from "@/lib/api-helpers";
 
 export async function GET(
   _req: Request,
@@ -29,11 +30,7 @@ export async function GET(
 
     return NextResponse.json(page.blocks);
   } catch (error) {
-    console.error("GET /api/pages/[pageId]/blocks failed:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("GET /api/pages/[pageId]/blocks", error);
   }
 }
 
@@ -160,10 +157,6 @@ export async function PUT(
 
     return NextResponse.json({ success: true, updatedAt: result.updatedAt });
   } catch (error) {
-    console.error("PUT /api/pages/[pageId]/blocks failed:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("PUT /api/pages/[pageId]/blocks", error);
   }
 }

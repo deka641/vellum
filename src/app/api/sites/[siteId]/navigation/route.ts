@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { parseBody, updateNavigationSchema } from "@/lib/validations";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
+import { apiError } from "@/lib/api-helpers";
 
 export async function PATCH(
   req: Request,
@@ -80,10 +81,6 @@ export async function PATCH(
 
     return NextResponse.json({ pages: updatedPages });
   } catch (error) {
-    console.error("PATCH /api/sites/[siteId]/navigation failed:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("PATCH /api/sites/[siteId]/navigation", error);
   }
 }

@@ -96,7 +96,13 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   historyIndex: -1,
   previewMode: "desktop",
 
-  setPage: (pageId, title, blocks, updatedAt, description, slug) =>
+  setPage: (pageId, title, blocks, updatedAt, description, slug) => {
+    // Clear any pending content history timer to prevent stale closures
+    // from corrupting the new page's history stack
+    if (contentHistoryTimer) {
+      clearTimeout(contentHistoryTimer);
+      contentHistoryTimer = null;
+    }
     set({
       pageId,
       pageTitle: title,
@@ -110,7 +116,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       conflict: null,
       history: [{ blocks: structuredClone(blocks) }],
       historyIndex: 0,
-    }),
+    });
+  },
 
   addBlock: (type, index) =>
     set((state) => {
