@@ -24,9 +24,19 @@ export async function optimizeImage(filename: string): Promise<void> {
     const ext = path.extname(filename).toLowerCase();
 
     if ([".jpg", ".jpeg", ".png", ".webp"].includes(ext)) {
-      const buffer = await sharp(filepath)
-        .resize(1920, 1920, { fit: "inside", withoutEnlargement: true })
-        .toBuffer();
+      let pipeline = sharp(filepath)
+        .rotate() // auto-orient from EXIF, then strip metadata
+        .resize(1920, 1920, { fit: "inside", withoutEnlargement: true });
+
+      if (ext === ".jpg" || ext === ".jpeg") {
+        pipeline = pipeline.jpeg({ quality: 85, progressive: true });
+      } else if (ext === ".webp") {
+        pipeline = pipeline.webp({ quality: 82 });
+      } else if (ext === ".png") {
+        pipeline = pipeline.png({ compressionLevel: 9 });
+      }
+
+      const buffer = await pipeline.toBuffer();
       const fs = await import("fs/promises");
       await fs.writeFile(filepath, buffer);
     }

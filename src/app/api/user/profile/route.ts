@@ -53,10 +53,11 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
 
-    // Check email uniqueness if changing
-    if (parsed.data.email) {
+    // Check email uniqueness if changing (case-insensitive)
+    const normalizedEmail = parsed.data.email?.toLowerCase();
+    if (normalizedEmail) {
       const existing = await db.user.findUnique({
-        where: { email: parsed.data.email },
+        where: { email: normalizedEmail },
       });
       if (existing && existing.id !== userId) {
         return NextResponse.json(
@@ -70,7 +71,7 @@ export async function PATCH(req: Request) {
       where: { id: userId },
       data: {
         name: parsed.data.name,
-        email: parsed.data.email,
+        email: normalizedEmail ?? parsed.data.email,
       },
       select: {
         id: true,

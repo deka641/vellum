@@ -205,8 +205,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   setSaving: (saving) => set({ isSaving: saving }),
   setSaveError: (error) => set({ saveError: error }),
   setPageTitle: (title) => set({ pageTitle: title, isDirty: true, saveError: null }),
-  setPageDescription: (description) => set({ pageDescription: description }),
-  setPageSlug: (slug) => set({ pageSlug: slug }),
+  setPageDescription: (description) => set({ pageDescription: description, isDirty: true, saveError: null }),
+  setPageSlug: (slug) => set({ pageSlug: slug, isDirty: true, saveError: null }),
   setLastSavedAt: (updatedAt) => set({ lastSavedAt: updatedAt }),
   setConflict: (conflict) => set({ conflict }),
 
@@ -297,6 +297,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       const newBlocks = state.blocks.map((b) => {
         if (b.id !== parentId || b.type !== "columns") return b;
         const cols = structuredClone((b.content as ColumnsContent).columns);
+        if (colIndex < 0 || colIndex >= cols.length) return b;
         cols[colIndex].blocks.push(block);
         return { ...b, content: { columns: cols } };
       });
@@ -371,7 +372,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       const newBlocks = state.blocks.map((b) => {
         if (b.id !== parentId || b.type !== "columns") return b;
         const cols = structuredClone((b.content as ColumnsContent).columns);
+        if (colIndex < 0 || colIndex >= cols.length) return b;
         const colBlocks = cols[colIndex].blocks;
+        if (fromIndex < 0 || fromIndex >= colBlocks.length || toIndex < 0 || toIndex >= colBlocks.length) return b;
         const [moved] = colBlocks.splice(fromIndex, 1);
         colBlocks.splice(toIndex, 0, moved);
         return { ...b, content: { columns: cols } };

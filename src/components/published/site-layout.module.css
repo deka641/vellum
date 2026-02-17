@@ -5,6 +5,23 @@
   background: var(--color-surface);
 }
 
+.readingProgress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: var(--color-accent);
+  z-index: 9998;
+  transition: width 50ms linear;
+  box-shadow: 0 0 4px rgba(99, 102, 241, 0.3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .readingProgress {
+    display: none;
+  }
+}
+
 .skipLink {
   position: absolute;
   left: -10000px;

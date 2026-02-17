@@ -159,9 +159,11 @@ export default function MediaPage() {
           </div>
         ) : total === 0 && !debouncedSearch && typeFilter === "all" ? (
           <div className={styles.empty}>
-            <ImageIcon size={48} strokeWidth={1} />
+            <div className={styles.emptyIconCircle}>
+              <ImageIcon size={28} strokeWidth={1.5} />
+            </div>
             <h3>No media yet</h3>
-            <p>Upload your first file to get started</p>
+            <p>Upload images, videos, and documents to use across your sites</p>
           </div>
         ) : (
           <>

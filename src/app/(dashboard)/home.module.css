@@ -5,7 +5,7 @@
 
 .stats {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: var(--space-4);
   margin-bottom: var(--space-6);
 }
@@ -27,19 +27,40 @@
   width: 36px;
   height: 36px;
   border-radius: var(--radius-md);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+}
+
+.statIconAccent {
   background: var(--color-accent-light);
   color: var(--color-accent);
 }
 
-.statIconSuccess {
-  background: var(--color-bg-secondary);
-  color: var(--color-text-secondary);
+.statIconBlue {
+  background: #EFF6FF;
+  color: #3B82F6;
+}
+
+.statIconGreen {
+  background: var(--color-success-light);
+  color: var(--color-success);
+}
+
+.statIconOrange {
+  background: var(--color-warning-light);
+  color: var(--color-warning);
+}
+
+.statIconPurple {
+  background: #F5F3FF;
+  color: #8B5CF6;
 }
 
 .statValue {
   font-size: var(--text-2xl);
   font-weight: var(--weight-bold);
   color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
 }
 
 .statLabel {
@@ -99,6 +120,49 @@
   color: var(--color-text-tertiary);
   text-align: center;
   padding: var(--space-6) 0;
+}
+
+.emptyCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+}
+
+.emptyCardIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-tertiary);
+  margin-bottom: var(--space-1);
+}
+
+.emptyCard .emptyText {
+  padding: 0;
+}
+
+.emptyCardLink {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+.emptyCardLink:hover {
+  text-decoration: underline;
+}
+
+.emptyHint {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  max-width: 200px;
+  line-height: var(--leading-normal);
 }
 
 .list {
@@ -166,6 +230,12 @@ a.listLink:hover {
   background: var(--color-success);
 }
 
+@media (max-width: 960px) {
+  .stats {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
   .stats {
     grid-template-columns: repeat(2, 1fr);
@@ -173,5 +243,9 @@ a.listLink:hover {
 
   .grid {
     grid-template-columns: 1fr;
+  }
+
+  .quickActions {
+    flex-wrap: wrap;
   }
 }

@@ -5,6 +5,7 @@ import { sanitizeUrl } from "@/lib/sanitize";
 import { parseSiteTheme, generateThemeVariables, FONT_PRESETS } from "@/lib/theme";
 import { SiteHeader } from "@/components/published/SiteHeader";
 import { SiteFooter } from "@/components/published/SiteFooter";
+import { ReadingProgress } from "@/components/published/ReadingProgress";
 import { WebSiteJsonLd } from "@/components/published/JsonLd";
 import styles from "@/components/published/site-layout.module.css";
 
@@ -45,6 +46,7 @@ export default async function PublishedSiteLayout({ params, children }: Props) {
 
   return (
     <div className={styles.layout} style={themeVars as React.CSSProperties}>
+      <ReadingProgress />
       <a href="#main-content" className={styles.skipLink}>Skip to content</a>
       {site.favicon && <link rel="icon" href={sanitizeUrl(site.favicon)} />}
       {fontPreset?.googleFontsUrl && (

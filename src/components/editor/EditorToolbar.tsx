@@ -2,10 +2,17 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Eye, ExternalLink, Save, Undo2, Redo2, Loader2, AlertCircle, AlertTriangle, Monitor, Tablet, Smartphone, Check } from "lucide-react";
+import { ArrowLeft, Eye, ExternalLink, Save, Undo2, Redo2, Loader2, AlertCircle, AlertTriangle, Monitor, Tablet, Smartphone, Check, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/Button/Button";
 import { IconButton } from "@/components/ui/IconButton/IconButton";
 import { Badge } from "@/components/ui/Badge/Badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/Dropdown/Dropdown";
 import { useEditorStore } from "@/stores/editor-store";
 import { useAutosave } from "@/hooks/use-autosave";
 import { KeyboardShortcutsDialog } from "./KeyboardShortcutsDialog";
@@ -109,53 +116,107 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, onPubl
             Saved{relativeTime ? ` ${relativeTime}` : ""}
           </span>
         )}
-        <IconButton icon={<Undo2 />} label="Undo (Ctrl+Z)" onClick={undo} />
-        <IconButton icon={<Redo2 />} label="Redo (Ctrl+Shift+Z)" onClick={redo} />
-        <KeyboardShortcutsDialog />
-        <div className={styles.divider} />
-        <div className={styles.previewToggle}>
-          <button
-            className={`${styles.previewBtn} ${previewMode === "desktop" ? styles.previewBtnActive : ""}`}
-            onClick={() => setPreviewMode("desktop")}
-            title="Desktop view"
-          >
-            <Monitor size={16} />
-          </button>
-          <button
-            className={`${styles.previewBtn} ${previewMode === "tablet" ? styles.previewBtnActive : ""}`}
-            onClick={() => setPreviewMode("tablet")}
-            title="Tablet view"
-          >
-            <Tablet size={16} />
-          </button>
-          <button
-            className={`${styles.previewBtn} ${previewMode === "mobile" ? styles.previewBtnActive : ""}`}
-            onClick={() => setPreviewMode("mobile")}
-            title="Mobile view"
-          >
-            <Smartphone size={16} />
-          </button>
-        </div>
-        <div className={styles.divider} />
-        <IconButton
-          icon={<Eye />}
-          label="Preview"
-          onClick={() => {
-            const { pageId } = useEditorStore.getState();
-            window.open(`/preview/${pageId}`, "_blank");
-          }}
-        />
-        {pageStatus === "PUBLISHED" && (
+
+        {/* Desktop-only secondary actions */}
+        <div className={styles.desktopOnly}>
+          <IconButton icon={<Undo2 />} label="Undo (Ctrl+Z)" onClick={undo} />
+          <IconButton icon={<Redo2 />} label="Redo (Ctrl+Shift+Z)" onClick={redo} />
+          <KeyboardShortcutsDialog />
+          <div className={styles.divider} />
+          <div className={styles.previewToggle}>
+            <button
+              className={`${styles.previewBtn} ${previewMode === "desktop" ? styles.previewBtnActive : ""}`}
+              onClick={() => setPreviewMode("desktop")}
+              title="Desktop view"
+            >
+              <Monitor size={16} />
+            </button>
+            <button
+              className={`${styles.previewBtn} ${previewMode === "tablet" ? styles.previewBtnActive : ""}`}
+              onClick={() => setPreviewMode("tablet")}
+              title="Tablet view"
+            >
+              <Tablet size={16} />
+            </button>
+            <button
+              className={`${styles.previewBtn} ${previewMode === "mobile" ? styles.previewBtnActive : ""}`}
+              onClick={() => setPreviewMode("mobile")}
+              title="Mobile view"
+            >
+              <Smartphone size={16} />
+            </button>
+          </div>
+          <div className={styles.divider} />
           <IconButton
-            icon={<ExternalLink />}
-            label="View published page"
+            icon={<Eye />}
+            label="Preview"
             onClick={() => {
-              const url = isHomepage ? `/s/${siteSlug}` : `/s/${siteSlug}/${pageSlug}`;
-              window.open(url, "_blank");
+              const { pageId } = useEditorStore.getState();
+              window.open(`/preview/${pageId}`, "_blank");
             }}
           />
-        )}
-        <SaveAsTemplateDialog />
+          {pageStatus === "PUBLISHED" && (
+            <IconButton
+              icon={<ExternalLink />}
+              label="View published page"
+              onClick={() => {
+                const url = isHomepage ? `/s/${siteSlug}` : `/s/${siteSlug}/${pageSlug}`;
+                window.open(url, "_blank");
+              }}
+            />
+          )}
+          <SaveAsTemplateDialog />
+        </div>
+
+        {/* Mobile overflow menu */}
+        <div className={styles.mobileOnly}>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <IconButton icon={<MoreHorizontal />} label="More actions" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={undo}>
+                <Undo2 size={16} />
+                Undo
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={redo}>
+                <Redo2 size={16} />
+                Redo
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => {
+                const { pageId } = useEditorStore.getState();
+                window.open(`/preview/${pageId}`, "_blank");
+              }}>
+                <Eye size={16} />
+                Preview
+              </DropdownMenuItem>
+              {pageStatus === "PUBLISHED" && (
+                <DropdownMenuItem onClick={() => {
+                  const url = isHomepage ? `/s/${siteSlug}` : `/s/${siteSlug}/${pageSlug}`;
+                  window.open(url, "_blank");
+                }}>
+                  <ExternalLink size={16} />
+                  View published
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setPreviewMode("desktop")}>
+                <Monitor size={16} />
+                Desktop view
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setPreviewMode("tablet")}>
+                <Tablet size={16} />
+                Tablet view
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setPreviewMode("mobile")}>
+                <Smartphone size={16} />
+                Mobile view
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
         <Button size="sm" onClick={() => { save(); }} disabled={hasConflict}>
           <Save size={14} />
           Save

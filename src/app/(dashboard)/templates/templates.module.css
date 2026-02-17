@@ -59,10 +59,22 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-3);
   padding: var(--space-20);
   text-align: center;
   color: var(--color-text-tertiary);
+}
+
+.emptyIconCircle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-full);
+  background: var(--color-accent-light);
+  color: var(--color-accent);
+  margin-bottom: var(--space-2);
 }
 
 .empty h3 {

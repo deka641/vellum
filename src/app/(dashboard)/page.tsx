@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Globe, FileText, Send, Image, Plus, Upload } from "lucide-react";
+import { Globe, FileText, Send, Image as ImageIcon, Plus, Upload, LayoutTemplate, FileEdit, Inbox } from "lucide-react";
 import { requireAuth } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import { Topbar } from "@/components/dashboard/Topbar";
@@ -51,29 +51,34 @@ export default async function DashboardPage() {
       <div className={styles.content}>
         <div className={styles.stats}>
           <div className={styles.statCard}>
-            <div className={styles.statIcon}><Globe size={20} /></div>
+            <div className={`${styles.statIcon} ${styles.statIconAccent}`}><Globe size={20} /></div>
             <div className={styles.statValue}>{siteCount}</div>
             <div className={styles.statLabel}>Sites</div>
           </div>
           <div className={styles.statCard}>
-            <div className={styles.statIcon}><FileText size={20} /></div>
+            <div className={`${styles.statIcon} ${styles.statIconBlue}`}><FileText size={20} /></div>
             <div className={styles.statValue}>{pageCount}</div>
             <div className={styles.statLabel}>Pages</div>
           </div>
           <div className={styles.statCard}>
-            <div className={`${styles.statIcon} ${styles.statIconSuccess}`}><FileText size={20} /></div>
+            <div className={`${styles.statIcon} ${styles.statIconGreen}`}><FileText size={20} /></div>
             <div className={styles.statValue}>{publishedCount}</div>
             <div className={styles.statLabel}>Published</div>
           </div>
           <div className={styles.statCard}>
-            <div className={styles.statIcon}><Send size={20} /></div>
+            <div className={`${styles.statIcon} ${styles.statIconOrange}`}><Send size={20} /></div>
             <div className={styles.statValue}>{submissionCount}</div>
             <div className={styles.statLabel}>Submissions (30d)</div>
+          </div>
+          <div className={styles.statCard}>
+            <div className={`${styles.statIcon} ${styles.statIconPurple}`}><ImageIcon size={20} /></div>
+            <div className={styles.statValue}>{mediaCount}</div>
+            <div className={styles.statLabel}>Media Files</div>
           </div>
         </div>
 
         <div className={styles.quickActions}>
-          <Link href="/sites" className={styles.quickAction}>
+          <Link href="/sites/new" className={styles.quickAction}>
             <Plus size={16} />
             New Site
           </Link>
@@ -81,13 +86,21 @@ export default async function DashboardPage() {
             <Upload size={16} />
             Upload Media
           </Link>
+          <Link href="/templates" className={styles.quickAction}>
+            <LayoutTemplate size={16} />
+            Browse Templates
+          </Link>
         </div>
 
         <div className={styles.grid}>
           <div className={styles.card}>
             <h3 className={styles.cardTitle}>Recent Pages</h3>
             {recentPages.length === 0 ? (
-              <p className={styles.emptyText}>No pages yet</p>
+              <div className={styles.emptyCard}>
+                <div className={styles.emptyCardIcon}><FileEdit size={24} /></div>
+                <p className={styles.emptyText}>No pages yet</p>
+                <Link href="/sites" className={styles.emptyCardLink}>Create your first page</Link>
+              </div>
             ) : (
               <ul className={styles.list}>
                 {recentPages.map((page) => (
@@ -111,7 +124,11 @@ export default async function DashboardPage() {
           <div className={styles.card}>
             <h3 className={styles.cardTitle}>Recent Submissions</h3>
             {recentSubmissions.length === 0 ? (
-              <p className={styles.emptyText}>No form submissions yet</p>
+              <div className={styles.emptyCard}>
+                <div className={styles.emptyCardIcon}><Inbox size={24} /></div>
+                <p className={styles.emptyText}>No form submissions yet</p>
+                <p className={styles.emptyHint}>Add a form block to your pages to collect submissions</p>
+              </div>
             ) : (
               <ul className={styles.list}>
                 {recentSubmissions.map((sub) => (

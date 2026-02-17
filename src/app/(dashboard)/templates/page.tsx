@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { LayoutTemplate, Trash2, Plus } from "lucide-react";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { Card } from "@/components/ui/Card/Card";
@@ -139,9 +140,14 @@ export default function TemplatesPage() {
           </div>
         ) : templates.length === 0 ? (
           <div className={styles.empty}>
-            <LayoutTemplate size={48} strokeWidth={1} />
+            <div className={styles.emptyIconCircle}>
+              <LayoutTemplate size={28} strokeWidth={1.5} />
+            </div>
             <h3>No templates yet</h3>
-            <p>Templates will appear here once created or seeded</p>
+            <p>Save your page designs as templates from the editor, or create a site to get started</p>
+            <Link href="/sites/new">
+              <Button leftIcon={<Plus size={16} />}>Create a site</Button>
+            </Link>
           </div>
         ) : (
           <div className={styles.grid}>

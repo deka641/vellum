@@ -69,9 +69,11 @@ export default function SitesPage() {
           </div>
         ) : sites.length === 0 ? (
           <div className={styles.empty}>
-            <Globe size={48} strokeWidth={1} />
+            <div className={styles.emptyIconCircle}>
+              <Globe size={28} strokeWidth={1.5} />
+            </div>
             <h3>No sites yet</h3>
-            <p>Create your first website to get started</p>
+            <p>Create your first website and start building beautiful pages</p>
             <Link href="/sites/new">
               <Button leftIcon={<Plus size={16} />}>Create your first site</Button>
             </Link>
