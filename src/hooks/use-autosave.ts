@@ -12,26 +12,9 @@ export function useAutosave() {
     useEditorStore();
   const { toast } = useToast();
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const blocksRef = useRef(blocks);
-  const titleRef = useRef(pageTitle);
   const retryCountRef = useRef(0);
   const isSavingRef = useRef(false);
   const forceNextSaveRef = useRef(false);
-  const lastSavedAtRef = useRef(useEditorStore.getState().lastSavedAt);
-  const conflictRef = useRef(conflict);
-
-  useEffect(() => {
-    blocksRef.current = blocks;
-    titleRef.current = pageTitle;
-  }, [blocks, pageTitle]);
-
-  useEffect(() => {
-    lastSavedAtRef.current = useEditorStore.getState().lastSavedAt;
-  });
-
-  useEffect(() => {
-    conflictRef.current = conflict;
-  }, [conflict]);
 
   // Reset retry counter when user makes new edits
   useEffect(() => {
@@ -43,14 +26,17 @@ export function useAutosave() {
   const saveWithRetry = useCallback(async (): Promise<{ success: boolean; conflict?: boolean }> => {
     if (!pageId) return { success: false };
 
+    // Read latest state directly from store — no stale refs
+    const state = useEditorStore.getState();
+
     const body: Record<string, unknown> = {
-      blocks: blocksRef.current,
-      title: titleRef.current,
+      blocks: state.blocks,
+      title: state.pageTitle,
     };
 
     // Send expectedUpdatedAt unless force-saving
-    if (!forceNextSaveRef.current && lastSavedAtRef.current) {
-      body.expectedUpdatedAt = lastSavedAtRef.current;
+    if (!forceNextSaveRef.current && state.lastSavedAt) {
+      body.expectedUpdatedAt = state.lastSavedAt;
     }
     forceNextSaveRef.current = false;
 
@@ -97,19 +83,27 @@ export function useAutosave() {
     isSavingRef.current = true;
     setSaving(true);
 
+    // Snapshot what we're about to save
+    const snapshotState = useEditorStore.getState();
+    const snapshotBlocks = snapshotState.blocks;
+    const snapshotTitle = snapshotState.pageTitle;
+
     for (let attempt = 0; attempt <= MAX_RETRIES - 1; attempt++) {
       try {
         const result = await saveWithRetry();
 
         if (result.conflict) {
-          // Conflict is not a transient error — don't retry
           toast("This page was modified in another session", "info");
           isSavingRef.current = false;
           setSaving(false);
           return;
         }
 
-        setDirty(false);
+        // Only clear dirty if store state hasn't diverged during save
+        const currentState = useEditorStore.getState();
+        if (currentState.blocks === snapshotBlocks && currentState.pageTitle === snapshotTitle) {
+          setDirty(false);
+        }
         setSaveError(null);
         retryCountRef.current = 0;
         isSavingRef.current = false;
@@ -139,7 +133,7 @@ export function useAutosave() {
   }, [save]);
 
   useEffect(() => {
-    if (!isDirty || conflictRef.current) return;
+    if (!isDirty || conflict) return;
 
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(save, 2000);
