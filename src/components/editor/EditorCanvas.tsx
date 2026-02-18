@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   DndContext,
   closestCenter,
@@ -18,8 +18,8 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Plus, Type, AlignLeft, Image as ImageIcon, Columns2, Sparkles, Upload } from "lucide-react";
-import { type BlockType } from "@/types/blocks";
+import { Plus, Type, AlignLeft, Image as ImageIcon, Columns2, Sparkles, Upload, AlertTriangle } from "lucide-react";
+import { type BlockType, type HeadingContent } from "@/types/blocks";
 import { useEditorStore } from "@/stores/editor-store";
 import { useToast } from "@/components/ui/Toast/Toast";
 import { BlockWrapper } from "./BlockWrapper";
@@ -179,6 +179,22 @@ export function EditorCanvas({ onAddBlock }: EditorCanvasProps) {
     }
   }, [toast, updateBlockContent]);
 
+  const headingWarning = useMemo(() => {
+    const headings = blocks.filter((b) => b.type === "heading");
+    if (headings.length === 0) return null;
+    const hasH1 = headings.some((h) => (h.content as HeadingContent).level === 1);
+    if (!hasH1) return "Page has no H1 heading. Add one for better SEO and accessibility.";
+    let prevLevel = 0;
+    for (const h of headings) {
+      const level = (h.content as HeadingContent).level || 1;
+      if (level > prevLevel + 1 && prevLevel > 0) {
+        return `Heading levels skip from H${prevLevel} to H${level}. This may confuse screen readers.`;
+      }
+      prevLevel = level;
+    }
+    return null;
+  }, [blocks]);
+
   const activeBlock = activeId ? blocks.find((b) => b.id === activeId) : null;
 
   return (
@@ -204,6 +220,12 @@ export function EditorCanvas({ onAddBlock }: EditorCanvasProps) {
           transition: "max-width 300ms ease",
         }}
       >
+        {headingWarning && blocks.length > 0 && (
+          <div className={styles.headingWarning}>
+            <AlertTriangle size={14} />
+            <span>{headingWarning}</span>
+          </div>
+        )}
         {blocks.length === 0 ? (
           <div className={styles.empty}>
             <div className={styles.emptyIcon}>

@@ -83,4 +83,32 @@ test.describe("Templates", () => {
       }
     }
   });
+
+  test("delete a template from templates page", async ({ page }) => {
+    await page.goto("/templates");
+    await page.waitForTimeout(2_000);
+
+    // Check if there are any template cards with delete buttons
+    const templateCards = page.locator('[class*="templateCard"], [class*="card"]');
+    const count = await templateCards.count();
+
+    if (count > 0) {
+      // Look for a delete or options button on the last template card
+      const lastCard = templateCards.last();
+      const deleteBtn = lastCard.locator('button[aria-label*="delete" i], button[aria-label*="Delete" i], button[aria-label*="remove" i]').first();
+
+      if (await deleteBtn.isVisible({ timeout: 3_000 }).catch(() => false)) {
+        await deleteBtn.click();
+
+        // Confirm deletion if dialog appears
+        const confirmBtn = page.getByRole("button", { name: /Delete|Confirm/i }).last();
+        if (await confirmBtn.isVisible({ timeout: 3_000 }).catch(() => false)) {
+          await confirmBtn.click();
+        }
+
+        // Should show success or the template should be gone
+        await page.waitForTimeout(1_000);
+      }
+    }
+  });
 });

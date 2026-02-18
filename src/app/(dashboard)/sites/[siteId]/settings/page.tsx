@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Upload, X, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Upload, X, Plus, Trash2, Download } from "lucide-react";
 import Link from "next/link";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { Input, Textarea } from "@/components/ui/Input/Input";
@@ -250,6 +250,20 @@ export default function SiteSettingsPage() {
             </Button>
           </div>
         </form>
+
+        <div style={{ marginTop: "var(--space-12)", padding: "var(--space-5)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-lg)" }}>
+          <h3 style={{ fontSize: "var(--text-base)", fontWeight: "var(--weight-semibold)", marginBottom: "var(--space-2)" }}>Backup</h3>
+          <p style={{ fontSize: "var(--text-sm)", color: "var(--color-text-secondary)", marginBottom: "var(--space-4)" }}>Export your site as a JSON backup file containing all pages, blocks, and settings.</p>
+          <Button
+            variant="secondary"
+            leftIcon={<Download size={16} />}
+            onClick={() => {
+              window.location.href = `/api/sites/${params.siteId}/export`;
+            }}
+          >
+            Export site
+          </Button>
+        </div>
 
         <div className={styles.dangerZone}>
           <h3>Danger Zone</h3>

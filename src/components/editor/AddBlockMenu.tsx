@@ -39,6 +39,124 @@ const iconMap: Record<string, React.ReactNode> = {
   List: <List size={20} />,
 };
 
+function BlockPreview({ type }: { type: string }) {
+  switch (type) {
+    case "heading":
+      return (
+        <div className={styles.preview}>
+          <div className={styles.previewHeadingLg} />
+          <div className={styles.previewLine} style={{ width: "60%" }} />
+        </div>
+      );
+    case "text":
+      return (
+        <div className={styles.preview}>
+          <div className={styles.previewLine} />
+          <div className={styles.previewLine} style={{ width: "90%" }} />
+          <div className={styles.previewLine} style={{ width: "70%" }} />
+        </div>
+      );
+    case "image":
+      return (
+        <div className={styles.preview}>
+          <div className={styles.previewImage}>
+            <Image size={12} />
+          </div>
+        </div>
+      );
+    case "button":
+      return (
+        <div className={styles.preview}>
+          <div className={styles.previewButton} />
+        </div>
+      );
+    case "spacer":
+      return (
+        <div className={styles.preview}>
+          <div className={styles.previewSpacer}>
+            <MoveVertical size={10} />
+          </div>
+        </div>
+      );
+    case "divider":
+      return (
+        <div className={styles.preview}>
+          <div className={styles.previewDivider} />
+        </div>
+      );
+    case "columns":
+      return (
+        <div className={styles.preview}>
+          <div className={styles.previewColumns}>
+            <div className={styles.previewCol} />
+            <div className={styles.previewCol} />
+          </div>
+        </div>
+      );
+    case "video":
+      return (
+        <div className={styles.preview}>
+          <div className={styles.previewVideo}>
+            <Play size={12} />
+          </div>
+        </div>
+      );
+    case "quote":
+      return (
+        <div className={styles.preview}>
+          <div className={styles.previewQuote}>
+            <span>&ldquo;</span>
+            <div className={styles.previewLine} style={{ width: "80%" }} />
+          </div>
+        </div>
+      );
+    case "form":
+      return (
+        <div className={styles.preview}>
+          <div className={styles.previewInput} />
+          <div className={styles.previewInput} />
+          <div className={styles.previewButton} style={{ width: "50%" }} />
+        </div>
+      );
+    case "code":
+      return (
+        <div className={styles.preview}>
+          <div className={styles.previewCode}>
+            <div className={styles.previewLine} style={{ width: "60%", background: "var(--color-accent-light)" }} />
+            <div className={styles.previewLine} style={{ width: "80%", background: "var(--color-accent-light)" }} />
+          </div>
+        </div>
+      );
+    case "social":
+      return (
+        <div className={styles.preview}>
+          <div className={styles.previewSocial}>
+            <div className={styles.previewDot} />
+            <div className={styles.previewDot} />
+            <div className={styles.previewDot} />
+          </div>
+        </div>
+      );
+    case "accordion":
+      return (
+        <div className={styles.preview}>
+          <div className={styles.previewAccordionRow} />
+          <div className={styles.previewAccordionRow} />
+        </div>
+      );
+    case "toc":
+      return (
+        <div className={styles.preview}>
+          <div className={styles.previewTocLine} />
+          <div className={styles.previewTocLine} style={{ marginLeft: "6px", width: "60%" }} />
+          <div className={styles.previewTocLine} style={{ width: "55%" }} />
+        </div>
+      );
+    default:
+      return null;
+  }
+}
+
 interface AddBlockMenuProps {
   onAdd: (type: BlockType) => void;
 }
@@ -83,6 +201,7 @@ export function AddBlockMenu({ onAdd }: AddBlockMenuProps) {
                   <span className={styles.blockIcon}>
                     {iconMap[block.icon]}
                   </span>
+                  <BlockPreview type={block.type} />
                   <span className={styles.blockLabel}>{block.label}</span>
                 </button>
               ))}

@@ -6,6 +6,7 @@ import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { unlink } from "fs/promises";
 import { safeMediaFilePath } from "@/lib/upload";
 import { apiError } from "@/lib/api-helpers";
+import { logger } from "@/lib/logger";
 
 export async function POST(req: Request) {
   try {
@@ -58,7 +59,7 @@ export async function POST(req: Request) {
           await unlink(filePath);
         } catch (err: unknown) {
           if ((err as NodeJS.ErrnoException).code !== "ENOENT")
-            console.error("Failed to delete media file (orphaned):", err);
+            logger.warn("POST /api/media/bulk-delete", "Failed to delete media file (orphaned)", err);
         }
       }
     }

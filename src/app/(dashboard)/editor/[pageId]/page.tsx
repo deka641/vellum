@@ -177,6 +177,11 @@ export default function EditorPage() {
 
   const handlePublish = useCallback(async () => {
     await save();
+    const { saveError } = useEditorStore.getState();
+    if (saveError) {
+      toast("Cannot publish: save failed. Please fix the error and try again.", "error");
+      return;
+    }
     try {
       const res = await fetch(`/api/pages/${params.pageId}/publish`, {
         method: "POST",
@@ -189,7 +194,8 @@ export default function EditorPage() {
         }
         setPublishDialogOpen(true);
       } else {
-        toast("Failed to publish", "error");
+        const data = await res.json().catch(() => ({}));
+        toast(data.error || "Failed to publish", "error");
       }
     } catch {
       toast("Something went wrong", "error");
@@ -198,6 +204,11 @@ export default function EditorPage() {
 
   const handleSchedule = useCallback(async (scheduledAt: string) => {
     await save();
+    const { saveError } = useEditorStore.getState();
+    if (saveError) {
+      toast("Cannot schedule: save failed. Please fix the error and try again.", "error");
+      return;
+    }
     try {
       const res = await fetch(`/api/pages/${params.pageId}/publish`, {
         method: "POST",

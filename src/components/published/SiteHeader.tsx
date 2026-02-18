@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
@@ -20,6 +20,8 @@ interface SiteHeaderProps {
 export function SiteHeader({ siteName, homeHref, navItems }: SiteHeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
+  const mobileNavRef = useRef<HTMLElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
 
   function isActive(href: string) {
     if (href === homeHref) {
@@ -27,6 +29,29 @@ export function SiteHeader({ siteName, homeHref, navItems }: SiteHeaderProps) {
     }
     return pathname === href;
   }
+
+  // Focus first nav link when mobile menu opens
+  useEffect(() => {
+    if (mobileOpen && mobileNavRef.current) {
+      const firstLink = mobileNavRef.current.querySelector("a");
+      if (firstLink) firstLink.focus();
+    }
+  }, [mobileOpen]);
+
+  // Close mobile nav on Escape
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === "Escape" && mobileOpen) {
+      setMobileOpen(false);
+      menuButtonRef.current?.focus();
+    }
+  }, [mobileOpen]);
+
+  useEffect(() => {
+    if (mobileOpen) {
+      document.addEventListener("keydown", handleKeyDown);
+      return () => document.removeEventListener("keydown", handleKeyDown);
+    }
+  }, [mobileOpen, handleKeyDown]);
 
   return (
     <header className={styles.header} role="banner">
@@ -50,10 +75,12 @@ export function SiteHeader({ siteName, homeHref, navItems }: SiteHeaderProps) {
             </nav>
 
             <button
+              ref={menuButtonRef}
               className={styles.menuButton}
               onClick={() => setMobileOpen(!mobileOpen)}
               aria-label={mobileOpen ? "Close navigation" : "Open navigation"}
               aria-expanded={mobileOpen}
+              aria-controls="mobile-nav"
             >
               {mobileOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -62,7 +89,7 @@ export function SiteHeader({ siteName, homeHref, navItems }: SiteHeaderProps) {
       </div>
 
       {navItems.length > 0 && (
-        <nav className={`${styles.mobileNav} ${mobileOpen ? styles.mobileNavOpen : ""}`} aria-label="Site navigation">
+        <nav ref={mobileNavRef} id="mobile-nav" className={`${styles.mobileNav} ${mobileOpen ? styles.mobileNavOpen : ""}`} aria-label="Site navigation">
           {navItems.map((item) => (
             <Link
               key={item.href}

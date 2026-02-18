@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Plus, Globe } from "lucide-react";
+import { Plus, Globe, Upload } from "lucide-react";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { SiteCard } from "@/components/dashboard/SiteCard";
 import { Button } from "@/components/ui/Button/Button";
@@ -24,7 +25,10 @@ export default function SitesPage() {
   const [sites, setSites] = useState<Site[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteSiteId, setDeleteSiteId] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const importInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const router = useRouter();
 
   useEffect(() => {
     fetch("/api/sites")
@@ -35,6 +39,34 @@ export default function SitesPage() {
 
   function handleDelete(id: string) {
     setDeleteSiteId(id);
+  }
+
+  async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImporting(true);
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      const res = await fetch("/api/sites/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (res.ok) {
+        const result = await res.json();
+        toast(`Imported "${result.name}" with ${result.pageCount} pages`);
+        router.push(`/sites/${result.id}`);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast(err.error || "Import failed", "error");
+      }
+    } catch {
+      toast("Invalid import file", "error");
+    } finally {
+      setImporting(false);
+      if (importInputRef.current) importInputRef.current.value = "";
+    }
   }
 
   async function confirmDeleteSite() {
@@ -55,9 +87,26 @@ export default function SitesPage() {
         title="Sites"
         description="Manage your websites"
         actions={
-          <Link href="/sites/new">
-            <Button leftIcon={<Plus size={16} />}>New site</Button>
-          </Link>
+          <div style={{ display: "flex", gap: "var(--space-2)" }}>
+            <Button
+              variant="secondary"
+              leftIcon={<Upload size={16} />}
+              disabled={importing}
+              onClick={() => importInputRef.current?.click()}
+            >
+              {importing ? "Importing..." : "Import"}
+            </Button>
+            <input
+              ref={importInputRef}
+              type="file"
+              accept=".json"
+              style={{ display: "none" }}
+              onChange={handleImport}
+            />
+            <Link href="/sites/new">
+              <Button leftIcon={<Plus size={16} />}>New site</Button>
+            </Link>
+          </div>
         }
       />
       <div className={styles.content}>

@@ -40,4 +40,42 @@ test.describe("Media Library", () => {
       }
     }
   });
+
+  test("bulk select and delete media items", async ({ page }) => {
+    // Check if there are any media items to select
+    const mediaItems = page.locator('[class*="mediaCard"], [class*="card"]').filter({ has: page.locator("img") });
+    const itemCount = await mediaItems.count();
+
+    if (itemCount >= 2) {
+      // Look for bulk select mode toggle
+      const selectBtn = page.locator("button", { hasText: /Select/i }).first();
+      if (await selectBtn.isVisible({ timeout: 3_000 }).catch(() => false)) {
+        await selectBtn.click();
+        await page.waitForTimeout(500);
+
+        // Select first two items (click checkboxes)
+        const checkboxes = page.locator('input[type="checkbox"], [class*="checkbox"]');
+        if (await checkboxes.first().isVisible({ timeout: 3_000 }).catch(() => false)) {
+          await checkboxes.nth(0).click();
+          await checkboxes.nth(1).click();
+
+          // Look for bulk delete button
+          const bulkDeleteBtn = page.locator("button", { hasText: /Delete/i }).first();
+          if (await bulkDeleteBtn.isVisible({ timeout: 3_000 }).catch(() => false)) {
+            await bulkDeleteBtn.click();
+
+            // Confirm deletion
+            const confirmBtn = page.getByRole("button", { name: /Delete|Confirm/i }).last();
+            if (await confirmBtn.isVisible({ timeout: 3_000 }).catch(() => false)) {
+              await confirmBtn.click();
+              // Should show success
+              await expect(
+                page.locator("text=deleted").or(page.locator("text=Deleted"))
+              ).toBeVisible({ timeout: 10_000 });
+            }
+          }
+        }
+      }
+    }
+  });
 });

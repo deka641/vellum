@@ -7,6 +7,7 @@ import { parseBody, updateMediaSchema } from "@/lib/validations";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { safeMediaFilePath } from "@/lib/upload";
 import { apiError } from "@/lib/api-helpers";
+import { logger } from "@/lib/logger";
 
 export async function PATCH(
   req: Request,
@@ -92,7 +93,7 @@ export async function DELETE(
         await unlink(filepath);
       } catch (err: unknown) {
         if ((err as NodeJS.ErrnoException).code !== "ENOENT")
-          console.error("Failed to delete media file (orphaned):", err);
+          logger.warn("DELETE /api/media/[mediaId]", "Failed to delete media file (orphaned)", err);
       }
     }
 

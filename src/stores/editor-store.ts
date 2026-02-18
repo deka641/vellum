@@ -243,6 +243,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   moveBlock: (fromIndex, toIndex) => {
     set((state) => {
+      if (fromIndex < 0 || fromIndex >= state.blocks.length || toIndex < 0 || toIndex >= state.blocks.length) {
+        return state;
+      }
       const newBlocks = [...state.blocks];
       const [moved] = newBlocks.splice(fromIndex, 1);
       newBlocks.splice(toIndex, 0, moved);

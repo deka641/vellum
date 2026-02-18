@@ -1,15 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { FolderOpen } from "lucide-react";
 import { useEditorStore } from "@/stores/editor-store";
 import { Input } from "@/components/ui/Input/Input";
 import { PageSettings } from "./PageSettings";
 import { MediaPickerModal } from "./MediaPickerModal";
-import type { HeadingContent, ImageContent, ButtonContent, VideoContent, QuoteContent, CodeContent, BlockSettings as BlockSettingsType, ColumnsContent } from "@/types/blocks";
+import type { EditorBlock, HeadingContent, ImageContent, ButtonContent, VideoContent, QuoteContent, CodeContent, BlockSettings as BlockSettingsType, ColumnsContent } from "@/types/blocks";
 import styles from "./BlockSettings.module.css";
 
-function findBlockInTree(blocks: import("@/types/blocks").EditorBlock[], id: string): import("@/types/blocks").EditorBlock | null {
+function findBlockInTree(blocks: EditorBlock[], id: string): EditorBlock | null {
   for (const b of blocks) {
     if (b.id === id) return b;
     if (b.type === "columns") {
@@ -24,7 +24,7 @@ function findBlockInTree(blocks: import("@/types/blocks").EditorBlock[], id: str
   return null;
 }
 
-function findColumnParent(blocks: import("@/types/blocks").EditorBlock[], id: string): string | null {
+function findColumnParent(blocks: EditorBlock[], id: string): string | null {
   for (const b of blocks) {
     if (b.type === "columns") {
       const cols = (b.content as ColumnsContent).columns;
@@ -37,17 +37,27 @@ function findColumnParent(blocks: import("@/types/blocks").EditorBlock[], id: st
 }
 
 export function BlockSettings() {
-  const { blocks, selectedBlockId, updateBlockContent, updateBlockSettings, updateColumnBlockContent, updateColumnBlockSettings } =
-    useEditorStore();
+  const blocks = useEditorStore((s) => s.blocks);
+  const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
+  const updateBlockContent = useEditorStore((s) => s.updateBlockContent);
+  const updateBlockSettings = useEditorStore((s) => s.updateBlockSettings);
+  const updateColumnBlockContent = useEditorStore((s) => s.updateColumnBlockContent);
+  const updateColumnBlockSettings = useEditorStore((s) => s.updateColumnBlockSettings);
   const [pickerOpen, setPickerOpen] = useState(false);
 
-  const block = selectedBlockId ? findBlockInTree(blocks, selectedBlockId) : null;
+  const block = useMemo(
+    () => (selectedBlockId ? findBlockInTree(blocks, selectedBlockId) : null),
+    [blocks, selectedBlockId]
+  );
 
   if (!block) {
     return <PageSettings />;
   }
 
-  const columnParentId = findColumnParent(blocks, block.id);
+  const columnParentId = useMemo(
+    () => findColumnParent(blocks, block.id),
+    [blocks, block.id]
+  );
   const handleContentUpdate = (id: string, content: Record<string, unknown>) => {
     if (columnParentId) {
       updateColumnBlockContent(columnParentId, id, content as Partial<import("@/types/blocks").BlockContent>);

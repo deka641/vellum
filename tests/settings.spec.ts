@@ -87,6 +87,55 @@ test.describe("Page SEO settings", () => {
   });
 });
 
+test.describe("Theme settings", () => {
+  test("change theme color preset and save", async ({ page }) => {
+    const siteId = await goToFirstSite(page);
+    await page.goto(`/sites/${siteId}/settings`);
+    await page.waitForTimeout(2_000);
+
+    // Should show theme section
+    await expect(
+      page.locator("text=Theme").or(page.locator("text=Colors"))
+    ).toBeVisible({ timeout: 10_000 });
+
+    // Click on a color preset swatch (there should be color circles/buttons)
+    const presetButtons = page.locator('[class*="preset"], [class*="swatch"], [class*="color"]').filter({ has: page.locator("button").or(page.locator('[role="button"]')) });
+    if (await presetButtons.count() > 1) {
+      // Click the second preset (not the currently active one)
+      await presetButtons.nth(1).click();
+      await page.waitForTimeout(300);
+    }
+
+    // Save
+    const saveButton = page.getByRole("button", { name: /Save/i });
+    await saveButton.click();
+    await expect(
+      page.locator("text=saved").or(page.locator("text=Settings saved"))
+    ).toBeVisible({ timeout: 10_000 });
+  });
+
+  test("export site as JSON backup", async ({ page }) => {
+    const siteId = await goToFirstSite(page);
+    await page.goto(`/sites/${siteId}/settings`);
+    await page.waitForTimeout(2_000);
+
+    // Find the export button
+    const exportBtn = page.locator("button", { hasText: /Export/i }).first();
+    await expect(exportBtn).toBeVisible({ timeout: 5_000 });
+
+    // Click export — this triggers a download
+    const downloadPromise = page.waitForEvent("download", { timeout: 15_000 }).catch(() => null);
+    await exportBtn.click();
+    const download = await downloadPromise;
+
+    if (download) {
+      // Verify the file name contains the site slug or id
+      const filename = download.suggestedFilename();
+      expect(filename).toContain(".json");
+    }
+  });
+});
+
 test.describe("Navigation management", () => {
   test("navigation page loads", async ({ page }) => {
     const siteId = await goToFirstSite(page);

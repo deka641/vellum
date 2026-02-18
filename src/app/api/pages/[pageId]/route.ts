@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { parseBody, updatePageSchema } from "@/lib/validations";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { apiError } from "@/lib/api-helpers";
+import { logger } from "@/lib/logger";
 import { sanitizeImageSrc } from "@/lib/sanitize";
 
 export async function GET(
@@ -143,7 +144,7 @@ export async function PATCH(
             }
           }
           revalidatePath(`/s/${site.slug}`, "layout");
-        } catch { /* revalidation failure is non-fatal */ }
+        } catch (err) { logger.warn("PATCH /api/pages/[pageId]", "Revalidation failed", err); }
       }
     }
 

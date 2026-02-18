@@ -136,7 +136,7 @@ export function sanitizeEmbedHtml(code: string): string {
       "figure", "figcaption",
     ],
     allowedAttributes: {
-      iframe: ["src", "width", "height", "frameborder", "allow", "allowfullscreen", "title", "style"],
+      iframe: ["src", "width", "height", "frameborder", "allowfullscreen", "title", "style"],
       div: ["style", "class"],
       span: ["style", "class"],
       a: ["href", "target", "rel"],
@@ -144,7 +144,19 @@ export function sanitizeEmbedHtml(code: string): string {
       "*": ["id"],
     },
     allowedSchemes: ["http", "https"],
-    allowedIframeHostnames: [],
+    allowedIframeHostnames: [
+      "www.youtube.com", "youtube.com",
+      "player.vimeo.com", "vimeo.com",
+      "open.spotify.com",
+      "w.soundcloud.com",
+      "codepen.io",
+      "codesandbox.io",
+      "docs.google.com",
+      "www.google.com",
+      "calendar.google.com",
+      "maps.google.com",
+      "www.figma.com",
+    ],
     transformTags: {
       iframe: (tagName, attribs) => {
         // Only allow https:// src on iframes
@@ -162,7 +174,7 @@ export function sanitizeEmbedHtml(code: string): string {
           tagName,
           attribs: {
             ...attribs,
-            sandbox: "allow-scripts allow-same-origin allow-popups",
+            sandbox: "allow-scripts allow-popups",
           },
         };
       },

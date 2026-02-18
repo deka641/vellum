@@ -6,6 +6,7 @@ import { saveUploadedFile, UnsafeFileTypeError } from "@/lib/upload";
 import { getImageDimensions, optimizeImage } from "@/lib/image";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { apiError } from "@/lib/api-helpers";
+import { logger } from "@/lib/logger";
 import type { Prisma } from "@prisma/client";
 
 export async function GET(req: Request) {
@@ -124,7 +125,7 @@ export async function POST(req: Request) {
           { status: 400 }
         );
       }
-      console.error("POST /api/media upload failed:", error);
+      logger.error("POST /api/media", "Upload failed", error);
       return NextResponse.json(
         { error: "Upload failed" },
         { status: 500 }

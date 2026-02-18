@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { apiError } from "@/lib/api-helpers";
+import { logger } from "@/lib/logger";
 
 const BATCH_SIZE = 500;
 
@@ -110,7 +111,7 @@ export async function GET(
 
           controller.close();
         } catch (err) {
-          console.error("CSV stream error:", err);
+          logger.error("GET /api/sites/[siteId]/submissions/export", "CSV stream error", err);
           controller.error(err);
         }
       },

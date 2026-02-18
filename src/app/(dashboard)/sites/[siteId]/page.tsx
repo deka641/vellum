@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Plus, FileText, ArrowLeft, Navigation2, ExternalLink, Search, Send, Trash2, RotateCcw, Clock } from "lucide-react";
 import Link from "next/link";
@@ -30,6 +30,8 @@ interface PageItem {
   updatedAt: string;
   deletedAt: string | null;
   scheduledPublishAt: string | null;
+  sortOrder: number;
+  showInNav: boolean;
 }
 
 interface SiteDetail {
@@ -66,11 +68,17 @@ export default function SiteDetailPage() {
   const [trashedPages, setTrashedPages] = useState<PageItem[]>([]);
   const [deletePageId, setDeletePageId] = useState<string | null>(null);
   const [permDeletePageId, setPermDeletePageId] = useState<string | null>(null);
+  const [fetchError, setFetchError] = useState(false);
 
   useEffect(() => {
+    setFetchError(false);
     fetch(`/api/sites/${params.siteId}`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error(`Failed to load site (${res.status})`);
+        return res.json();
+      })
       .then(setSite)
+      .catch(() => setFetchError(true))
       .finally(() => setLoading(false));
   }, [params.siteId]);
 
@@ -117,10 +125,11 @@ export default function SiteDetailPage() {
         setSelectedTemplateId(null);
         router.push(`/editor/${page.id}`);
       } else {
-        toast("Failed to create page", "error");
+        const data = await res.json().catch(() => ({}));
+        toast(data.error || "Failed to create page", "error");
       }
     } catch {
-      toast("Something went wrong", "error");
+      toast("Network error — please check your connection", "error");
     } finally {
       setCreating(false);
     }
@@ -150,18 +159,23 @@ export default function SiteDetailPage() {
 
   async function confirmDeletePage() {
     if (!deletePageId) return;
-    const res = await fetch(`/api/pages/${deletePageId}`, { method: "DELETE" });
-    if (res.ok) {
-      const deletedPage = site?.pages.find((p) => p.id === deletePageId);
-      setSite((prev) =>
-        prev ? { ...prev, pages: prev.pages.filter((p) => p.id !== deletePageId) } : null
-      );
-      if (deletedPage) {
-        setTrashedPages((prev) => [...prev, { ...deletedPage, deletedAt: new Date().toISOString(), status: "DRAFT", scheduledPublishAt: null }]);
+    try {
+      const res = await fetch(`/api/pages/${deletePageId}`, { method: "DELETE" });
+      if (res.ok) {
+        const deletedPage = site?.pages.find((p) => p.id === deletePageId);
+        setSite((prev) =>
+          prev ? { ...prev, pages: prev.pages.filter((p) => p.id !== deletePageId) } : null
+        );
+        if (deletedPage) {
+          setTrashedPages((prev) => [...prev, { ...deletedPage, deletedAt: new Date().toISOString(), status: "DRAFT", scheduledPublishAt: null }]);
+        }
+        toast("Page moved to trash");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast(data.error || "Failed to delete page", "error");
       }
-      toast("Page moved to trash");
-    } else {
-      toast("Failed to delete page", "error");
+    } catch {
+      toast("Network error — could not delete page", "error");
     }
     setDeletePageId(null);
   }
@@ -172,7 +186,7 @@ export default function SiteDetailPage() {
       const restored = await res.json();
       setTrashedPages((prev) => prev.filter((p) => p.id !== pageId));
       setSite((prev) =>
-        prev ? { ...prev, pages: [...prev.pages, { ...restored, deletedAt: null }] } : null
+        prev ? { ...prev, pages: [...prev.pages, { ...restored, deletedAt: null, sortOrder: restored.sortOrder ?? prev.pages.length, showInNav: restored.showInNav ?? false }] } : null
       );
       toast("Page restored");
     } else {
@@ -197,41 +211,95 @@ export default function SiteDetailPage() {
   }
 
   async function handlePublishPage(pageId: string) {
-    const res = await fetch(`/api/pages/${pageId}/publish`, { method: "POST" });
-    if (res.ok) {
-      setSite((prev) =>
-        prev
-          ? {
-              ...prev,
-              pages: prev.pages.map((p) =>
-                p.id === pageId ? { ...p, status: "PUBLISHED" as const } : p
-              ),
-            }
-          : null
-      );
-      toast("Page published");
-    } else {
-      toast("Failed to publish page", "error");
+    try {
+      const res = await fetch(`/api/pages/${pageId}/publish`, { method: "POST" });
+      if (res.ok) {
+        setSite((prev) =>
+          prev
+            ? {
+                ...prev,
+                pages: prev.pages.map((p) =>
+                  p.id === pageId ? { ...p, status: "PUBLISHED" as const } : p
+                ),
+              }
+            : null
+        );
+        toast("Page published");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast(data.error || "Failed to publish page", "error");
+      }
+    } catch {
+      toast("Network error — could not publish page", "error");
     }
   }
 
   async function handleUnpublishPage(pageId: string) {
-    const res = await fetch(`/api/pages/${pageId}/publish`, { method: "DELETE" });
-    if (res.ok) {
-      setSite((prev) =>
-        prev
-          ? {
-              ...prev,
-              pages: prev.pages.map((p) =>
-                p.id === pageId ? { ...p, status: "DRAFT" as const } : p
-              ),
-            }
-          : null
-      );
-      toast("Page unpublished");
-    } else {
-      toast("Failed to unpublish page", "error");
+    try {
+      const res = await fetch(`/api/pages/${pageId}/publish`, { method: "DELETE" });
+      if (res.ok) {
+        setSite((prev) =>
+          prev
+            ? {
+                ...prev,
+                pages: prev.pages.map((p) =>
+                  p.id === pageId ? { ...p, status: "DRAFT" as const } : p
+                ),
+              }
+            : null
+        );
+        toast("Page unpublished");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast(data.error || "Failed to unpublish page", "error");
+      }
+    } catch {
+      toast("Network error — could not unpublish page", "error");
     }
+  }
+
+  const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const saveNavigation = useCallback((pages: PageItem[]) => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(async () => {
+      try {
+        await fetch(`/api/sites/${params.siteId}/navigation`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            pages: pages.map((p, i) => ({
+              id: p.id,
+              sortOrder: i,
+              showInNav: p.showInNav,
+            })),
+          }),
+        });
+      } catch {
+        toast("Failed to save page order", "error");
+      }
+    }, 800);
+  }, [params.siteId, toast]);
+
+  function handleReorderPages(reorderedPages: { id: string; title: string; slug: string; status: "DRAFT" | "PUBLISHED"; isHomepage: boolean; updatedAt: string; deletedAt?: string | null; scheduledPublishAt?: string | null; sortOrder?: number; showInNav?: boolean }[]) {
+    if (!site) return;
+    const reorderedFull = reorderedPages.map((rp, i) => {
+      const existing = site.pages.find((p) => p.id === rp.id);
+      return existing ? { ...existing, sortOrder: i } : null;
+    }).filter((p): p is PageItem => p !== null);
+    setSite((prev) => prev ? { ...prev, pages: reorderedFull } : null);
+    saveNavigation(reorderedFull);
+  }
+
+  function handleToggleNav(pageId: string) {
+    setSite((prev) => {
+      if (!prev) return null;
+      const updated = prev.pages.map((p) =>
+        p.id === pageId ? { ...p, showInNav: !p.showInNav } : p
+      );
+      saveNavigation(updated);
+      return { ...prev, pages: updated };
+    });
   }
 
   async function handleDuplicatePage(pageId: string) {
@@ -266,6 +334,8 @@ export default function SiteDetailPage() {
                     updatedAt: newPage.updatedAt,
                     deletedAt: null,
                     scheduledPublishAt: null,
+                    sortOrder: newPage.sortOrder ?? prev.pages.length,
+                    showInNav: newPage.showInNav ?? false,
                   },
                 ],
               }
@@ -287,6 +357,37 @@ export default function SiteDetailPage() {
         <div className={styles.content}>
           <Skeleton height={20} width={200} />
           <Skeleton height={300} />
+        </div>
+      </>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <>
+        <Topbar title="Error" />
+        <div className={styles.content}>
+          <div className={styles.empty}>
+            <h3>Failed to load site</h3>
+            <p>Something went wrong. Please try again.</p>
+            <Button
+              leftIcon={<RotateCcw size={16} />}
+              onClick={() => {
+                setLoading(true);
+                setFetchError(false);
+                fetch(`/api/sites/${params.siteId}`)
+                  .then((res) => {
+                    if (!res.ok) throw new Error(`Failed (${res.status})`);
+                    return res.json();
+                  })
+                  .then(setSite)
+                  .catch(() => setFetchError(true))
+                  .finally(() => setLoading(false));
+              }}
+            >
+              Try again
+            </Button>
+          </div>
         </div>
       </>
     );
@@ -436,6 +537,8 @@ export default function SiteDetailPage() {
               onPublish={handlePublishPage}
               onUnpublish={handleUnpublishPage}
               onDuplicate={handleDuplicatePage}
+              onReorder={handleReorderPages}
+              onToggleNav={handleToggleNav}
             />
           </>
         )}

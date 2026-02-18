@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { parseBody, updateNavigationSchema } from "@/lib/validations";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { apiError } from "@/lib/api-helpers";
+import { logger } from "@/lib/logger";
 
 export async function PATCH(
   req: Request,
@@ -77,7 +78,7 @@ export async function PATCH(
 
     try {
       revalidatePath(`/s/${site.slug}`, "layout");
-    } catch { /* revalidation failure is non-fatal */ }
+    } catch (err) { logger.warn("PATCH /api/sites/[siteId]/navigation", "Revalidation failed", err); }
 
     return NextResponse.json({ pages: updatedPages });
   } catch (error) {

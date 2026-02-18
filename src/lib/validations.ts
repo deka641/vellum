@@ -59,12 +59,66 @@ const blockSettingsSchema = z.record(z.string(), z.unknown()).optional().default
   return filtered;
 });
 
-const blockSchema = z.object({
+// Per-block-type content schemas — validates top-level keys to prevent arbitrary JSON storage
+const headingContentSchema = z.object({ text: z.string().optional(), level: z.number().optional() }).passthrough();
+const textContentSchema = z.object({ html: z.string().optional() }).passthrough();
+const imageContentSchema = z.object({ src: z.string().optional(), alt: z.string().optional() }).passthrough();
+const buttonContentSchema = z.object({ text: z.string().optional(), url: z.string().optional() }).passthrough();
+const spacerContentSchema = z.object({ height: z.union([z.string(), z.number()]).optional() }).passthrough();
+const dividerContentSchema = z.object({}).passthrough();
+const columnsContentSchema = z.object({ columns: z.array(z.object({ blocks: z.array(z.lazy(() => blockSchema)).optional() }).passthrough()).optional() }).passthrough();
+const videoContentSchema = z.object({ url: z.string().optional() }).passthrough();
+const quoteContentSchema = z.object({ text: z.string().optional(), attribution: z.string().optional() }).passthrough();
+const formContentSchema = z.object({ fields: z.array(z.record(z.string(), z.unknown())).optional(), submitText: z.string().optional() }).passthrough();
+const codeContentSchema = z.object({ code: z.string().optional(), language: z.string().optional() }).passthrough();
+const socialContentSchema = z.object({ links: z.array(z.object({ platform: z.string(), url: z.string() }).passthrough()).optional() }).passthrough();
+const accordionContentSchema = z.object({ items: z.array(z.object({ id: z.string(), title: z.string(), content: z.string() }).passthrough()).optional() }).passthrough();
+const tocContentSchema = z.object({}).passthrough();
+
+const blockContentByType: Record<string, z.ZodType> = {
+  heading: headingContentSchema,
+  text: textContentSchema,
+  image: imageContentSchema,
+  button: buttonContentSchema,
+  spacer: spacerContentSchema,
+  divider: dividerContentSchema,
+  columns: columnsContentSchema,
+  video: videoContentSchema,
+  quote: quoteContentSchema,
+  form: formContentSchema,
+  code: codeContentSchema,
+  social: socialContentSchema,
+  accordion: accordionContentSchema,
+  toc: tocContentSchema,
+};
+
+interface ParsedBlock {
+  id: string;
+  type: string;
+  content: Record<string, unknown>;
+  settings?: Record<string, unknown>;
+  parentId?: string | null;
+}
+
+const blockSchema: z.ZodType<ParsedBlock> = z.object({
   id: z.string().min(1).max(100),
   type: blockTypeEnum,
   content: z.record(z.string(), z.unknown()),
   settings: blockSettingsSchema,
   parentId: z.string().nullable().optional(),
+}).superRefine((block, ctx) => {
+  const schema = blockContentByType[block.type];
+  if (schema) {
+    const result = schema.safeParse(block.content);
+    if (!result.success) {
+      for (const issue of result.error.issues) {
+        ctx.addIssue({
+          ...issue,
+          path: ["content", ...issue.path],
+        });
+      }
+    }
+  }
 });
 
 // --- Reserved slugs ---
