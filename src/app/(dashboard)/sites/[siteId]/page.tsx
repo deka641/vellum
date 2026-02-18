@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Plus, FileText, ArrowLeft, Navigation2, ExternalLink, Search, Send, Trash2, RotateCcw } from "lucide-react";
+import { Plus, FileText, ArrowLeft, Navigation2, ExternalLink, Search, Send, Trash2, RotateCcw, Clock } from "lucide-react";
 import Link from "next/link";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { PageList } from "@/components/dashboard/PageList";
@@ -29,6 +29,7 @@ interface PageItem {
   isHomepage: boolean;
   updatedAt: string;
   deletedAt: string | null;
+  scheduledPublishAt: string | null;
 }
 
 interface SiteDetail {
@@ -156,7 +157,7 @@ export default function SiteDetailPage() {
         prev ? { ...prev, pages: prev.pages.filter((p) => p.id !== deletePageId) } : null
       );
       if (deletedPage) {
-        setTrashedPages((prev) => [...prev, { ...deletedPage, deletedAt: new Date().toISOString(), status: "DRAFT" }]);
+        setTrashedPages((prev) => [...prev, { ...deletedPage, deletedAt: new Date().toISOString(), status: "DRAFT", scheduledPublishAt: null }]);
       }
       toast("Page moved to trash");
     } else {
@@ -264,6 +265,7 @@ export default function SiteDetailPage() {
                     isHomepage: newPage.isHomepage,
                     updatedAt: newPage.updatedAt,
                     deletedAt: null,
+                    scheduledPublishAt: null,
                   },
                 ],
               }

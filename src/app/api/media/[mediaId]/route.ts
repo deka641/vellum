@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { unlink } from "fs/promises";
@@ -49,6 +50,8 @@ export async function PATCH(
       where: { id: mediaId },
       data: { alt: parsed.data.alt },
     });
+
+    revalidateTag("dashboard", { expire: 0 });
 
     return NextResponse.json(updated);
   } catch (error) {

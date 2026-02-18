@@ -1,14 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Settings2, X } from "lucide-react";
+import { Plus, Settings2, History, X } from "lucide-react";
 import { useEditorStore } from "@/stores/editor-store";
 import { AddBlockMenu } from "./AddBlockMenu";
 import { BlockSettings } from "./BlockSettings";
+import { RevisionHistory } from "./RevisionHistory";
 import type { BlockType } from "@/types/blocks";
 import styles from "./EditorSidebar.module.css";
 
-type Tab = "add" | "settings";
+type Tab = "add" | "settings" | "history";
 
 interface EditorSidebarProps {
   mobileOpen?: boolean;
@@ -17,7 +18,7 @@ interface EditorSidebarProps {
 
 export function EditorSidebar({ mobileOpen, onMobileToggle }: EditorSidebarProps) {
   const [activeTab, setActiveTab] = useState<Tab>("add");
-  const { selectedBlockId, addBlock } = useEditorStore();
+  const { selectedBlockId, addBlock, pageId } = useEditorStore();
 
   function handleAddBlock(type: BlockType) {
     addBlock(type);
@@ -30,8 +31,6 @@ export function EditorSidebar({ mobileOpen, onMobileToggle }: EditorSidebarProps
       setActiveTab("settings");
     }
   }, [selectedBlockId]);
-
-  const showSettings = selectedBlockId && activeTab === "settings";
 
   return (
     <>
@@ -58,12 +57,23 @@ export function EditorSidebar({ mobileOpen, onMobileToggle }: EditorSidebarProps
             <Settings2 size={16} />
             Settings
           </button>
+          <button
+            className={`${styles.tab} ${activeTab === "history" ? styles.active : ""}`}
+            onClick={() => setActiveTab("history")}
+          >
+            <History size={16} />
+            History
+          </button>
         </div>
         <div className={styles.content}>
-          {activeTab === "add" ? (
+          {activeTab === "add" && (
             <AddBlockMenu onAdd={handleAddBlock} />
-          ) : (
+          )}
+          {activeTab === "settings" && (
             <BlockSettings />
+          )}
+          {activeTab === "history" && pageId && (
+            <RevisionHistory pageId={pageId} />
           )}
         </div>
       </aside>

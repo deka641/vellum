@@ -4,7 +4,9 @@ import { type Metadata } from "next";
 import { db } from "@/lib/db";
 import { getBaseUrl, buildPageUrl } from "@/lib/url";
 import { PublishedPage } from "@/components/published/PublishedPage";
-import { WebPageJsonLd } from "@/components/published/JsonLd";
+import { WebPageJsonLd, BreadcrumbJsonLd } from "@/components/published/JsonLd";
+import { Breadcrumbs } from "@/components/published/Breadcrumbs";
+import { PageNavigation } from "@/components/published/PageNavigation";
 
 const getSite = cache((slug: string) =>
   db.site.findUnique({ where: { slug } })
@@ -14,6 +16,14 @@ const getPage = cache((siteId: string, pageSlug: string) =>
   db.page.findFirst({
     where: { siteId, slug: pageSlug, status: "PUBLISHED", deletedAt: null },
     include: { blocks: { orderBy: { sortOrder: "asc" } } },
+  })
+);
+
+const getNavPages = cache((siteId: string) =>
+  db.page.findMany({
+    where: { siteId, status: "PUBLISHED", showInNav: true, deletedAt: null },
+    orderBy: { sortOrder: "asc" },
+    select: { id: true, title: true, slug: true, isHomepage: true },
   })
 );
 
@@ -148,6 +158,40 @@ export default async function PublicSitePage({ params }: Props) {
     parentId: b.parentId,
   }));
 
+  const homeHref = `/s/${siteSlug}`;
+
+  // Build prev/next navigation from sibling nav pages
+  const navPages = await getNavPages(site.id);
+  const currentIndex = navPages.findIndex((p) => p.id === page.id);
+
+  let prevPage: { title: string; href: string } | null = null;
+  let nextPage: { title: string; href: string } | null = null;
+
+  if (currentIndex > 0) {
+    const prev = navPages[currentIndex - 1];
+    // Skip homepage as prev link
+    if (!prev.isHomepage) {
+      prevPage = {
+        title: prev.title,
+        href: `/s/${siteSlug}/${prev.slug}`,
+      };
+    }
+  }
+
+  if (currentIndex >= 0 && currentIndex < navPages.length - 1) {
+    const next = navPages[currentIndex + 1];
+    nextPage = {
+      title: next.title,
+      href: next.isHomepage ? homeHref : `/s/${siteSlug}/${next.slug}`,
+    };
+  }
+
+  // Build breadcrumb JSON-LD items
+  const breadcrumbItems = [{ name: site.name, url: siteUrl }];
+  if (!page.isHomepage) {
+    breadcrumbItems.push({ name: page.title, url: canonical });
+  }
+
   return (
     <>
       <WebPageJsonLd
@@ -158,7 +202,14 @@ export default async function PublicSitePage({ params }: Props) {
         dateModified={page.updatedAt}
         isPartOf={{ name: site.name, url: siteUrl }}
       />
+      <BreadcrumbJsonLd items={breadcrumbItems} />
+      <Breadcrumbs
+        siteName={site.name}
+        siteHref={homeHref}
+        pageTitle={page.isHomepage ? undefined : page.title}
+      />
       <PublishedPage title={page.title} blocks={blocks} pageId={page.id} />
+      <PageNavigation prevPage={prevPage} nextPage={nextPage} />
     </>
   );
 }

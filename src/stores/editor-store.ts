@@ -35,6 +35,10 @@ interface EditorState {
   conflict: ConflictState | null;
   previewMode: PreviewMode;
 
+  // Animation state
+  exitingBlockIds: Set<string>;
+  settledBlockId: string | null;
+
   // History
   history: HistoryEntry[];
   historyIndex: number;
@@ -124,6 +128,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   pageNoindex: false,
   lastSavedAt: null,
   conflict: null,
+  exitingBlockIds: new Set(),
+  settledBlockId: null,
   history: [],
   historyIndex: -1,
   previewMode: "desktop",
@@ -171,19 +177,34 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       };
     }),
 
-  removeBlock: (id) =>
+  removeBlock: (id) => {
+    // Add to exitingBlockIds to trigger exit animation
     set((state) => {
-      const newBlocks = state.blocks.filter((b) => b.id !== id);
+      const newExiting = new Set(state.exitingBlockIds);
+      newExiting.add(id);
       return {
-        blocks: newBlocks,
+        exitingBlockIds: newExiting,
         selectedBlockId:
           state.selectedBlockId === id ? null : state.selectedBlockId,
-        isDirty: true,
-        blocksDirty: true,
-        saveError: null,
-        ...pushHistory({ ...state, blocks: newBlocks }),
       };
-    }),
+    });
+    // Actually remove after animation completes
+    setTimeout(() => {
+      set((state) => {
+        const newExiting = new Set(state.exitingBlockIds);
+        newExiting.delete(id);
+        const newBlocks = state.blocks.filter((b) => b.id !== id);
+        return {
+          blocks: newBlocks,
+          exitingBlockIds: newExiting,
+          isDirty: true,
+          blocksDirty: true,
+          saveError: null,
+          ...pushHistory({ ...state, blocks: newBlocks }),
+        };
+      });
+    }, 200);
+  },
 
   updateBlockContent: (id, content) => {
     set((state) => {
@@ -220,19 +241,24 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       };
     }),
 
-  moveBlock: (fromIndex, toIndex) =>
+  moveBlock: (fromIndex, toIndex) => {
     set((state) => {
       const newBlocks = [...state.blocks];
       const [moved] = newBlocks.splice(fromIndex, 1);
       newBlocks.splice(toIndex, 0, moved);
       return {
         blocks: newBlocks,
+        settledBlockId: moved.id,
         isDirty: true,
         blocksDirty: true,
         saveError: null,
         ...pushHistory({ ...state, blocks: newBlocks }),
       };
-    }),
+    });
+    setTimeout(() => {
+      set({ settledBlockId: null });
+    }, 300);
+  },
 
   selectBlock: (id) => set({ selectedBlockId: id }),
 
@@ -361,24 +387,39 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       };
     }),
 
-  removeBlockFromColumn: (parentId, blockId) =>
+  removeBlockFromColumn: (parentId, blockId) => {
+    // Add to exitingBlockIds to trigger exit animation
     set((state) => {
-      const newBlocks = state.blocks.map((b) => {
-        if (b.id !== parentId || b.type !== "columns") return b;
-        const cols = (b.content as ColumnsContent).columns.map((col) => ({
-          blocks: col.blocks.filter((cb) => cb.id !== blockId),
-        }));
-        return { ...b, content: { columns: cols } };
-      });
+      const newExiting = new Set(state.exitingBlockIds);
+      newExiting.add(blockId);
       return {
-        blocks: newBlocks,
+        exitingBlockIds: newExiting,
         selectedBlockId: state.selectedBlockId === blockId ? null : state.selectedBlockId,
-        isDirty: true,
-        blocksDirty: true,
-        saveError: null,
-        ...pushHistory({ ...state, blocks: newBlocks }),
       };
-    }),
+    });
+    // Actually remove after animation completes
+    setTimeout(() => {
+      set((state) => {
+        const newExiting = new Set(state.exitingBlockIds);
+        newExiting.delete(blockId);
+        const newBlocks = state.blocks.map((b) => {
+          if (b.id !== parentId || b.type !== "columns") return b;
+          const cols = (b.content as ColumnsContent).columns.map((col) => ({
+            blocks: col.blocks.filter((cb) => cb.id !== blockId),
+          }));
+          return { ...b, content: { columns: cols } };
+        });
+        return {
+          blocks: newBlocks,
+          exitingBlockIds: newExiting,
+          isDirty: true,
+          blocksDirty: true,
+          saveError: null,
+          ...pushHistory({ ...state, blocks: newBlocks }),
+        };
+      });
+    }, 200);
+  },
 
   updateColumnBlockContent: (parentId, blockId, content) => {
     set((state) => {
@@ -420,7 +461,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       };
     }),
 
-  moveBlockInColumn: (parentId, colIndex, fromIndex, toIndex) =>
+  moveBlockInColumn: (parentId, colIndex, fromIndex, toIndex) => {
+    let movedBlockId: string | null = null;
     set((state) => {
       const newBlocks = state.blocks.map((b) => {
         if (b.id !== parentId || b.type !== "columns") return b;
@@ -430,16 +472,24 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         if (fromIndex < 0 || fromIndex >= colBlocks.length || toIndex < 0 || toIndex >= colBlocks.length) return b;
         const [moved] = colBlocks.splice(fromIndex, 1);
         colBlocks.splice(toIndex, 0, moved);
+        movedBlockId = moved.id;
         return { ...b, content: { columns: cols } };
       });
       return {
         blocks: newBlocks,
+        settledBlockId: movedBlockId,
         isDirty: true,
         blocksDirty: true,
         saveError: null,
         ...pushHistory({ ...state, blocks: newBlocks }),
       };
-    }),
+    });
+    if (movedBlockId) {
+      setTimeout(() => {
+        set({ settledBlockId: null });
+      }, 300);
+    }
+  },
 
   undo: () =>
     set((state) => {

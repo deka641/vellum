@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { MoreHorizontal, Trash2, FileText, Home, ExternalLink, Pencil, Globe, GlobeLock, Copy } from "lucide-react";
+import { MoreHorizontal, Trash2, FileText, Home, ExternalLink, Pencil, Globe, GlobeLock, Copy, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { IconButton } from "@/components/ui/IconButton/IconButton";
 import {
@@ -21,6 +21,7 @@ interface Page {
   status: "DRAFT" | "PUBLISHED";
   isHomepage: boolean;
   updatedAt: string;
+  scheduledPublishAt?: string | null;
 }
 
 interface PageListProps {
@@ -52,6 +53,12 @@ export function PageList({ pages, siteSlug, onDelete, onPublish, onUnpublish, on
               >
                 {page.status === "PUBLISHED" ? "Published" : "Draft"}
               </Badge>
+              {page.scheduledPublishAt && (
+                <Badge variant="warning" dot>
+                  <Clock size={10} />
+                  Scheduled
+                </Badge>
+              )}
               <span className={styles.date}>
                 {formatRelativeDate(page.updatedAt)}
               </span>

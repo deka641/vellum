@@ -1,5 +1,6 @@
 import sharp from "sharp";
 import path from "path";
+import { logger } from "@/lib/logger";
 
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
 
@@ -12,8 +13,8 @@ export async function getImageDimensions(
     if (metadata.width && metadata.height) {
       return { width: metadata.width, height: metadata.height };
     }
-  } catch {
-    // Not an image or processing failed
+  } catch (error) {
+    logger.warn("image", `getImageDimensions failed for ${filename}:`, error);
   }
   return null;
 }
@@ -40,7 +41,7 @@ export async function optimizeImage(filename: string): Promise<void> {
       const fs = await import("fs/promises");
       await fs.writeFile(filepath, buffer);
     }
-  } catch {
-    // Optimization failed, keep original
+  } catch (error) {
+    logger.error("image", `optimizeImage failed for ${filename}:`, error);
   }
 }

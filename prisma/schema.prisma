@@ -37,31 +37,34 @@ model Site {
 }
 
 model Page {
-  id              String           @id @default(cuid())
-  title           String
-  slug            String
-  description     String?
-  metaTitle       String?
-  ogImage         String?
-  noindex         Boolean          @default(false)
-  status          PageStatus       @default(DRAFT)
-  isHomepage      Boolean          @default(false)
-  showInNav       Boolean          @default(true)
-  sortOrder       Int              @default(0)
-  siteId          String
-  site            Site             @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  blocks          Block[]
-  formSubmissions FormSubmission[]
-  deletedAt       DateTime?
-  publishedAt     DateTime?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  id                 String           @id @default(cuid())
+  title              String
+  slug               String
+  description        String?
+  metaTitle          String?
+  ogImage            String?
+  noindex            Boolean          @default(false)
+  status             PageStatus       @default(DRAFT)
+  isHomepage         Boolean          @default(false)
+  showInNav          Boolean          @default(true)
+  sortOrder          Int              @default(0)
+  scheduledPublishAt DateTime?
+  siteId             String
+  site               Site             @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  blocks             Block[]
+  formSubmissions    FormSubmission[]
+  revisions          PageRevision[]
+  deletedAt          DateTime?
+  publishedAt        DateTime?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
 
   @@unique([siteId, slug])
   @@index([siteId])
   @@index([siteId, status])
   @@index([siteId, sortOrder])
   @@index([siteId, deletedAt])
+  @@index([scheduledPublishAt, status])
 }
 
 enum PageStatus {
@@ -84,6 +87,18 @@ model Block {
   @@index([pageId])
   @@index([parentId])
   @@index([pageId, sortOrder])
+}
+
+model PageRevision {
+  id        String   @id @default(cuid())
+  pageId    String
+  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  title     String
+  blocks    Json
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([pageId, createdAt])
 }
 
 model Template {

@@ -128,3 +128,38 @@
   position: relative;
   padding: var(--space-3);
 }
+
+/* Block transition animations */
+.entering {
+  animation: blockEnter 200ms var(--ease-out) forwards;
+}
+
+.exiting {
+  animation: blockExit 200ms var(--ease-out) forwards;
+  pointer-events: none;
+}
+
+.settled {
+  animation: blockSettle 300ms var(--ease-out) forwards;
+}
+
+@keyframes blockEnter {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes blockExit {
+  from { opacity: 1; max-height: 500px; }
+  to { opacity: 0; max-height: 0; overflow: hidden; }
+}
+
+@keyframes blockSettle {
+  0% { transform: scale(1.01); box-shadow: 0 0 0 2px var(--color-accent-light); }
+  100% { transform: scale(1); box-shadow: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entering, .exiting, .settled {
+    animation-duration: 0ms;
+  }
+}

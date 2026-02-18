@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import styles from "@/components/published/site-layout.module.css";
+import styles from "./not-found.module.css";
 
 export default function SiteNotFound() {
   const pathname = usePathname();
@@ -11,13 +11,19 @@ export default function SiteNotFound() {
   const homepageHref = `/s/${siteSlug}`;
 
   return (
-    <div className={styles.notFound}>
-      <h1 className={styles.notFoundTitle}>Page not found</h1>
-      <p className={styles.notFoundText}>
+    <div className={styles.container}>
+      <p className={styles.errorCode} aria-hidden="true">
+        404
+      </p>
+      <h1 className={styles.title}>Page not found</h1>
+      <p className={styles.description}>
         The page you&apos;re looking for doesn&apos;t exist or has been removed.
       </p>
-      <a href={homepageHref} className={styles.notFoundLink}>
-        Go to homepage
+      <p className={styles.suggestion}>
+        Try checking the URL or browsing the navigation above.
+      </p>
+      <a href={homepageHref} className={styles.homeLink}>
+        Back to Homepage
       </a>
     </div>
   );

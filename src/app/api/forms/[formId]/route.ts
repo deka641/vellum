@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { rateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 import { apiError } from "@/lib/api-helpers";
+import { parseBody, formSubmissionSchema } from "@/lib/validations";
 
 export async function POST(
   req: Request,
@@ -41,6 +42,12 @@ export async function POST(
       return NextResponse.json({ id: "ok" }, { status: 201 });
     }
 
+    // Validate form data keys and values
+    const parsed = parseBody(formSubmissionSchema, { data });
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error }, { status: 400 });
+    }
+
     // Verify the page exists and is published
     const page = await db.page.findFirst({
       where: { id: pageId, status: "PUBLISHED" },
@@ -67,13 +74,11 @@ export async function POST(
 
     // Sanitize all values
     const sanitizedData: Record<string, string> = {};
-    for (const [key, value] of Object.entries(data)) {
-      if (typeof value === "string") {
-        sanitizedData[key] = sanitize(value, {
-          allowedTags: [],
-          allowedAttributes: {},
-        });
-      }
+    for (const [key, value] of Object.entries(parsed.data.data)) {
+      sanitizedData[key] = sanitize(value, {
+        allowedTags: [],
+        allowedAttributes: {},
+      });
     }
 
     const submission = await db.formSubmission.create({

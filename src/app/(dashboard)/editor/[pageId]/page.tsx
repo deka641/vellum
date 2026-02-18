@@ -34,6 +34,7 @@ export default function EditorPage() {
   const [siteSlug, setSiteSlug] = useState("");
   const [isHomepage, setIsHomepage] = useState(false);
   const [pageStatus, setPageStatus] = useState<"DRAFT" | "PUBLISHED">("DRAFT");
+  const [scheduledPublishAt, setScheduledPublishAt] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [publishDialogOpen, setPublishDialogOpen] = useState(false);
   const { setPage, addBlock, isDirty, pageSlug } = useEditorStore();
@@ -54,6 +55,7 @@ export default function EditorPage() {
       setSiteSlug(data.site.slug);
       setIsHomepage(data.isHomepage);
       setPageStatus(data.status);
+      setScheduledPublishAt(data.scheduledPublishAt ?? null);
 
       const blocks: EditorBlock[] = data.blocks.map(
         (b: { id: string; type: string; content: unknown; settings: unknown; parentId: string | null }) => ({
@@ -194,6 +196,43 @@ export default function EditorPage() {
     }
   }, [params.pageId, save, toast]);
 
+  const handleSchedule = useCallback(async (scheduledAt: string) => {
+    await save();
+    try {
+      const res = await fetch(`/api/pages/${params.pageId}/publish`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scheduledAt }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setScheduledPublishAt(data.scheduledPublishAt ?? scheduledAt);
+        toast("Page scheduled for publishing");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast(data.error || "Failed to schedule", "error");
+      }
+    } catch {
+      toast("Something went wrong", "error");
+    }
+  }, [params.pageId, save, toast]);
+
+  const handleCancelSchedule = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/pages/${params.pageId}/publish?cancelSchedule=true`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setScheduledPublishAt(null);
+        toast("Schedule cancelled");
+      } else {
+        toast("Failed to cancel schedule", "error");
+      }
+    } catch {
+      toast("Something went wrong", "error");
+    }
+  }, [params.pageId, toast]);
+
   if (loading) {
     return (
       <div className={styles.loadingContainer}>
@@ -248,7 +287,10 @@ export default function EditorPage() {
         siteSlug={siteSlug}
         isHomepage={isHomepage}
         pageStatus={pageStatus}
+        scheduledPublishAt={scheduledPublishAt}
         onPublish={handlePublish}
+        onSchedule={handleSchedule}
+        onCancelSchedule={handleCancelSchedule}
       />
       <ConflictBanner onForceSave={forceSave} />
       <div className={styles.body}>

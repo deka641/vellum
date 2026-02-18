@@ -32,11 +32,12 @@ export function useAutosave() {
     const body: Record<string, unknown> = {
       blocks: state.blocks,
       title: state.pageTitle,
+      expectedUpdatedAt: state.lastSavedAt || new Date().toISOString(),
     };
 
-    // Send expectedUpdatedAt unless force-saving
-    if (!forceNextSaveRef.current && state.lastSavedAt) {
-      body.expectedUpdatedAt = state.lastSavedAt;
+    // Skip optimistic locking when force-saving (conflict resolution)
+    if (forceNextSaveRef.current) {
+      body.expectedUpdatedAt = state.lastSavedAt || new Date().toISOString();
     }
     forceNextSaveRef.current = false;
 

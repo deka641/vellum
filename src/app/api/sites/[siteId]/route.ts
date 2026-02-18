@@ -6,6 +6,7 @@ import { apiError } from "@/lib/api-helpers";
 import { parseBody, updateSiteSchema } from "@/lib/validations";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { sanitizeUrl } from "@/lib/sanitize";
+import { logger } from "@/lib/logger";
 
 export async function GET(
   _req: Request,
@@ -87,7 +88,7 @@ export async function PATCH(
 
     try {
       revalidatePath(`/s/${site.slug}`, "layout");
-    } catch { /* revalidation failure is non-fatal */ }
+    } catch (err) { logger.warn("revalidation", "Site update revalidation failed:", err); }
 
     return NextResponse.json(updated);
   } catch (error) {

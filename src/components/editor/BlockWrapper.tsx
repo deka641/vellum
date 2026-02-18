@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, type ReactNode, useCallback } from "react";
+import { memo, type ReactNode, useCallback, useState, useEffect } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Trash2, Copy, Eye, EyeOff } from "lucide-react";
@@ -22,12 +22,23 @@ export const BlockWrapper = memo(function BlockWrapper({ id, children }: BlockWr
   });
   const marginTop = useEditorStore((s) => s.blocks.find((b) => b.id === id)?.settings.marginTop);
   const marginBottom = useEditorStore((s) => s.blocks.find((b) => b.id === id)?.settings.marginBottom);
+  const isExiting = useEditorStore((s) => s.exitingBlockIds.has(id));
+  const isSettled = useEditorStore((s) => s.settledBlockId === id);
   const selectBlock = useEditorStore((s) => s.selectBlock);
   const removeBlock = useEditorStore((s) => s.removeBlock);
   const duplicateBlock = useEditorStore((s) => s.duplicateBlock);
   const updateBlockSettings = useEditorStore((s) => s.updateBlockSettings);
   const undo = useEditorStore((s) => s.undo);
   const { toast } = useToast();
+
+  // Enter animation: start with isEntering true, clear after a frame to trigger CSS animation
+  const [isEntering, setIsEntering] = useState(true);
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => {
+      setIsEntering(false);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
   const {
     attributes,
@@ -81,7 +92,10 @@ export const BlockWrapper = memo(function BlockWrapper({ id, children }: BlockWr
         styles.wrapper,
         isSelected && styles.selected,
         isDragging && styles.dragging,
-        isHidden && styles.hidden
+        isHidden && styles.hidden,
+        isEntering && styles.entering,
+        isExiting && styles.exiting,
+        isSettled && styles.settled
       )}
       onClick={handleClick}
     >

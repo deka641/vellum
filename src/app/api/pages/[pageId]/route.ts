@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
-import { revalidateTag } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { parseBody, updatePageSchema } from "@/lib/validations";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { apiError } from "@/lib/api-helpers";
+import { sanitizeImageSrc } from "@/lib/sanitize";
 
 export async function GET(
   _req: Request,
@@ -88,7 +89,7 @@ export async function PATCH(
     };
 
     if (parsed.data.metaTitle !== undefined) updateData.metaTitle = parsed.data.metaTitle;
-    if (parsed.data.ogImage !== undefined) updateData.ogImage = parsed.data.ogImage;
+    if (parsed.data.ogImage !== undefined) updateData.ogImage = parsed.data.ogImage ? sanitizeImageSrc(parsed.data.ogImage) : parsed.data.ogImage;
     if (parsed.data.noindex !== undefined) updateData.noindex = parsed.data.noindex;
 
     if (parsed.data.slug !== undefined) {
@@ -121,6 +122,30 @@ export async function PATCH(
       where: { id: pageId },
       data: updateData,
     });
+
+    revalidateTag("dashboard", { expire: 0 });
+
+    // Revalidate published page paths if the page is published
+    if (page.status === "PUBLISHED") {
+      const site = await db.site.findUnique({
+        where: { id: page.siteId },
+        select: { slug: true },
+      });
+      if (site) {
+        try {
+          if (page.isHomepage) {
+            revalidatePath(`/s/${site.slug}`);
+          } else {
+            revalidatePath(`/s/${site.slug}/${page.slug}`);
+            // If slug changed, also revalidate the new path
+            if (updateData.slug && updateData.slug !== page.slug) {
+              revalidatePath(`/s/${site.slug}/${updateData.slug}`);
+            }
+          }
+          revalidatePath(`/s/${site.slug}`, "layout");
+        } catch { /* revalidation failure is non-fatal */ }
+      }
+    }
 
     return NextResponse.json(updated);
   } catch (error) {

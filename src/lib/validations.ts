@@ -34,11 +34,36 @@ const blockTypeEnum = z.enum([
   "toc",
 ]);
 
+// Allowlisted block setting keys and safe value patterns
+const ALLOWED_SETTING_KEYS = new Set([
+  "textColor", "backgroundColor", "fontSize", "paddingY", "paddingX",
+  "marginTop", "marginBottom", "hidden", "align", "style", "color",
+  "gap", "rounded", "shadow", "aspectRatio",
+]);
+
+const safeCssValuePattern = /^[a-zA-Z0-9#.,% ()_-]+$/;
+
+const blockSettingsSchema = z.record(z.string(), z.unknown()).optional().default({}).transform((settings) => {
+  const filtered: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(settings)) {
+    if (!ALLOWED_SETTING_KEYS.has(key)) continue;
+    if (typeof value === "boolean" || typeof value === "number") {
+      filtered[key] = value;
+    } else if (typeof value === "string") {
+      // Block CSS injection: only allow safe patterns
+      if (safeCssValuePattern.test(value) && value.length <= 200) {
+        filtered[key] = value;
+      }
+    }
+  }
+  return filtered;
+});
+
 const blockSchema = z.object({
   id: z.string().min(1).max(100),
   type: blockTypeEnum,
   content: z.record(z.string(), z.unknown()),
-  settings: z.record(z.string(), z.unknown()).optional().default({}),
+  settings: blockSettingsSchema,
   parentId: z.string().nullable().optional(),
 });
 
@@ -99,7 +124,7 @@ const templateBlockSchema = z.object({
   id: z.string().min(1).max(100).optional(),
   type: blockTypeEnum,
   content: z.record(z.string(), z.unknown()),
-  settings: z.record(z.string(), z.unknown()).optional().default({}),
+  settings: blockSettingsSchema,
   parentId: z.string().nullable().optional(),
 });
 
@@ -120,6 +145,20 @@ export const updatePageSchema = z.object({
   metaTitle: z.string().max(200).nullable().optional(),
   ogImage: z.string().max(2000).nullable().optional(),
   noindex: z.boolean().optional(),
+  scheduledAt: z.string().optional().refine(
+    (val) => {
+      if (!val) return true;
+      const date = new Date(val);
+      if (isNaN(date.getTime())) return false;
+      const now = new Date();
+      if (date.getTime() < now.getTime() - 60_000) return false; // allow 1 min grace
+      const oneYear = new Date(now);
+      oneYear.setFullYear(oneYear.getFullYear() + 1);
+      if (date.getTime() > oneYear.getTime()) return false;
+      return true;
+    },
+    { message: "Scheduled date must be a valid ISO date, not in the past, and at most 1 year in the future" }
+  ),
 });
 
 // --- Blocks endpoint ---
@@ -127,7 +166,7 @@ export const updatePageSchema = z.object({
 export const updateBlocksSchema = z.object({
   blocks: z.array(blockSchema).max(500).optional(),
   title: z.string().min(1).max(200).optional(),
-  expectedUpdatedAt: z.string().optional(),
+  expectedUpdatedAt: z.string().min(1),
 });
 
 // --- Media ---
@@ -183,8 +222,18 @@ export const changePasswordSchema = z.object({
 
 // --- Form Submissions ---
 
+const FORBIDDEN_KEYS = ["__proto__", "constructor", "prototype"];
+
+const safeFormKeySchema = z.string().min(1).max(100).refine(
+  (key) => !FORBIDDEN_KEYS.includes(key),
+  { message: "Invalid field key" }
+);
+
 export const formSubmissionSchema = z.object({
-  data: z.record(z.string(), z.string().max(10000)),
+  data: z.record(safeFormKeySchema, z.string().max(10000)).refine(
+    (data) => Object.keys(data).length <= 50,
+    { message: "Too many form fields (max 50)" }
+  ),
 });
 
 // --- Password Reset ---

@@ -58,8 +58,9 @@ export async function GET(
       });
     }
 
-    // First pass: collect all field keys using batched cursor pagination
+    // Single pass: collect all data + field keys, then stream CSV
     const allKeys = new Set<string>();
+    const allRows: Array<{ pageTitle: string; createdAt: Date; data: Record<string, string> }> = [];
     let cursor: string | undefined;
     let hasMore = true;
 
@@ -69,12 +70,18 @@ export async function GET(
         orderBy: { id: "asc" },
         take: BATCH_SIZE,
         ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
-        select: { id: true, data: true },
+        select: {
+          id: true,
+          data: true,
+          createdAt: true,
+          page: { select: { title: true } },
+        },
       });
 
       for (const sub of batch) {
         const data = sub.data as Record<string, string>;
         Object.keys(data).forEach((k) => allKeys.add(k));
+        allRows.push({ pageTitle: sub.page.title, createdAt: sub.createdAt, data });
       }
 
       hasMore = batch.length === BATCH_SIZE;
@@ -85,43 +92,20 @@ export async function GET(
     const keysArray = Array.from(allKeys);
     const encoder = new TextEncoder();
 
-    // Second pass: stream CSV rows
     const stream = new ReadableStream({
-      async start(controller) {
+      start(controller) {
         try {
           // Header row
           controller.enqueue(encoder.encode(headers.map(escapeCsv).join(",") + "\n"));
 
-          // Data rows in batches
-          let batchCursor: string | undefined;
-          let batchHasMore = true;
-
-          while (batchHasMore) {
-            const batch = await db.formSubmission.findMany({
-              where,
-              orderBy: { id: "asc" },
-              take: BATCH_SIZE,
-              ...(batchCursor ? { skip: 1, cursor: { id: batchCursor } } : {}),
-              select: {
-                id: true,
-                data: true,
-                createdAt: true,
-                page: { select: { title: true } },
-              },
-            });
-
-            for (const sub of batch) {
-              const data = sub.data as Record<string, string>;
-              const row = [
-                sub.page.title,
-                new Date(sub.createdAt).toISOString(),
-                ...keysArray.map((k) => data[k] || ""),
-              ];
-              controller.enqueue(encoder.encode(row.map(escapeCsv).join(",") + "\n"));
-            }
-
-            batchHasMore = batch.length === BATCH_SIZE;
-            if (batch.length > 0) batchCursor = batch[batch.length - 1].id;
+          // Data rows from collected data
+          for (const row of allRows) {
+            const csvRow = [
+              row.pageTitle,
+              new Date(row.createdAt).toISOString(),
+              ...keysArray.map((k) => row.data[k] || ""),
+            ];
+            controller.enqueue(encoder.encode(csvRow.map(escapeCsv).join(",") + "\n"));
           }
 
           controller.close();

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 /**
  * Generate a short unique error ID for correlating client errors with server logs.
@@ -14,7 +15,8 @@ function generateErrorId(): string {
  */
 export function apiError(route: string, error: unknown): NextResponse {
   const errorId = generateErrorId();
-  console.error(`[${errorId}] ${route} failed:`, error);
+  const message = error instanceof Error ? error.message : String(error);
+  logger.error("api", `[${errorId}] ${route} failed: ${message}`, error);
   return NextResponse.json(
     { error: "Internal server error", errorId },
     { status: 500 }

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Eye, ExternalLink, Save, Undo2, Redo2, Loader2, AlertCircle, AlertTriangle, Monitor, Tablet, Smartphone, Check, MoreHorizontal } from "lucide-react";
+import { ArrowLeft, Eye, ExternalLink, Save, Undo2, Redo2, Loader2, AlertCircle, AlertTriangle, Monitor, Tablet, Smartphone, Check, MoreHorizontal, Clock, CalendarClock, X } from "lucide-react";
 import { Button } from "@/components/ui/Button/Button";
 import { IconButton } from "@/components/ui/IconButton/IconButton";
 import { Badge } from "@/components/ui/Badge/Badge";
@@ -55,21 +55,83 @@ function useRelativeTime(dateStr: string | null): string {
   return text;
 }
 
+function formatScheduledDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const isToday = date.toDateString() === now.toDateString();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const isTomorrow = date.toDateString() === tomorrow.toDateString();
+
+  const timeStr = date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+
+  if (isToday) return `Today at ${timeStr}`;
+  if (isTomorrow) return `Tomorrow at ${timeStr}`;
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" }) + ` at ${timeStr}`;
+}
+
+function toLocalDatetimeValue(dateStr: string): string {
+  const date = new Date(dateStr);
+  const offset = date.getTimezoneOffset();
+  const local = new Date(date.getTime() - offset * 60_000);
+  return local.toISOString().slice(0, 16);
+}
+
+function getMinDatetimeLocal(): string {
+  const now = new Date();
+  const offset = now.getTimezoneOffset();
+  const local = new Date(now.getTime() - offset * 60_000);
+  return local.toISOString().slice(0, 16);
+}
+
 interface EditorToolbarProps {
   siteId: string;
   siteSlug: string;
   isHomepage: boolean;
   pageStatus: "DRAFT" | "PUBLISHED";
+  scheduledPublishAt: string | null;
   onPublish: () => void;
+  onSchedule: (scheduledAt: string) => void;
+  onCancelSchedule: () => void;
 }
 
-export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, onPublish }: EditorToolbarProps) {
+export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, scheduledPublishAt, onPublish, onSchedule, onCancelSchedule }: EditorToolbarProps) {
   const router = useRouter();
   const { pageTitle, pageSlug, setPageTitle, isDirty, isSaving, saveError, conflict, undo, redo, previewMode, setPreviewMode, lastSavedAt } =
     useEditorStore();
   const { save } = useAutosave();
   const hasConflict = conflict !== null;
   const relativeTime = useRelativeTime(lastSavedAt);
+
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [scheduleDate, setScheduleDate] = useState("");
+  const [scheduleLoading, setScheduleLoading] = useState(false);
+  const scheduleRef = useRef<HTMLDivElement>(null);
+
+  // Close schedule dropdown on outside click
+  useEffect(() => {
+    if (!scheduleOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (scheduleRef.current && !scheduleRef.current.contains(e.target as Node)) {
+        setScheduleOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [scheduleOpen]);
+
+  const handleScheduleSubmit = useCallback(async () => {
+    if (!scheduleDate) return;
+    setScheduleLoading(true);
+    try {
+      const isoDate = new Date(scheduleDate).toISOString();
+      onSchedule(isoDate);
+      setScheduleOpen(false);
+      setScheduleDate("");
+    } finally {
+      setScheduleLoading(false);
+    }
+  }, [scheduleDate, onSchedule]);
 
   return (
     <div className={styles.toolbar}>
@@ -92,6 +154,12 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, onPubl
         >
           {pageStatus === "PUBLISHED" ? "Published" : "Draft"}
         </Badge>
+        {scheduledPublishAt && (
+          <Badge variant="warning" dot>
+            <Clock size={10} />
+            Scheduled {formatScheduledDate(scheduledPublishAt)}
+          </Badge>
+        )}
       </div>
       <div className={styles.right}>
         {hasConflict && (
@@ -225,6 +293,15 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, onPubl
                 <Smartphone size={16} />
                 Mobile view
               </DropdownMenuItem>
+              {scheduledPublishAt && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={onCancelSchedule}>
+                    <X size={16} />
+                    Cancel schedule
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -236,6 +313,74 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, onPubl
         <Button size="sm" onClick={onPublish} disabled={hasConflict}>
           {pageStatus === "PUBLISHED" ? "Update" : "Publish"}
         </Button>
+
+        {/* Schedule dropdown */}
+        <div className={styles.scheduleWrap} ref={scheduleRef}>
+          <Button
+            size="sm"
+            variant={scheduledPublishAt ? "secondary" : "secondary"}
+            onClick={() => setScheduleOpen((o) => !o)}
+            disabled={hasConflict}
+          >
+            <CalendarClock size={14} />
+            {scheduledPublishAt ? "Scheduled" : "Schedule"}
+          </Button>
+          {scheduleOpen && (
+            <div className={styles.scheduleDropdown}>
+              {scheduledPublishAt ? (
+                <div className={styles.scheduleContent}>
+                  <div className={styles.scheduleInfo}>
+                    <Clock size={14} />
+                    <span>Scheduled for {formatScheduledDate(scheduledPublishAt)}</span>
+                  </div>
+                  <div className={styles.scheduleActions}>
+                    <Button size="sm" variant="secondary" onClick={() => {
+                      setScheduleDate(toLocalDatetimeValue(scheduledPublishAt));
+                    }}>
+                      Change
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => {
+                      onCancelSchedule();
+                      setScheduleOpen(false);
+                    }}>
+                      <X size={14} />
+                      Cancel schedule
+                    </Button>
+                  </div>
+                  {scheduleDate && (
+                    <div className={styles.scheduleForm}>
+                      <input
+                        type="datetime-local"
+                        className={styles.scheduleDateInput}
+                        value={scheduleDate}
+                        onChange={(e) => setScheduleDate(e.target.value)}
+                        min={getMinDatetimeLocal()}
+                      />
+                      <Button size="sm" onClick={handleScheduleSubmit} disabled={scheduleLoading || !scheduleDate}>
+                        {scheduleLoading ? "Updating..." : "Update schedule"}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className={styles.scheduleContent}>
+                  <div className={styles.scheduleLabel}>Schedule publish</div>
+                  <input
+                    type="datetime-local"
+                    className={styles.scheduleDateInput}
+                    value={scheduleDate}
+                    onChange={(e) => setScheduleDate(e.target.value)}
+                    min={getMinDatetimeLocal()}
+                    autoFocus
+                  />
+                  <Button size="sm" onClick={handleScheduleSubmit} disabled={scheduleLoading || !scheduleDate}>
+                    {scheduleLoading ? "Scheduling..." : "Schedule publish"}
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

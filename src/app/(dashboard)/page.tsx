@@ -10,11 +10,14 @@ import styles from "./home.module.css";
 
 const getDashboardData = unstable_cache(
   async (userId: string) => {
-    const [siteCount, pageCount, publishedCount, submissionCount, mediaCount, recentPages, recentSubmissions, firstSite] =
+    const [siteCount, pageCounts, submissionCount, mediaCount, recentPages, recentSubmissions, firstSite] =
       await Promise.all([
         db.site.count({ where: { userId } }),
-        db.page.count({ where: { site: { userId } } }),
-        db.page.count({ where: { site: { userId }, status: "PUBLISHED" } }),
+        db.page.groupBy({
+          by: ["status"],
+          where: { site: { userId } },
+          _count: true,
+        }),
         db.formSubmission.count({
           where: {
             page: { site: { userId } },
@@ -50,6 +53,9 @@ const getDashboardData = unstable_cache(
           select: { id: true },
         }),
       ]);
+
+    const pageCount = pageCounts.reduce((sum, g) => sum + g._count, 0);
+    const publishedCount = pageCounts.find((g) => g.status === "PUBLISHED")?._count ?? 0;
 
     return { siteCount, pageCount, publishedCount, submissionCount, mediaCount, recentPages, recentSubmissions, firstSite };
   },
