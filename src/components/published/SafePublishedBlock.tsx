@@ -10,10 +10,10 @@ interface BlockData {
   settings: Record<string, unknown>;
 }
 
-export function SafePublishedBlock({ block, pageId }: { block: BlockData; pageId?: string }) {
+export function SafePublishedBlock({ block, pageId, allBlocks }: { block: BlockData; pageId?: string; allBlocks?: BlockData[] }) {
   return (
     <ErrorBoundary silent>
-      <PublishedBlock block={block} pageId={pageId} />
+      <PublishedBlock block={block} pageId={pageId} allBlocks={allBlocks} />
     </ErrorBoundary>
   );
 }

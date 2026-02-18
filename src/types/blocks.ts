@@ -10,7 +10,9 @@ export type BlockType =
   | "quote"
   | "form"
   | "code"
-  | "social";
+  | "social"
+  | "accordion"
+  | "toc";
 
 export interface HeadingContent {
   text: string;
@@ -87,6 +89,24 @@ export interface SocialContent {
   style: "icons" | "pills";
 }
 
+export interface AccordionItem {
+  id: string;
+  title: string;
+  content: string;
+}
+
+export interface AccordionContent {
+  items: AccordionItem[];
+  style: "bordered" | "minimal";
+  iconPosition: "left" | "right";
+}
+
+export interface TocContent {
+  maxDepth: number;
+  style: "minimal" | "boxed";
+  ordered: boolean;
+}
+
 export interface FormContent {
   fields: FormField[];
   submitText: string;
@@ -105,7 +125,9 @@ export type BlockContent =
   | QuoteContent
   | FormContent
   | CodeContent
-  | SocialContent;
+  | SocialContent
+  | AccordionContent
+  | TocContent;
 
 export interface BlockSettings {
   align?: "left" | "center" | "right";

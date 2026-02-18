@@ -82,10 +82,14 @@ export async function PATCH(
     }
 
     // Handle slug changes
-    const updateData: { title: string; description: string | null; slug?: string } = {
+    const updateData: Record<string, unknown> = {
       title: parsed.data.title ?? page.title,
       description: parsed.data.description ?? page.description,
     };
+
+    if (parsed.data.metaTitle !== undefined) updateData.metaTitle = parsed.data.metaTitle;
+    if (parsed.data.ogImage !== undefined) updateData.ogImage = parsed.data.ogImage;
+    if (parsed.data.noindex !== undefined) updateData.noindex = parsed.data.noindex;
 
     if (parsed.data.slug !== undefined) {
       if (page.isHomepage) {

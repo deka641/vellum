@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode } from "react";
+import { memo, type ReactNode, useCallback } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Trash2, Copy, Eye, EyeOff } from "lucide-react";
@@ -14,12 +14,20 @@ interface BlockWrapperProps {
   children: ReactNode;
 }
 
-export function BlockWrapper({ id, children }: BlockWrapperProps) {
-  const { selectedBlockId, selectBlock, removeBlock, duplicateBlock, blocks, updateBlockSettings, undo } = useEditorStore();
+export const BlockWrapper = memo(function BlockWrapper({ id, children }: BlockWrapperProps) {
+  const isSelected = useEditorStore((s) => s.selectedBlockId === id);
+  const isHidden = useEditorStore((s) => {
+    const block = s.blocks.find((b) => b.id === id);
+    return block?.settings.hidden === true;
+  });
+  const marginTop = useEditorStore((s) => s.blocks.find((b) => b.id === id)?.settings.marginTop);
+  const marginBottom = useEditorStore((s) => s.blocks.find((b) => b.id === id)?.settings.marginBottom);
+  const selectBlock = useEditorStore((s) => s.selectBlock);
+  const removeBlock = useEditorStore((s) => s.removeBlock);
+  const duplicateBlock = useEditorStore((s) => s.duplicateBlock);
+  const updateBlockSettings = useEditorStore((s) => s.updateBlockSettings);
+  const undo = useEditorStore((s) => s.undo);
   const { toast } = useToast();
-  const isSelected = selectedBlockId === id;
-  const block = blocks.find((b) => b.id === id);
-  const isHidden = block?.settings.hidden === true;
 
   const {
     attributes,
@@ -34,9 +42,36 @@ export function BlockWrapper({ id, children }: BlockWrapperProps) {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-    ...(block?.settings.marginTop ? { marginTop: block.settings.marginTop } : {}),
-    ...(block?.settings.marginBottom ? { marginBottom: block.settings.marginBottom } : {}),
+    ...(marginTop ? { marginTop } : {}),
+    ...(marginBottom ? { marginBottom } : {}),
   };
+
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    selectBlock(id);
+  }, [id, selectBlock]);
+
+  const handleDuplicate = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    duplicateBlock(id);
+  }, [id, duplicateBlock]);
+
+  const handleToggleVisibility = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    updateBlockSettings(id, { hidden: !isHidden });
+  }, [id, isHidden, updateBlockSettings]);
+
+  const handleDelete = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    removeBlock(id);
+    const idx = useEditorStore.getState().historyIndex;
+    toast("Block deleted", "info", {
+      label: "Undo",
+      onClick: () => {
+        if (useEditorStore.getState().historyIndex === idx) undo();
+      },
+    });
+  }, [id, removeBlock, undo, toast]);
 
   return (
     <div
@@ -48,10 +83,7 @@ export function BlockWrapper({ id, children }: BlockWrapperProps) {
         isDragging && styles.dragging,
         isHidden && styles.hidden
       )}
-      onClick={(e) => {
-        e.stopPropagation();
-        selectBlock(id);
-      }}
+      onClick={handleClick}
     >
       <div className={styles.toolbar}>
         <button
@@ -64,10 +96,7 @@ export function BlockWrapper({ id, children }: BlockWrapperProps) {
         </button>
         <button
           className={styles.duplicateButton}
-          onClick={(e) => {
-            e.stopPropagation();
-            duplicateBlock(id);
-          }}
+          onClick={handleDuplicate}
           title="Duplicate block"
           aria-label="Duplicate block"
         >
@@ -75,10 +104,7 @@ export function BlockWrapper({ id, children }: BlockWrapperProps) {
         </button>
         <button
           className={styles.visibilityButton}
-          onClick={(e) => {
-            e.stopPropagation();
-            updateBlockSettings(id, { hidden: !isHidden });
-          }}
+          onClick={handleToggleVisibility}
           title={isHidden ? "Show block" : "Hide block"}
           aria-label={isHidden ? "Show block" : "Hide block"}
         >
@@ -86,17 +112,7 @@ export function BlockWrapper({ id, children }: BlockWrapperProps) {
         </button>
         <button
           className={styles.deleteButton}
-          onClick={(e) => {
-            e.stopPropagation();
-            removeBlock(id);
-            const idx = useEditorStore.getState().historyIndex;
-            toast("Block deleted", "info", {
-              label: "Undo",
-              onClick: () => {
-                if (useEditorStore.getState().historyIndex === idx) undo();
-              },
-            });
-          }}
+          onClick={handleDelete}
           title="Delete block"
           aria-label="Delete block"
         >
@@ -106,4 +122,4 @@ export function BlockWrapper({ id, children }: BlockWrapperProps) {
       <div className={styles.content}>{children}</div>
     </div>
   );
-}
+});

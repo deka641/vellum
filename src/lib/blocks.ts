@@ -10,7 +10,7 @@ interface BlockDefinition {
   type: BlockType;
   label: string;
   icon: string;
-  category: "text" | "media" | "layout";
+  category: "text" | "media" | "layout" | "interactive";
   defaultContent: BlockContent;
   defaultSettings: BlockSettings;
 }
@@ -120,6 +120,30 @@ export const blockDefinitions: Record<BlockType, BlockDefinition> = {
     defaultContent: { links: [], style: "icons" },
     defaultSettings: { align: "center" },
   },
+  accordion: {
+    type: "accordion",
+    label: "Accordion",
+    icon: "ChevronDown",
+    category: "interactive",
+    defaultContent: {
+      items: [
+        { id: generateId(), title: "Accordion item 1", content: "<p>Content for item 1</p>" },
+        { id: generateId(), title: "Accordion item 2", content: "<p>Content for item 2</p>" },
+        { id: generateId(), title: "Accordion item 3", content: "<p>Content for item 3</p>" },
+      ],
+      style: "bordered",
+      iconPosition: "right",
+    },
+    defaultSettings: {},
+  },
+  toc: {
+    type: "toc",
+    label: "Table of Contents",
+    icon: "List",
+    category: "interactive",
+    defaultContent: { maxDepth: 3, style: "boxed", ordered: false },
+    defaultSettings: {},
+  },
 };
 
 export function createBlock(type: BlockType): EditorBlock {
@@ -136,4 +160,5 @@ export const blockCategories = [
   { key: "text", label: "Text" },
   { key: "media", label: "Media" },
   { key: "layout", label: "Layout" },
+  { key: "interactive", label: "Interactive" },
 ] as const;

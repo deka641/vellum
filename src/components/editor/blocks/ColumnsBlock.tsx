@@ -19,10 +19,9 @@ import { Plus, Trash2, GripVertical } from "lucide-react";
 import type { ColumnsContent, BlockSettings, BlockType, EditorBlock } from "@/types/blocks";
 import { useEditorStore } from "@/stores/editor-store";
 import { blockDefinitions, blockCategories } from "@/lib/blocks";
+import { DISALLOWED_NESTED_TYPES } from "@/lib/validations";
 import { BlockRenderer } from "../BlockRenderer";
 import styles from "./blocks.module.css";
-
-const DISALLOWED_NESTED_TYPES: BlockType[] = ["columns", "form", "video"];
 
 interface ColumnsBlockProps {
   id: string;
@@ -37,8 +36,9 @@ function SortableNestedBlock({
   block: EditorBlock;
   parentId: string;
 }) {
-  const { selectedBlockId, selectBlock, removeBlockFromColumn } = useEditorStore();
-  const isSelected = selectedBlockId === block.id;
+  const isSelected = useEditorStore((s) => s.selectedBlockId === block.id);
+  const selectBlock = useEditorStore((s) => s.selectBlock);
+  const removeBlockFromColumn = useEditorStore((s) => s.removeBlockFromColumn);
 
   const {
     attributes,
@@ -93,7 +93,8 @@ function ColumnDropZone({
   colIndex: number;
   blocks: EditorBlock[];
 }) {
-  const { addBlockToColumn, moveBlockInColumn } = useEditorStore();
+  const addBlockToColumn = useEditorStore((s) => s.addBlockToColumn);
+  const moveBlockInColumn = useEditorStore((s) => s.moveBlockInColumn);
   const [showPicker, setShowPicker] = useState(false);
 
   const sensors = useSensors(

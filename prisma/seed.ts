@@ -185,6 +185,314 @@ async function main() {
         },
       ],
     },
+    {
+      name: "Services",
+      description: "Showcase your services with a feature grid and call-to-action",
+      category: "business",
+      blocks: [
+        {
+          type: "heading",
+          content: { text: "Our Services", level: 1 },
+          settings: { align: "center" },
+        },
+        {
+          type: "text",
+          content: {
+            html: "<p>We offer a comprehensive range of services designed to help your business grow. From strategy to execution, we're with you every step of the way.</p>",
+          },
+          settings: { align: "center" },
+        },
+        { type: "spacer", content: { height: 48 }, settings: {} },
+        {
+          type: "columns",
+          content: {
+            columns: [
+              {
+                blocks: [
+                  { id: "sv1", type: "heading", content: { text: "Web Design", level: 3 }, settings: { align: "center" } },
+                  { id: "sv2", type: "text", content: { html: "<p>Beautiful, responsive websites tailored to your brand. We create designs that convert visitors into customers.</p>" }, settings: { align: "center" } },
+                ],
+              },
+              {
+                blocks: [
+                  { id: "sv3", type: "heading", content: { text: "Development", level: 3 }, settings: { align: "center" } },
+                  { id: "sv4", type: "text", content: { html: "<p>Custom web applications built with modern technologies. Scalable, secure, and performant solutions for any need.</p>" }, settings: { align: "center" } },
+                ],
+              },
+              {
+                blocks: [
+                  { id: "sv5", type: "heading", content: { text: "Consulting", level: 3 }, settings: { align: "center" } },
+                  { id: "sv6", type: "text", content: { html: "<p>Strategic guidance to optimize your digital presence. We help you make informed decisions about technology and design.</p>" }, settings: { align: "center" } },
+                ],
+              },
+            ],
+          },
+          settings: { gap: "32px" },
+        },
+        { type: "spacer", content: { height: 48 }, settings: {} },
+        { type: "divider", content: {}, settings: { style: "solid" } },
+        {
+          type: "heading",
+          content: { text: "Ready to get started?", level: 2 },
+          settings: { align: "center" },
+        },
+        {
+          type: "text",
+          content: { html: "<p>Let's discuss how we can help bring your vision to life.</p>" },
+          settings: { align: "center" },
+        },
+        {
+          type: "button",
+          content: { text: "Contact Us", url: "#", variant: "primary" },
+          settings: { align: "center" },
+        },
+      ],
+    },
+    {
+      name: "FAQ",
+      description: "Frequently asked questions with accordion items",
+      category: "support",
+      blocks: [
+        {
+          type: "heading",
+          content: { text: "Frequently Asked Questions", level: 1 },
+          settings: { align: "center" },
+        },
+        {
+          type: "text",
+          content: {
+            html: "<p>Find answers to the most common questions about our product and services. Can't find what you're looking for? Feel free to reach out.</p>",
+          },
+          settings: { align: "center" },
+        },
+        { type: "spacer", content: { height: 32 }, settings: {} },
+        {
+          type: "accordion",
+          content: {
+            items: [
+              { id: "faq1", title: "How do I get started?", content: "<p>Sign up for an account, create a new site, and start building pages with our visual editor. No coding experience required — just drag and drop blocks to build your perfect page.</p>" },
+              { id: "faq2", title: "Can I use my own domain?", content: "<p>Yes! You can connect a custom domain to your site. Simply update your DNS settings to point to our servers and we'll handle the rest, including SSL certificates.</p>" },
+              { id: "faq3", title: "Is there a free plan?", content: "<p>We offer a generous free tier that includes all core features. For advanced functionality like custom domains and priority support, check out our premium plans.</p>" },
+              { id: "faq4", title: "How do I contact support?", content: "<p>You can reach our support team via the contact form on our website, or email us directly. We typically respond within 24 hours on business days.</p>" },
+              { id: "faq5", title: "Can I export my content?", content: "<p>Absolutely. Your content is yours. You can export your pages and data at any time from your dashboard settings.</p>" },
+            ],
+            style: "bordered",
+            iconPosition: "right",
+          },
+          settings: {},
+        },
+        { type: "spacer", content: { height: 48 }, settings: {} },
+        { type: "divider", content: {}, settings: { style: "solid" } },
+        {
+          type: "heading",
+          content: { text: "Still have questions?", level: 2 },
+          settings: { align: "center" },
+        },
+        {
+          type: "button",
+          content: { text: "Contact Support", url: "#", variant: "outline" },
+          settings: { align: "center" },
+        },
+      ],
+    },
+    {
+      name: "Team / About Us",
+      description: "Introduce your team with bios and a company overview",
+      category: "about",
+      blocks: [
+        {
+          type: "heading",
+          content: { text: "About Our Company", level: 1 },
+          settings: { align: "center" },
+        },
+        {
+          type: "text",
+          content: {
+            html: "<p>We're a passionate team of designers, developers, and strategists dedicated to building exceptional digital experiences. Founded in 2020, we've helped over 500 businesses transform their online presence.</p>",
+          },
+          settings: { align: "center" },
+        },
+        { type: "spacer", content: { height: 48 }, settings: {} },
+        {
+          type: "heading",
+          content: { text: "Meet the Team", level: 2 },
+          settings: { align: "center" },
+        },
+        {
+          type: "columns",
+          content: {
+            columns: [
+              {
+                blocks: [
+                  { id: "tm1", type: "heading", content: { text: "Sarah Chen", level: 3 }, settings: { align: "center" } },
+                  { id: "tm2", type: "text", content: { html: "<p><strong>CEO & Founder</strong></p><p>10+ years in product design. Previously led design at a Fortune 500 tech company. Passionate about making design tools accessible to everyone.</p>" }, settings: { align: "center" } },
+                ],
+              },
+              {
+                blocks: [
+                  { id: "tm3", type: "heading", content: { text: "Marcus Johnson", level: 3 }, settings: { align: "center" } },
+                  { id: "tm4", type: "text", content: { html: "<p><strong>CTO</strong></p><p>Full-stack engineer with a love for clean architecture. Open source contributor and speaker at tech conferences worldwide.</p>" }, settings: { align: "center" } },
+                ],
+              },
+            ],
+          },
+          settings: { gap: "32px" },
+        },
+        { type: "spacer", content: { height: 24 }, settings: {} },
+        {
+          type: "quote",
+          content: {
+            text: "Great products come from great teams. We hire for curiosity, empathy, and craft.",
+            attribution: "Sarah Chen, CEO",
+            style: "filled",
+          },
+          settings: {},
+        },
+      ],
+    },
+    {
+      name: "Event",
+      description: "Announce an event with schedule, details, and registration",
+      category: "event",
+      blocks: [
+        {
+          type: "heading",
+          content: { text: "Design Conference 2026", level: 1 },
+          settings: { align: "center" },
+        },
+        {
+          type: "text",
+          content: {
+            html: "<p><strong>March 15-16, 2026</strong> &bull; San Francisco, CA</p><p>Join 500+ designers and developers for two days of inspiring talks, hands-on workshops, and networking.</p>",
+          },
+          settings: { align: "center" },
+        },
+        {
+          type: "button",
+          content: { text: "Register Now", url: "#", variant: "primary" },
+          settings: { align: "center" },
+        },
+        { type: "spacer", content: { height: 48 }, settings: {} },
+        {
+          type: "heading",
+          content: { text: "Schedule", level: 2 },
+          settings: {},
+        },
+        {
+          type: "columns",
+          content: {
+            columns: [
+              {
+                blocks: [
+                  { id: "ev1", type: "heading", content: { text: "Day 1 — Talks", level: 3 }, settings: {} },
+                  { id: "ev2", type: "text", content: { html: "<p><strong>9:00 AM</strong> — Opening Keynote<br><strong>10:30 AM</strong> — Design Systems at Scale<br><strong>1:00 PM</strong> — The Future of AI in Design<br><strong>3:00 PM</strong> — Accessibility Best Practices<br><strong>5:00 PM</strong> — Networking Reception</p>" }, settings: {} },
+                ],
+              },
+              {
+                blocks: [
+                  { id: "ev3", type: "heading", content: { text: "Day 2 — Workshops", level: 3 }, settings: {} },
+                  { id: "ev4", type: "text", content: { html: "<p><strong>9:00 AM</strong> — Hands-on Prototyping<br><strong>11:00 AM</strong> — Advanced CSS Techniques<br><strong>1:00 PM</strong> — User Research Methods<br><strong>3:00 PM</strong> — Portfolio Reviews<br><strong>4:30 PM</strong> — Closing Remarks</p>" }, settings: {} },
+                ],
+              },
+            ],
+          },
+          settings: { gap: "32px" },
+        },
+        { type: "divider", content: {}, settings: { style: "solid" } },
+        {
+          type: "heading",
+          content: { text: "Register", level: 2 },
+          settings: {},
+        },
+        {
+          type: "form",
+          content: {
+            fields: [
+              { id: "name", type: "text", label: "Full Name", required: true, placeholder: "Your name" },
+              { id: "email", type: "email", label: "Email", required: true, placeholder: "your@email.com" },
+              { id: "ticket", type: "select", label: "Ticket Type", required: true, placeholder: "Select ticket", options: ["Standard ($299)", "VIP ($499)", "Student ($149)"] },
+            ],
+            submitText: "Register",
+            successMessage: "You're registered! Check your email for confirmation details.",
+          },
+          settings: {},
+        },
+      ],
+    },
+    {
+      name: "Pricing",
+      description: "Display pricing tiers with a feature comparison",
+      category: "business",
+      blocks: [
+        {
+          type: "heading",
+          content: { text: "Simple, Transparent Pricing", level: 1 },
+          settings: { align: "center" },
+        },
+        {
+          type: "text",
+          content: {
+            html: "<p>Choose the plan that's right for you. All plans include a 14-day free trial.</p>",
+          },
+          settings: { align: "center" },
+        },
+        { type: "spacer", content: { height: 32 }, settings: {} },
+        {
+          type: "columns",
+          content: {
+            columns: [
+              {
+                blocks: [
+                  { id: "pr1", type: "heading", content: { text: "Starter", level: 3 }, settings: { align: "center" } },
+                  { id: "pr2", type: "text", content: { html: "<p><strong style='font-size:2rem'>$9</strong>/month</p><p>Perfect for personal projects</p><ul><li>1 site</li><li>10 pages</li><li>Basic templates</li><li>Community support</li></ul>" }, settings: { align: "center" } },
+                  { id: "pr3", type: "button", content: { text: "Start Free Trial", url: "#", variant: "outline" }, settings: { align: "center" } },
+                ],
+              },
+              {
+                blocks: [
+                  { id: "pr4", type: "heading", content: { text: "Professional", level: 3 }, settings: { align: "center" } },
+                  { id: "pr5", type: "text", content: { html: "<p><strong style='font-size:2rem'>$29</strong>/month</p><p>For growing businesses</p><ul><li>5 sites</li><li>Unlimited pages</li><li>Custom domain</li><li>Priority support</li><li>Advanced SEO</li></ul>" }, settings: { align: "center" } },
+                  { id: "pr6", type: "button", content: { text: "Start Free Trial", url: "#", variant: "primary" }, settings: { align: "center" } },
+                ],
+              },
+              {
+                blocks: [
+                  { id: "pr7", type: "heading", content: { text: "Enterprise", level: 3 }, settings: { align: "center" } },
+                  { id: "pr8", type: "text", content: { html: "<p><strong style='font-size:2rem'>$99</strong>/month</p><p>For large organizations</p><ul><li>Unlimited sites</li><li>Unlimited pages</li><li>White-label</li><li>Dedicated support</li><li>Custom integrations</li></ul>" }, settings: { align: "center" } },
+                  { id: "pr9", type: "button", content: { text: "Contact Sales", url: "#", variant: "outline" }, settings: { align: "center" } },
+                ],
+              },
+            ],
+          },
+          settings: { gap: "24px" },
+        },
+        { type: "spacer", content: { height: 48 }, settings: {} },
+        {
+          type: "heading",
+          content: { text: "Common Questions", level: 2 },
+          settings: { align: "center" },
+        },
+        {
+          type: "accordion",
+          content: {
+            items: [
+              { id: "pf1", title: "Can I change plans later?", content: "<p>Yes, you can upgrade or downgrade your plan at any time. Changes take effect at the start of your next billing cycle.</p>" },
+              { id: "pf2", title: "What payment methods do you accept?", content: "<p>We accept all major credit cards and PayPal. Enterprise customers can also pay via invoice.</p>" },
+              { id: "pf3", title: "Is there a money-back guarantee?", content: "<p>Absolutely. If you're not satisfied within the first 30 days, we'll refund your payment in full — no questions asked.</p>" },
+            ],
+            style: "bordered",
+            iconPosition: "right",
+          },
+          settings: {},
+        },
+        { type: "spacer", content: { height: 32 }, settings: {} },
+        {
+          type: "button",
+          content: { text: "Get Started Today", url: "#", variant: "primary" },
+          settings: { align: "center" },
+        },
+      ],
+    },
   ];
 
   for (const template of templates) {

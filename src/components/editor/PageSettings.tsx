@@ -5,8 +5,9 @@ import { useEditorStore } from "@/stores/editor-store";
 import { Input, Textarea } from "@/components/ui/Input/Input";
 import { Button } from "@/components/ui/Button/Button";
 import { useToast } from "@/components/ui/Toast/Toast";
+import { MediaPickerModal } from "./MediaPickerModal";
 import { slugify } from "@/lib/utils";
-import { Save, Globe } from "lucide-react";
+import { Save, Globe, Image as ImageIcon, X } from "lucide-react";
 import styles from "./PageSettings.module.css";
 
 export function PageSettings() {
@@ -15,17 +16,28 @@ export function PageSettings() {
     pageId,
     pageDescription,
     pageSlug,
+    pageMetaTitle,
+    pageOgImage,
+    pageNoindex,
     setPageDescription,
     setPageSlug,
+    setPageMetaTitle,
+    setPageOgImage,
+    setPageNoindex,
     setLastSavedAt,
+    setDirty,
   } = useEditorStore();
 
   const [description, setDescription] = useState(pageDescription ?? "");
   const [slug, setSlug] = useState(pageSlug);
+  const [metaTitle, setMetaTitle] = useState(pageMetaTitle ?? "");
+  const [ogImage, setOgImage] = useState(pageOgImage ?? "");
+  const [noindex, setNoindex] = useState(pageNoindex);
   const [slugError, setSlugError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [isHomepage, setIsHomepage] = useState(false);
   const [siteSlug, setSiteSlug] = useState("");
+  const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
 
   // Sync from store when page loads or store values change externally
   useEffect(() => {
@@ -35,6 +47,18 @@ export function PageSettings() {
   useEffect(() => {
     setSlug(pageSlug);
   }, [pageSlug]);
+
+  useEffect(() => {
+    setMetaTitle(pageMetaTitle ?? "");
+  }, [pageMetaTitle]);
+
+  useEffect(() => {
+    setOgImage(pageOgImage ?? "");
+  }, [pageOgImage]);
+
+  useEffect(() => {
+    setNoindex(pageNoindex);
+  }, [pageNoindex]);
 
   // Load page metadata for homepage check and site slug
   useEffect(() => {
@@ -55,7 +79,11 @@ export function PageSettings() {
   }, [pageId]);
 
   const hasChanges =
-    description !== (pageDescription ?? "") || slug !== pageSlug;
+    description !== (pageDescription ?? "") ||
+    slug !== pageSlug ||
+    metaTitle !== (pageMetaTitle ?? "") ||
+    ogImage !== (pageOgImage ?? "") ||
+    noindex !== pageNoindex;
 
   const handleSlugChange = (value: string) => {
     const slugified = slugify(value);
@@ -76,13 +104,22 @@ export function PageSettings() {
     setSlugError(null);
 
     try {
-      const body: { description?: string | null; slug?: string } = {};
+      const body: Record<string, unknown> = {};
 
       if (description !== (pageDescription ?? "")) {
         body.description = description || null;
       }
       if (slug !== pageSlug) {
         body.slug = slug;
+      }
+      if (metaTitle !== (pageMetaTitle ?? "")) {
+        body.metaTitle = metaTitle || null;
+      }
+      if (ogImage !== (pageOgImage ?? "")) {
+        body.ogImage = ogImage || null;
+      }
+      if (noindex !== pageNoindex) {
+        body.noindex = noindex;
       }
 
       const res = await fetch(`/api/pages/${pageId}`, {
@@ -106,7 +143,13 @@ export function PageSettings() {
       const updated = await res.json();
       setPageDescription(updated.description);
       setPageSlug(updated.slug);
+      setPageMetaTitle(updated.metaTitle ?? null);
+      setPageOgImage(updated.ogImage ?? null);
+      setPageNoindex(updated.noindex ?? false);
       setLastSavedAt(updated.updatedAt);
+      // Clear isDirty since metadata was just saved and blocksDirty is unaffected
+      const { blocksDirty } = useEditorStore.getState();
+      if (!blocksDirty) setDirty(false);
       toast("Page settings saved");
     } catch {
       toast("Something went wrong", "error");
@@ -124,6 +167,15 @@ export function PageSettings() {
       <h3 className={styles.title}>Page Settings</h3>
 
       <div className={styles.section}>
+        <Input
+          label="Meta title"
+          value={metaTitle}
+          onChange={(e) => setMetaTitle(e.target.value)}
+          placeholder="Override page title for SEO"
+          maxLength={200}
+          hint={`${metaTitle.length}/60 recommended`}
+        />
+
         <Textarea
           label="Meta description"
           value={description}
@@ -133,6 +185,39 @@ export function PageSettings() {
           maxLength={2000}
           hint={`${description.length}/160 recommended for SEO`}
         />
+
+        <div className={styles.field}>
+          <label className={styles.fieldLabel}>OG Image</label>
+          {ogImage ? (
+            <div className={styles.ogImagePreview}>
+              <img src={ogImage} alt="OG preview" className={styles.ogImageThumb} />
+              <button
+                className={styles.ogImageRemove}
+                onClick={() => setOgImage("")}
+                title="Remove image"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ) : (
+            <button
+              className={styles.ogImagePicker}
+              onClick={() => setMediaPickerOpen(true)}
+            >
+              <ImageIcon size={16} />
+              Choose OG image
+            </button>
+          )}
+        </div>
+
+        <label className={styles.checkboxLabel}>
+          <input
+            type="checkbox"
+            checked={noindex}
+            onChange={(e) => setNoindex(e.target.checked)}
+          />
+          Hide from search engines (noindex)
+        </label>
 
         <div className={styles.field}>
           <Input
@@ -163,6 +248,15 @@ export function PageSettings() {
           {saving ? "Saving..." : "Save Settings"}
         </Button>
       </div>
+
+      <MediaPickerModal
+        open={mediaPickerOpen}
+        onOpenChange={setMediaPickerOpen}
+        onSelect={(media) => {
+          setOgImage(media.url);
+          setMediaPickerOpen(false);
+        }}
+      />
     </div>
   );
 }

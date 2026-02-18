@@ -414,3 +414,117 @@
   height: 0;
   overflow: hidden;
 }
+
+/* Accordion */
+.accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.accordionItem {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.accordionItemBordered {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-2);
+}
+
+.accordionItemMinimal {
+  border-left: none;
+  border-right: none;
+  border-top: none;
+}
+
+.accordionSummary {
+  padding: var(--space-3) var(--space-4);
+  font-weight: var(--weight-medium);
+  font-size: var(--text-base);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.accordionSummary::-webkit-details-marker {
+  display: none;
+}
+
+.accordionSummary::after {
+  content: "+";
+  font-size: var(--text-lg);
+  color: var(--color-text-tertiary);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+  margin-left: var(--space-3);
+}
+
+details[open] > .accordionSummary::after {
+  content: "\2212";
+}
+
+.accordionBody {
+  padding: 0 var(--space-4) var(--space-4);
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: var(--color-text-secondary);
+}
+
+.accordionBody p {
+  margin-bottom: 0.5em;
+}
+
+.accordionBody a {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
+
+/* Table of Contents */
+.toc {
+  scroll-behavior: smooth;
+}
+
+.tocBoxed {
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-secondary);
+}
+
+.tocMinimal {
+  padding: var(--space-3) 0;
+  border-left: 3px solid var(--color-accent);
+  padding-left: var(--space-4);
+}
+
+.tocList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-left: var(--space-4);
+  margin: 0;
+}
+
+.tocList ol,
+.tocList ul {
+  padding-left: var(--space-4);
+}
+
+.tocItem {
+  line-height: var(--leading-normal);
+}
+
+.tocLink {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.tocLink:hover {
+  color: var(--color-accent);
+}

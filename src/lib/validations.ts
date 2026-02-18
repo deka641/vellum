@@ -30,6 +30,8 @@ const blockTypeEnum = z.enum([
   "form",
   "code",
   "social",
+  "accordion",
+  "toc",
 ]);
 
 const blockSchema = z.object({
@@ -115,6 +117,9 @@ export const updatePageSchema = z.object({
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug must be lowercase letters, numbers, and hyphens")
     .refine((s) => !RESERVED_SLUGS.includes(s), "This slug is reserved and cannot be used")
     .optional(),
+  metaTitle: z.string().max(200).nullable().optional(),
+  ogImage: z.string().max(2000).nullable().optional(),
+  noindex: z.boolean().optional(),
 });
 
 // --- Blocks endpoint ---
@@ -195,7 +200,7 @@ export const resetPasswordSchema = z.object({
 
 // --- Block hierarchy validation ---
 
-const DISALLOWED_NESTED_TYPES = ["columns", "form", "video"];
+export const DISALLOWED_NESTED_TYPES = ["columns", "form", "video"];
 
 interface BlockLike {
   type: string;

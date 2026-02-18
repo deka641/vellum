@@ -14,6 +14,7 @@ interface BlockData {
 interface PublishedBlockProps {
   block: BlockData;
   pageId?: string;
+  allBlocks?: BlockData[];
 }
 
 function buildBlockStyle(settings: Record<string, unknown>): CSSProperties {
@@ -34,7 +35,17 @@ function buildBlockStyle(settings: Record<string, unknown>): CSSProperties {
   return style;
 }
 
-export function PublishedBlock({ block, pageId }: PublishedBlockProps) {
+function slugifyText(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/[\s_]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+export function PublishedBlock({ block, pageId, allBlocks }: PublishedBlockProps) {
   const { type, content, settings } = block;
 
   // Block visibility toggle
@@ -50,8 +61,10 @@ export function PublishedBlock({ block, pageId }: PublishedBlockProps) {
       const level = (content.level || 2) as number;
       const headingMap = { 1: "h1", 2: "h2", 3: "h3", 4: "h4" } as const;
       const Tag = headingMap[level as 1 | 2 | 3 | 4] || "h2";
+      const headingId = slugifyText(text);
       return (
         <Tag
+          id={headingId}
           className={styles.heading}
           style={{ textAlign: align, ...extraStyle }}
           data-level={level}
@@ -312,6 +325,83 @@ export function PublishedBlock({ block, pageId }: PublishedBlockProps) {
             </a>
           ))}
         </div>
+      );
+    }
+
+    case "accordion": {
+      const items = (content.items || []) as Array<{ id: string; title: string; content: string }>;
+      if (items.length === 0) return null;
+      const accordionStyle = (content.style as string) || "bordered";
+      return (
+        <div className={styles.accordion} style={extraStyle}>
+          {items.map((item) => (
+            <details
+              key={item.id}
+              className={`${styles.accordionItem} ${accordionStyle === "bordered" ? styles.accordionItemBordered : styles.accordionItemMinimal}`}
+            >
+              <summary className={styles.accordionSummary}>
+                {item.title}
+              </summary>
+              <div
+                className={styles.accordionBody}
+                dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(item.content) }}
+              />
+            </details>
+          ))}
+        </div>
+      );
+    }
+
+    case "toc": {
+      const blocksToScan = allBlocks || [];
+      const maxDepth = (content.maxDepth as number) || 3;
+      const tocStyle = (content.style as string) || "boxed";
+      const ordered = content.ordered === true;
+
+      interface TocEntry { text: string; level: number; id: string }
+      const headings: TocEntry[] = [];
+
+      function collectHeadings(blocks: BlockData[]) {
+        for (const b of blocks) {
+          if (b.type === "heading") {
+            const text = b.content.text as string;
+            const level = (b.content.level || 2) as number;
+            if (text && text.trim() !== "" && text !== "Untitled heading" && level <= maxDepth) {
+              headings.push({ text, level, id: slugifyText(text) });
+            }
+          }
+          if (b.type === "columns" && Array.isArray(b.content.columns)) {
+            for (const col of b.content.columns as Array<{ blocks?: BlockData[] }>) {
+              if (Array.isArray(col.blocks)) collectHeadings(col.blocks);
+            }
+          }
+        }
+      }
+      collectHeadings(blocksToScan);
+
+      if (headings.length === 0) return null;
+
+      const ListTag = ordered ? "ol" : "ul";
+      return (
+        <nav
+          className={`${styles.toc} ${tocStyle === "boxed" ? styles.tocBoxed : styles.tocMinimal}`}
+          aria-label="Table of Contents"
+          style={extraStyle}
+        >
+          <ListTag className={styles.tocList}>
+            {headings.map((h, i) => (
+              <li
+                key={i}
+                className={styles.tocItem}
+                style={{ paddingLeft: `${(h.level - 1) * 16}px` }}
+              >
+                <a href={`#${h.id}`} className={styles.tocLink}>
+                  {h.text}
+                </a>
+              </li>
+            ))}
+          </ListTag>
+        </nav>
       );
     }
 

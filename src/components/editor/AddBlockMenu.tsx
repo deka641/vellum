@@ -15,6 +15,8 @@ import {
   Code,
   Share2,
   Search,
+  ChevronDown,
+  List,
 } from "lucide-react";
 import { type BlockType } from "@/types/blocks";
 import { blockDefinitions, blockCategories } from "@/lib/blocks";
@@ -33,6 +35,8 @@ const iconMap: Record<string, React.ReactNode> = {
   FileInput: <FileInput size={20} />,
   Code: <Code size={20} />,
   Share2: <Share2 size={20} />,
+  ChevronDown: <ChevronDown size={20} />,
+  List: <List size={20} />,
 };
 
 interface AddBlockMenuProps {

@@ -8,7 +8,7 @@ const MAX_RETRIES = 3;
 const BASE_DELAY = 2000;
 
 export function useAutosave() {
-  const { blocks, pageId, pageTitle, isDirty, conflict, setDirty, setSaving, setSaveError, setLastSavedAt, setConflict } =
+  const { blocks, pageId, pageTitle, isDirty, blocksDirty, conflict, setDirty, setBlocksDirty, setSaving, setSaveError, setLastSavedAt, setConflict } =
     useEditorStore();
   const { toast } = useToast();
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -18,10 +18,10 @@ export function useAutosave() {
 
   // Reset retry counter when user makes new edits
   useEffect(() => {
-    if (isDirty) {
+    if (blocksDirty) {
       retryCountRef.current = 0;
     }
-  }, [isDirty, blocks, pageTitle]);
+  }, [blocksDirty, blocks, pageTitle]);
 
   const saveWithRetry = useCallback(async (): Promise<{ success: boolean; conflict?: boolean }> => {
     if (!pageId) return { success: false };
@@ -115,6 +115,7 @@ export function useAutosave() {
         const currentState = useEditorStore.getState();
         if (currentState.blocks === snapshotBlocks && currentState.pageTitle === snapshotTitle) {
           setDirty(false);
+          setBlocksDirty(false);
         }
         setSaveError(null);
         retryCountRef.current = 0;
@@ -137,7 +138,7 @@ export function useAutosave() {
 
     isSavingRef.current = false;
     setSaving(false);
-  }, [pageId, saveWithRetry, setDirty, setSaving, setSaveError, toast]);
+  }, [pageId, saveWithRetry, setDirty, setBlocksDirty, setSaving, setSaveError, toast]);
 
   const forceSave = useCallback(async () => {
     forceNextSaveRef.current = true;
@@ -145,7 +146,7 @@ export function useAutosave() {
   }, [save]);
 
   useEffect(() => {
-    if (!isDirty || conflict) return;
+    if (!blocksDirty || conflict) return;
 
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(save, 2000);
@@ -153,7 +154,7 @@ export function useAutosave() {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [isDirty, blocks, pageTitle, save, conflict]);
+  }, [blocksDirty, blocks, pageTitle, save, conflict]);
 
   return { save, forceSave };
 }

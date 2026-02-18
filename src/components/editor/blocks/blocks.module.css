@@ -883,3 +883,212 @@
 .socialAddBtn:hover {
   background: var(--color-accent-light);
 }
+
+/* Accordion */
+.accordionEditor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.accordionStyleToggle {
+  display: flex;
+  gap: 2px;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  align-self: flex-start;
+  margin-bottom: var(--space-2);
+}
+
+.accordionStyleBtn {
+  padding: 4px 10px;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-sm);
+}
+
+.accordionStyleActive {
+  background: var(--color-accent-light);
+  color: var(--color-accent);
+}
+
+.accordionItem {
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.accordionItemBordered {
+  border: 1px solid var(--color-border);
+}
+
+.accordionItemHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-bg-secondary);
+}
+
+.accordionDragHandle {
+  display: flex;
+  align-items: center;
+  color: var(--color-text-tertiary);
+  cursor: grab;
+}
+
+.accordionDragHandle:hover {
+  color: var(--color-text-primary);
+}
+
+.accordionChevron {
+  color: var(--color-text-tertiary);
+  flex-shrink: 0;
+}
+
+.accordionTitleInput {
+  flex: 1;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  border: none;
+  background: none;
+  outline: none;
+  color: var(--color-text-primary);
+  padding: var(--space-1);
+}
+
+.accordionTitleInput::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+.accordionDeleteBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  color: var(--color-text-tertiary);
+  border-radius: var(--radius-sm);
+}
+
+.accordionDeleteBtn:hover:not(:disabled) {
+  color: var(--color-error);
+  background: var(--color-error-light);
+}
+
+.accordionDeleteBtn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.accordionItemBody {
+  padding: var(--space-2) var(--space-3);
+}
+
+.accordionContentInput {
+  width: 100%;
+  font-size: var(--text-sm);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  padding: var(--space-2);
+  resize: vertical;
+  font-family: inherit;
+  outline: none;
+}
+
+.accordionContentInput:focus {
+  border-color: var(--color-border-focus);
+}
+
+.accordionAddBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-accent);
+  border: 1px dashed var(--color-accent);
+  border-radius: var(--radius-sm);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.accordionAddBtn:hover {
+  background: var(--color-accent-light);
+}
+
+/* Table of Contents */
+.tocEditor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-secondary);
+}
+
+.tocPreview {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  color: var(--color-text-secondary);
+}
+
+.tocPreviewText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.tocPreviewText strong {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.tocPreviewText span {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+}
+
+.tocSettings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border-light);
+}
+
+.tocSettingLabel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+}
+
+.tocSelect {
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+}
+
+.tocCheckboxLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.tocCheckboxLabel input {
+  accent-color: var(--color-accent);
+}

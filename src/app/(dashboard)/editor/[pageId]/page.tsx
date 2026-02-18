@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
-import { useEditorStore } from "@/stores/editor-store";
+import { useEditorStore, findBlockLocation } from "@/stores/editor-store";
 import { useAutosave } from "@/hooks/use-autosave";
 import { EditorToolbar } from "@/components/editor/EditorToolbar";
 import { EditorCanvas } from "@/components/editor/EditorCanvas";
@@ -65,7 +65,11 @@ export default function EditorPage() {
         })
       );
 
-      setPage(data.id, data.title, blocks, data.updatedAt, data.description, data.slug);
+      setPage(data.id, data.title, blocks, data.updatedAt, data.description, data.slug, {
+        metaTitle: data.metaTitle,
+        ogImage: data.ogImage,
+        noindex: data.noindex,
+      });
     } catch {
       setLoadError("server-error");
     } finally {
@@ -107,31 +111,48 @@ export default function EditorPage() {
           target.tagName === "TEXTAREA" ||
           target.closest(".tiptap");
         if (isEditing) return;
-        const { selectedBlockId, blocks, moveBlock } = useEditorStore.getState();
-        if (!selectedBlockId) return;
-        const index = blocks.findIndex((b) => b.id === selectedBlockId);
-        if (index === -1) return;
+        const state = useEditorStore.getState();
+        if (!state.selectedBlockId) return;
+        const loc = findBlockLocation(state.blocks, state.selectedBlockId);
+        if (!loc) return;
         e.preventDefault();
-        if (e.key === "ArrowUp" && index > 0) {
-          moveBlock(index, index - 1);
-        } else if (e.key === "ArrowDown" && index < blocks.length - 1) {
-          moveBlock(index, index + 1);
+        if (loc.level === "top") {
+          if (e.key === "ArrowUp" && loc.index > 0) {
+            state.moveBlock(loc.index, loc.index - 1);
+          } else if (e.key === "ArrowDown" && loc.index < state.blocks.length - 1) {
+            state.moveBlock(loc.index, loc.index + 1);
+          }
+        } else {
+          const cols = (state.blocks.find((b) => b.id === loc.parentId)?.content as import("@/types/blocks").ColumnsContent)?.columns;
+          if (!cols) return;
+          const colBlocks = cols[loc.colIndex].blocks;
+          if (e.key === "ArrowUp" && loc.index > 0) {
+            state.moveBlockInColumn(loc.parentId, loc.colIndex, loc.index, loc.index - 1);
+          } else if (e.key === "ArrowDown" && loc.index < colBlocks.length - 1) {
+            state.moveBlockInColumn(loc.parentId, loc.colIndex, loc.index, loc.index + 1);
+          }
         }
       }
       if (e.key === "Escape") {
         useEditorStore.getState().selectBlock(null);
       }
       if (e.key === "Delete" || e.key === "Backspace") {
-        const { selectedBlockId, removeBlock } = useEditorStore.getState();
         const target = e.target as HTMLElement;
         const isEditing =
           target.isContentEditable ||
           target.tagName === "INPUT" ||
           target.tagName === "TEXTAREA" ||
           target.closest(".tiptap");
-        if (selectedBlockId && !isEditing) {
+        const state = useEditorStore.getState();
+        if (state.selectedBlockId && !isEditing) {
           e.preventDefault();
-          removeBlock(selectedBlockId);
+          const loc = findBlockLocation(state.blocks, state.selectedBlockId);
+          if (!loc) return;
+          if (loc.level === "top") {
+            state.removeBlock(state.selectedBlockId);
+          } else {
+            state.removeBlockFromColumn(loc.parentId, state.selectedBlockId);
+          }
         }
       }
     }

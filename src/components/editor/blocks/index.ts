@@ -10,3 +10,5 @@ export { QuoteBlock } from "./QuoteBlock";
 export { FormBlock } from "./FormBlock";
 export { CodeBlock } from "./CodeBlock";
 export { SocialBlock } from "./SocialBlock";
+export { AccordionBlock } from "./AccordionBlock";
+export { TocBlock } from "./TocBlock";

@@ -41,6 +41,9 @@ model Page {
   title           String
   slug            String
   description     String?
+  metaTitle       String?
+  ogImage         String?
+  noindex         Boolean          @default(false)
   status          PageStatus       @default(DRAFT)
   isHomepage      Boolean          @default(false)
   showInNav       Boolean          @default(true)

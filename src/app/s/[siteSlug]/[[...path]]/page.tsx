@@ -98,25 +98,27 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     || extractTextSnippet(blockData)
     || (page.isHomepage ? site.description : undefined)
     || undefined;
-  const ogImage = findFirstImageSrc(blockData);
+  const ogImage = page.ogImage || findFirstImageSrc(blockData);
+  const metaTitle = page.metaTitle || page.title;
 
   return {
-    title: `${page.title} - ${site.name}`,
+    title: `${metaTitle} - ${site.name}`,
     description,
     alternates: {
       canonical,
     },
+    ...(page.noindex ? { robots: "noindex, nofollow" } : {}),
     openGraph: {
       type: "website",
       url: canonical,
-      title: page.title,
+      title: metaTitle,
       description: description || undefined,
       siteName: site.name,
       ...(ogImage ? { images: [ogImage] } : {}),
     },
     twitter: {
       card: ogImage ? "summary_large_image" : "summary",
-      title: page.title,
+      title: metaTitle,
       description: description || undefined,
       ...(ogImage ? { images: [ogImage] } : {}),
     },

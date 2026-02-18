@@ -23,6 +23,9 @@ next-env.d.ts
 
 # testing
 /coverage
+/test-results/
+/playwright-report/
+tests/.auth/
 
 # uploads (user-generated content)
 /public/uploads/*

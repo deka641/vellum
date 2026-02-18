@@ -279,6 +279,20 @@ function sanitizeBlockContent(block: BlockLike): BlockLike {
         }));
       }
       break;
+
+    case "accordion":
+      if (Array.isArray(content.items)) {
+        content.items = (content.items as Array<{ id: string; title: string; content: string }>).map((item) => ({
+          id: typeof item.id === "string" ? item.id : "",
+          title: typeof item.title === "string"
+            ? sanitize(item.title, { allowedTags: [], allowedAttributes: {} })
+            : "",
+          content: typeof item.content === "string"
+            ? sanitizeRichHtml(item.content)
+            : "",
+        }));
+      }
+      break;
   }
 
   return { ...block, content } as BlockLike;

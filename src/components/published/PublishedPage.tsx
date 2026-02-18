@@ -1,4 +1,3 @@
-import { PublishedBlock } from "./PublishedBlock";
 import { SafePublishedBlock } from "./SafePublishedBlock";
 import styles from "./published.module.css";
 
@@ -21,7 +20,7 @@ export function PublishedPage({ title, blocks, pageId }: PublishedPageProps) {
     <div className={styles.page}>
       <div className={styles.container}>
         {blocks.filter(b => !b.parentId).map((block) => (
-          <SafePublishedBlock key={block.id} block={block} pageId={pageId} />
+          <SafePublishedBlock key={block.id} block={block} pageId={pageId} allBlocks={blocks} />
         ))}
       </div>
     </div>

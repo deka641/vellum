@@ -25,6 +25,12 @@
   gap: var(--space-2);
 }
 
+.fieldLabel {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-primary);
+}
+
 .urlPreview {
   display: flex;
   align-items: center;
@@ -42,4 +48,67 @@
 
 .saveButton {
   align-self: flex-start;
+}
+
+.ogImagePicker {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--color-accent);
+  border: 1px dashed var(--color-accent);
+  border-radius: var(--radius-md);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.ogImagePicker:hover {
+  background: var(--color-accent-light);
+}
+
+.ogImagePreview {
+  position: relative;
+  display: inline-block;
+}
+
+.ogImageThumb {
+  max-width: 200px;
+  max-height: 120px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  object-fit: cover;
+}
+
+.ogImageRemove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+}
+
+.ogImageRemove:hover {
+  color: var(--color-error);
+  border-color: var(--color-error);
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.checkboxLabel input {
+  accent-color: var(--color-accent);
 }
