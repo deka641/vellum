@@ -1,3 +1,7 @@
+/* ═══════════════════════════════════════════
+   Site Layout — Header, Footer, Chrome
+   ═══════════════════════════════════════════ */
+
 .layout {
   min-height: 100vh;
   display: flex;
@@ -13,7 +17,7 @@
   background: var(--color-accent);
   z-index: 9998;
   transition: width 50ms linear;
-  box-shadow: 0 0 4px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 0 6px rgba(99, 102, 241, 0.35);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -61,8 +65,8 @@
   top: 0;
   z-index: var(--z-sticky);
   background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
-  box-shadow: var(--shadow-xs);
+  border-bottom: 1px solid var(--color-border-light);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .headerInner {
@@ -81,6 +85,7 @@
   color: var(--color-text-primary);
   text-decoration: none;
   letter-spacing: -0.02em;
+  transition: color var(--duration-fast) var(--ease-out);
 }
 
 .siteName:hover {
@@ -168,7 +173,7 @@
 .footerInner {
   max-width: 1080px;
   margin: 0 auto;
-  padding: var(--space-8) var(--space-6);
+  padding: var(--space-10) var(--space-6);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -184,7 +189,7 @@
 .footerLinks {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-6);
   flex-wrap: wrap;
 }
 
@@ -238,19 +243,22 @@
 .notFoundLink {
   display: inline-block;
   margin-top: var(--space-2);
-  padding: var(--space-3) var(--space-6);
+  padding: 0.8rem var(--space-8);
   background: var(--color-accent);
   color: var(--color-surface);
   font-family: var(--font-body);
   font-size: var(--text-base);
-  font-weight: var(--weight-medium);
+  font-weight: var(--weight-semibold);
   text-decoration: none;
-  border-radius: var(--radius-md);
-  transition: background var(--duration-fast) var(--ease-out);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  transition: all var(--duration-normal) var(--ease-out);
 }
 
 .notFoundLink:hover {
   background: var(--color-accent-hover);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
 }
 
 /* --- Responsive --- */
@@ -267,5 +275,6 @@
   .footerInner {
     flex-direction: column;
     text-align: center;
+    padding: var(--space-8) var(--space-6);
   }
 }

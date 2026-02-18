@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { hash } from "bcryptjs";
+import { createHash } from "crypto";
 import { db } from "@/lib/db";
 import { parseBody, resetPasswordSchema } from "@/lib/validations";
 import { rateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
@@ -27,9 +28,10 @@ export async function POST(req: Request) {
     }
 
     const { token, password } = parsed.data;
+    const tokenHash = createHash("sha256").update(token).digest("hex");
 
     const resetToken = await db.passwordResetToken.findUnique({
-      where: { token },
+      where: { token: tokenHash },
     });
 
     if (!resetToken) {

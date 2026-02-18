@@ -5,6 +5,7 @@ import { FolderOpen } from "lucide-react";
 import { useEditorStore } from "@/stores/editor-store";
 import { Input } from "@/components/ui/Input/Input";
 import { PageSettings } from "./PageSettings";
+import { SeoAudit } from "./SeoAudit";
 import { MediaPickerModal } from "./MediaPickerModal";
 import type { EditorBlock, HeadingContent, ImageContent, ButtonContent, VideoContent, QuoteContent, CodeContent, BlockSettings as BlockSettingsType, ColumnsContent } from "@/types/blocks";
 import styles from "./BlockSettings.module.css";
@@ -51,7 +52,12 @@ export function BlockSettings() {
   );
 
   if (!block) {
-    return <PageSettings />;
+    return (
+      <>
+        <PageSettings />
+        <SeoAudit />
+      </>
+    );
   }
 
   const columnParentId = useMemo(

@@ -5,6 +5,8 @@ import { db } from "@/lib/db";
 import { apiError } from "@/lib/api-helpers";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
+import { validateBlockHierarchy } from "@/lib/validations";
+import { sanitizeBlocks } from "@/lib/sanitize";
 import type { Prisma } from "@prisma/client";
 
 export async function POST(
@@ -49,14 +51,27 @@ export async function POST(
         parentId?: string | null;
       }>;
 
+      // Validate block hierarchy before restoring (rules may have changed since revision was created)
+      const hierarchy = validateBlockHierarchy(
+        revisionBlocks as Array<{ type: string; content: Record<string, unknown> }>
+      );
+      if (!hierarchy.valid) {
+        return { status: 400 as const, error: `Invalid revision data: ${hierarchy.error}` };
+      }
+
+      // Sanitize blocks before writing
+      const cleanBlocks = sanitizeBlocks(
+        revisionBlocks as Array<{ type: string; content: Record<string, unknown> }>
+      );
+
       // Delete all current blocks
       await tx.block.deleteMany({ where: { pageId } });
 
       // Create blocks from the revision
-      if (revisionBlocks.length > 0) {
+      if (cleanBlocks.length > 0) {
         await tx.block.createMany({
-          data: revisionBlocks.map((block, i) => ({
-            id: block.id,
+          data: cleanBlocks.map((block, i) => ({
+            id: block.id as string,
             type: block.type,
             content: block.content as Prisma.InputJsonValue,
             settings: (block.settings || {}) as Prisma.InputJsonValue,
@@ -76,6 +91,10 @@ export async function POST(
 
       return { status: 200 as const, page: updated };
     });
+
+    if (result.status === 400) {
+      return NextResponse.json({ error: result.error }, { status: 400 });
+    }
 
     if (result.status === 404) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });

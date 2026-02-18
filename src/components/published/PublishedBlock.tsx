@@ -103,6 +103,7 @@ export function PublishedBlock({ block, pageId, allBlocks }: PublishedBlockProps
             alt={(content.alt as string) || ""}
             className={styles.image}
             loading="lazy"
+            decoding="async"
             {...(typeof content.width === "number" && content.width > 0 ? { width: content.width } : {})}
             {...(typeof content.height === "number" && content.height > 0 ? { height: content.height } : {})}
             style={{
@@ -307,7 +308,7 @@ export function PublishedBlock({ block, pageId, allBlocks }: PublishedBlockProps
       if (links.length === 0) return null;
       const socialStyle = (content.style as string) || "icons";
       return (
-        <div className={styles.socialBlock} style={{ textAlign: align, ...extraStyle }}>
+        <nav className={styles.socialBlock} style={{ textAlign: align, ...extraStyle }} aria-label="Social links">
           {links.map((link, i) => (
             <a
               key={i}
@@ -324,7 +325,7 @@ export function PublishedBlock({ block, pageId, allBlocks }: PublishedBlockProps
               )}
             </a>
           ))}
-        </div>
+        </nav>
       );
     }
 
@@ -411,7 +412,7 @@ export function PublishedBlock({ block, pageId, allBlocks }: PublishedBlockProps
 }
 
 function SocialIcon({ platform }: { platform: string }) {
-  const size = 20;
+  const size = 22;
   const svgProps = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
   switch (platform) {
     case "twitter":

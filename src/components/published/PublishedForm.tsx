@@ -150,11 +150,12 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
               placeholder={field.placeholder}
               rows={4}
               required={field.required}
+              aria-required={field.required || undefined}
               aria-invalid={hasError || undefined}
               aria-describedby={hasError ? errorId : undefined}
               onChange={() => clearFieldError(field.id)}
             />
-            {hasError && <span id={errorId} className={styles.formError}>{fieldErrors[field.id]}</span>}
+            {hasError && <span id={errorId} className={styles.formError} role="alert">{fieldErrors[field.id]}</span>}
           </>
         );
       case "select":
@@ -165,6 +166,7 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
               name={field.id}
               className={`${styles.formSelect}${errorClass}`}
               required={field.required}
+              aria-required={field.required || undefined}
               aria-invalid={hasError || undefined}
               aria-describedby={hasError ? errorId : undefined}
               onChange={() => clearFieldError(field.id)}
@@ -174,7 +176,7 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
                 <option key={i} value={opt}>{opt}</option>
               ))}
             </select>
-            {hasError && <span id={errorId} className={styles.formError}>{fieldErrors[field.id]}</span>}
+            {hasError && <span id={errorId} className={styles.formError} role="alert">{fieldErrors[field.id]}</span>}
           </>
         );
       case "radio":
@@ -195,7 +197,7 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
                 </label>
               ))}
             </fieldset>
-            {hasError && <span id={errorId} className={styles.formError}>{fieldErrors[field.id]}</span>}
+            {hasError && <span id={errorId} className={styles.formError} role="alert">{fieldErrors[field.id]}</span>}
           </>
         );
       case "checkbox":
@@ -222,11 +224,12 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
               className={`${styles.formInput}${errorClass}`}
               placeholder={field.placeholder}
               required={field.required}
+              aria-required={field.required || undefined}
               aria-invalid={hasError || undefined}
               aria-describedby={hasError ? errorId : undefined}
               onChange={() => clearFieldError(field.id)}
             />
-            {hasError && <span id={errorId} className={styles.formError}>{fieldErrors[field.id]}</span>}
+            {hasError && <span id={errorId} className={styles.formError} role="alert">{fieldErrors[field.id]}</span>}
           </>
         );
     }
@@ -247,7 +250,7 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
           {renderField(field)}
         </div>
       ))}
-      {error && <p style={{ color: "var(--color-error)", fontSize: "var(--text-sm)" }}>{error}</p>}
+      {error && <p role="alert" style={{ color: "var(--color-error)", fontSize: "var(--text-sm)" }}>{error}</p>}
       <button type="submit" className={styles.formSubmit} disabled={submitting}>
         {submitting ? "Submitting..." : submitText || "Submit"}
       </button>

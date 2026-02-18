@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import { randomBytes } from "crypto";
+import { randomBytes, createHash } from "crypto";
 import { db } from "@/lib/db";
 import { parseBody, forgotPasswordSchema } from "@/lib/validations";
 import { rateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 import { apiError } from "@/lib/api-helpers";
+import { logger } from "@/lib/logger";
 
 export async function POST(req: Request) {
   try {
@@ -40,19 +41,19 @@ export async function POST(req: Request) {
     }
 
     const token = randomBytes(32).toString("hex");
+    const tokenHash = createHash("sha256").update(token).digest("hex");
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
     await db.passwordResetToken.create({
       data: {
-        token,
+        token: tokenHash,
         userId: user.id,
         expiresAt,
       },
     });
 
     // Log the reset link since no SMTP is configured
-    console.log(`[Password Reset] Token for ${user.email}: ${token}`);
-    console.log(`[Password Reset] Link: /reset-password?token=${token}`);
+    logger.info("password-reset", `Reset link generated for ${user.email}: /reset-password?token=${token}`);
 
     return successResponse;
   } catch (error) {

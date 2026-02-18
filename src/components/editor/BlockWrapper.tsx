@@ -3,9 +3,10 @@
 import { memo, type ReactNode, useCallback, useState, useEffect } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Trash2, Copy, Eye, EyeOff } from "lucide-react";
+import { GripVertical, Trash2, Copy, Clipboard, Eye, EyeOff } from "lucide-react";
 import { useEditorStore } from "@/stores/editor-store";
 import { useToast } from "@/components/ui/Toast/Toast";
+import { ErrorBoundary, BlockErrorFallback } from "@/components/ErrorBoundary";
 import { cn } from "@/lib/utils";
 import styles from "./BlockWrapper.module.css";
 
@@ -16,17 +17,20 @@ interface BlockWrapperProps {
 
 export const BlockWrapper = memo(function BlockWrapper({ id, children }: BlockWrapperProps) {
   const isSelected = useEditorStore((s) => s.selectedBlockId === id);
-  const isHidden = useEditorStore((s) => {
+  const { isHidden, marginTop, marginBottom } = useEditorStore((s) => {
     const block = s.blocks.find((b) => b.id === id);
-    return block?.settings.hidden === true;
+    return {
+      isHidden: block?.settings.hidden === true,
+      marginTop: block?.settings.marginTop,
+      marginBottom: block?.settings.marginBottom,
+    };
   });
-  const marginTop = useEditorStore((s) => s.blocks.find((b) => b.id === id)?.settings.marginTop);
-  const marginBottom = useEditorStore((s) => s.blocks.find((b) => b.id === id)?.settings.marginBottom);
   const isExiting = useEditorStore((s) => s.exitingBlockIds.has(id));
   const isSettled = useEditorStore((s) => s.settledBlockId === id);
   const selectBlock = useEditorStore((s) => s.selectBlock);
   const removeBlock = useEditorStore((s) => s.removeBlock);
   const duplicateBlock = useEditorStore((s) => s.duplicateBlock);
+  const copyBlock = useEditorStore((s) => s.copyBlock);
   const updateBlockSettings = useEditorStore((s) => s.updateBlockSettings);
   const undo = useEditorStore((s) => s.undo);
   const { toast } = useToast();
@@ -66,6 +70,12 @@ export const BlockWrapper = memo(function BlockWrapper({ id, children }: BlockWr
     e.stopPropagation();
     duplicateBlock(id);
   }, [id, duplicateBlock]);
+
+  const handleCopy = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    copyBlock(id);
+    toast("Block copied to clipboard", "info");
+  }, [id, copyBlock, toast]);
 
   const handleToggleVisibility = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -117,6 +127,14 @@ export const BlockWrapper = memo(function BlockWrapper({ id, children }: BlockWr
           <Copy size={14} />
         </button>
         <button
+          className={styles.copyButton}
+          onClick={handleCopy}
+          title="Copy block (Ctrl+C)"
+          aria-label="Copy block to clipboard"
+        >
+          <Clipboard size={14} />
+        </button>
+        <button
           className={styles.visibilityButton}
           onClick={handleToggleVisibility}
           title={isHidden ? "Show block" : "Hide block"}
@@ -133,7 +151,14 @@ export const BlockWrapper = memo(function BlockWrapper({ id, children }: BlockWr
           <Trash2 size={14} />
         </button>
       </div>
-      <div className={styles.content}>{children}</div>
+      <div className={styles.content}>
+        <ErrorBoundary
+          fallback={<BlockErrorFallback onDelete={() => removeBlock(id)} />}
+          resetKey={id}
+        >
+          {children}
+        </ErrorBoundary>
+      </div>
     </div>
   );
 });

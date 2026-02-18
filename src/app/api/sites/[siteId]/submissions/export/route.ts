@@ -59,9 +59,8 @@ export async function GET(
       });
     }
 
-    // Single pass: collect all data + field keys, then stream CSV
+    // Pass 1: Collect all field keys (only keys, not data — O(1) memory per row)
     const allKeys = new Set<string>();
-    const allRows: Array<{ pageTitle: string; createdAt: Date; data: Record<string, string> }> = [];
     let cursor: string | undefined;
     let hasMore = true;
 
@@ -71,42 +70,57 @@ export async function GET(
         orderBy: { id: "asc" },
         take: BATCH_SIZE,
         ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
-        select: {
-          id: true,
-          data: true,
-          createdAt: true,
-          page: { select: { title: true } },
-        },
+        select: { id: true, data: true },
       });
 
       for (const sub of batch) {
         const data = sub.data as Record<string, string>;
         Object.keys(data).forEach((k) => allKeys.add(k));
-        allRows.push({ pageTitle: sub.page.title, createdAt: sub.createdAt, data });
       }
 
       hasMore = batch.length === BATCH_SIZE;
       if (batch.length > 0) cursor = batch[batch.length - 1].id;
     }
 
-    const headers = ["Page", "Date", ...Array.from(allKeys)];
     const keysArray = Array.from(allKeys);
+    const headers = ["Page", "Date", ...keysArray];
     const encoder = new TextEncoder();
 
+    // Pass 2: Stream rows directly without accumulating in memory
     const stream = new ReadableStream({
-      start(controller) {
+      async start(controller) {
         try {
-          // Header row
           controller.enqueue(encoder.encode(headers.map(escapeCsv).join(",") + "\n"));
 
-          // Data rows from collected data
-          for (const row of allRows) {
-            const csvRow = [
-              row.pageTitle,
-              new Date(row.createdAt).toISOString(),
-              ...keysArray.map((k) => row.data[k] || ""),
-            ];
-            controller.enqueue(encoder.encode(csvRow.map(escapeCsv).join(",") + "\n"));
+          let streamCursor: string | undefined;
+          let streamHasMore = true;
+
+          while (streamHasMore) {
+            const batch = await db.formSubmission.findMany({
+              where,
+              orderBy: { id: "asc" },
+              take: BATCH_SIZE,
+              ...(streamCursor ? { skip: 1, cursor: { id: streamCursor } } : {}),
+              select: {
+                id: true,
+                data: true,
+                createdAt: true,
+                page: { select: { title: true } },
+              },
+            });
+
+            for (const sub of batch) {
+              const data = sub.data as Record<string, string>;
+              const csvRow = [
+                sub.page.title,
+                new Date(sub.createdAt).toISOString(),
+                ...keysArray.map((k) => data[k] || ""),
+              ];
+              controller.enqueue(encoder.encode(csvRow.map(escapeCsv).join(",") + "\n"));
+            }
+
+            streamHasMore = batch.length === BATCH_SIZE;
+            if (batch.length > 0) streamCursor = batch[batch.length - 1].id;
           }
 
           controller.close();

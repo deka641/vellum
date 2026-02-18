@@ -12,21 +12,19 @@ import styles from "./PageSettings.module.css";
 
 export function PageSettings() {
   const { toast } = useToast();
-  const {
-    pageId,
-    pageDescription,
-    pageSlug,
-    pageMetaTitle,
-    pageOgImage,
-    pageNoindex,
-    setPageDescription,
-    setPageSlug,
-    setPageMetaTitle,
-    setPageOgImage,
-    setPageNoindex,
-    setLastSavedAt,
-    setDirty,
-  } = useEditorStore();
+  const pageId = useEditorStore((s) => s.pageId);
+  const pageDescription = useEditorStore((s) => s.pageDescription);
+  const pageSlug = useEditorStore((s) => s.pageSlug);
+  const pageMetaTitle = useEditorStore((s) => s.pageMetaTitle);
+  const pageOgImage = useEditorStore((s) => s.pageOgImage);
+  const pageNoindex = useEditorStore((s) => s.pageNoindex);
+  const setPageDescription = useEditorStore((s) => s.setPageDescription);
+  const setPageSlug = useEditorStore((s) => s.setPageSlug);
+  const setPageMetaTitle = useEditorStore((s) => s.setPageMetaTitle);
+  const setPageOgImage = useEditorStore((s) => s.setPageOgImage);
+  const setPageNoindex = useEditorStore((s) => s.setPageNoindex);
+  const setLastSavedAt = useEditorStore((s) => s.setLastSavedAt);
+  const setDirty = useEditorStore((s) => s.setDirty);
 
   const [description, setDescription] = useState(pageDescription ?? "");
   const [slug, setSlug] = useState(pageSlug);

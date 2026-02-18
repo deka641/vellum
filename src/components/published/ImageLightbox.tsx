@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { useReducedMotion } from "framer-motion";
 import styles from "./ImageLightbox.module.css";
@@ -14,6 +14,7 @@ interface ImageLightboxProps {
 export function ImageLightbox({ src, alt, children }: ImageLightboxProps) {
   const [open, setOpen] = useState(false);
   const shouldReduceMotion = useReducedMotion();
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
 
   const handleOpen = useCallback(() => setOpen(true), []);
   const handleClose = useCallback(() => setOpen(false), []);
@@ -28,6 +29,8 @@ export function ImageLightbox({ src, alt, children }: ImageLightboxProps) {
     }
     window.addEventListener("keydown", onKeyDown);
     document.body.style.overflow = "hidden";
+    // Focus the close button for keyboard accessibility
+    requestAnimationFrame(() => closeBtnRef.current?.focus());
     return () => {
       window.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = "";
@@ -60,6 +63,7 @@ export function ImageLightbox({ src, alt, children }: ImageLightboxProps) {
           aria-label="Image lightbox"
         >
           <button
+            ref={closeBtnRef}
             className={styles.closeBtn}
             onClick={(e) => {
               e.stopPropagation();
@@ -72,6 +76,7 @@ export function ImageLightbox({ src, alt, children }: ImageLightboxProps) {
           <img
             src={src}
             alt={alt}
+            decoding="async"
             className={styles.lightboxImage}
             onClick={(e) => e.stopPropagation()}
           />

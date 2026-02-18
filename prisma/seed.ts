@@ -4,9 +4,11 @@ import { hash } from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("Seeding database...");
+  console.log("Re-seeding database (keeping users)...\n");
 
-  // Create demo user
+  // ──────────────────────────────────────────────
+  // 1. Ensure demo user exists (upsert — never deletes)
+  // ──────────────────────────────────────────────
   const passwordHash = await hash("password123", 12);
   const user = await prisma.user.upsert({
     where: { email: "demo@vellum.app" },
@@ -17,10 +19,22 @@ async function main() {
       passwordHash,
     },
   });
+  console.log("Demo user ready:", user.email);
 
-  console.log("Created demo user:", user.email);
+  // ──────────────────────────────────────────────
+  // 2. Delete all content (safe cascade order)
+  //    Users & Templates are preserved.
+  // ──────────────────────────────────────────────
+  await prisma.formSubmission.deleteMany({});
+  await prisma.pageRevision.deleteMany({});
+  await prisma.block.deleteMany({});
+  await prisma.page.deleteMany({});
+  await prisma.site.deleteMany({});
+  console.log("Cleared all sites, pages, blocks, revisions, and submissions");
 
-  // Create system templates
+  // ──────────────────────────────────────────────
+  // 3. Upsert system templates
+  // ──────────────────────────────────────────────
   const templates = [
     {
       name: "Blank",
@@ -80,24 +94,13 @@ async function main() {
             { id: "po4", type: "text", content: { html: "<p>Complete brand identity overhaul for a digital-first bank. Developed a design system spanning web, mobile, print, and environmental signage across 12 branch locations.</p><p><strong>Role:</strong> Brand Designer<br><strong>Year:</strong> 2024<br><strong>Impact:</strong> 40% increase in brand recognition</p>" }, settings: {} },
           ] },
         ] }, settings: { gap: "32px" } },
-        { type: "spacer", content: { height: 24 }, settings: {} },
-        { type: "columns", content: { columns: [
-          { blocks: [
-            { id: "po5", type: "heading", content: { text: "CloudSync Dashboard", level: 3 }, settings: {} },
-            { id: "po6", type: "text", content: { html: "<p>Enterprise SaaS analytics dashboard with real-time data visualization, custom report builder, and role-based access. Reduced average task completion time by 35%.</p><p><strong>Role:</strong> UX/UI Designer<br><strong>Year:</strong> 2024</p>" }, settings: {} },
-          ] },
-          { blocks: [
-            { id: "po7", type: "heading", content: { text: "Harvest & Co E-Commerce", level: 3 }, settings: {} },
-            { id: "po8", type: "text", content: { html: "<p>End-to-end e-commerce redesign for an organic food brand. Streamlined checkout flow, product discovery, and subscription management for recurring orders.</p><p><strong>Role:</strong> Full-Stack Design<br><strong>Year:</strong> 2023</p>" }, settings: {} },
-          ] },
-        ] }, settings: { gap: "32px" } },
         { type: "spacer", content: { height: 48 }, settings: {} },
         { type: "heading", content: { text: "About Me", level: 2 }, settings: {} },
-        { type: "text", content: { html: "<p>I'm a multidisciplinary designer with 8 years of experience spanning brand identity, product design, and front-end development. I believe the best digital products emerge from close collaboration between design and engineering.</p><p>When I'm not designing, you'll find me hiking, photographing architecture, or contributing to open-source design tools.</p>" }, settings: {} },
+        { type: "text", content: { html: "<p>I'm a multidisciplinary designer with 8 years of experience spanning brand identity, product design, and front-end development. I believe the best digital products emerge from close collaboration between design and engineering.</p>" }, settings: {} },
         { type: "quote", content: { text: "Design is not just what it looks like. Design is how it works.", attribution: "Steve Jobs", style: "bordered" }, settings: {} },
         { type: "divider", content: {}, settings: { style: "solid" } },
         { type: "heading", content: { text: "Let's Work Together", level: 2 }, settings: { align: "center" } },
-        { type: "text", content: { html: "<p>Have a project in mind? I'd love to hear about it. Reach out and let's create something great.</p>" }, settings: { align: "center" } },
+        { type: "text", content: { html: "<p>Have a project in mind? I'd love to hear about it.</p>" }, settings: { align: "center" } },
         { type: "button", content: { text: "Get in Touch", url: "#", variant: "primary" }, settings: { align: "center" } },
         { type: "social", content: { links: [{ platform: "twitter", url: "https://twitter.com" }, { platform: "github", url: "https://github.com" }, { platform: "linkedin", url: "https://linkedin.com" }] }, settings: { align: "center" } },
       ],
@@ -132,50 +135,32 @@ async function main() {
       category: "business",
       blocks: [
         { type: "heading", content: { text: "Our Services", level: 1 }, settings: { align: "center" } },
-        { type: "text", content: { html: "<p>We help businesses build exceptional digital products — from initial strategy through launch and beyond. Every engagement is tailored to your specific goals and constraints.</p>" }, settings: { align: "center" } },
+        { type: "text", content: { html: "<p>We help businesses build exceptional digital products — from initial strategy through launch and beyond.</p>" }, settings: { align: "center" } },
         { type: "spacer", content: { height: 32 }, settings: {} },
         { type: "columns", content: { columns: [
           { blocks: [
             { id: "sv1", type: "heading", content: { text: "Web Design", level: 3 }, settings: { align: "center" } },
-            { id: "sv2", type: "text", content: { html: "<p>Conversion-focused websites that reflect your brand and drive results. We handle research, wireframing, visual design, and interactive prototyping.</p><p><strong>Starting at $5,000</strong></p>" }, settings: { align: "center" } },
+            { id: "sv2", type: "text", content: { html: "<p>Conversion-focused websites that reflect your brand and drive results.</p><p><strong>Starting at $5,000</strong></p>" }, settings: { align: "center" } },
           ] },
           { blocks: [
             { id: "sv3", type: "heading", content: { text: "Development", level: 3 }, settings: { align: "center" } },
-            { id: "sv4", type: "text", content: { html: "<p>Custom web applications built with modern frameworks. We specialize in React, Next.js, and Node.js with a focus on performance, security, and maintainability.</p><p><strong>Starting at $8,000</strong></p>" }, settings: { align: "center" } },
+            { id: "sv4", type: "text", content: { html: "<p>Custom web applications built with modern frameworks and a focus on performance.</p><p><strong>Starting at $8,000</strong></p>" }, settings: { align: "center" } },
           ] },
           { blocks: [
             { id: "sv5", type: "heading", content: { text: "Consulting", level: 3 }, settings: { align: "center" } },
-            { id: "sv6", type: "text", content: { html: "<p>Strategic guidance for technology decisions, architecture reviews, and design system audits. Ideal for teams that need expert input without long-term commitment.</p><p><strong>$200/hour</strong></p>" }, settings: { align: "center" } },
-          ] },
-        ] }, settings: { gap: "32px" } },
-        { type: "spacer", content: { height: 48 }, settings: {} },
-        { type: "heading", content: { text: "Our Process", level: 2 }, settings: { align: "center" } },
-        { type: "columns", content: { columns: [
-          { blocks: [
-            { id: "sv7", type: "heading", content: { text: "1. Discovery", level: 3 }, settings: { align: "center" } },
-            { id: "sv8", type: "text", content: { html: "<p>We start by understanding your business, users, and goals. This phase includes stakeholder interviews, competitive analysis, and requirements gathering.</p>" }, settings: { align: "center" } },
-          ] },
-          { blocks: [
-            { id: "sv9", type: "heading", content: { text: "2. Design & Build", level: 3 }, settings: { align: "center" } },
-            { id: "sv10", type: "text", content: { html: "<p>We design and develop iteratively, sharing progress weekly. You'll see working prototypes early and provide feedback throughout the process.</p>" }, settings: { align: "center" } },
-          ] },
-          { blocks: [
-            { id: "sv11", type: "heading", content: { text: "3. Launch & Support", level: 3 }, settings: { align: "center" } },
-            { id: "sv12", type: "text", content: { html: "<p>We handle deployment, monitoring, and post-launch optimization. Every project includes 30 days of support after launch.</p>" }, settings: { align: "center" } },
+            { id: "sv6", type: "text", content: { html: "<p>Strategic guidance for technology decisions, architecture reviews, and design system audits.</p><p><strong>$200/hour</strong></p>" }, settings: { align: "center" } },
           ] },
         ] }, settings: { gap: "32px" } },
         { type: "spacer", content: { height: 32 }, settings: {} },
         { type: "divider", content: {}, settings: { style: "solid" } },
         { type: "heading", content: { text: "Frequently Asked Questions", level: 2 }, settings: { align: "center" } },
         { type: "accordion", content: { items: [
-          { id: "svf1", title: "How long does a typical project take?", content: "<p>Most website projects take 4-8 weeks from kickoff to launch. Web applications typically take 8-16 weeks depending on complexity. We'll provide a detailed timeline during the discovery phase.</p>" },
-          { id: "svf2", title: "Do you work with existing designs?", content: "<p>Absolutely. We're happy to implement designs from your team or another agency. We can also extend existing design systems or provide design feedback.</p>" },
-          { id: "svf3", title: "What about ongoing maintenance?", content: "<p>We offer monthly retainer packages for ongoing updates, security patches, and feature additions. Retainers start at $1,500/month and can be adjusted as your needs change.</p>" },
-          { id: "svf4", title: "Do you offer fixed-price or hourly billing?", content: "<p>We prefer fixed-price engagements because they align incentives — you know exactly what you'll pay, and we're motivated to work efficiently. For ongoing or exploratory work, we bill hourly.</p>" },
+          { id: "svf1", title: "How long does a typical project take?", content: "<p>Most website projects take 4-8 weeks from kickoff to launch. Web applications typically take 8-16 weeks depending on complexity.</p>" },
+          { id: "svf2", title: "Do you work with existing designs?", content: "<p>Absolutely. We're happy to implement designs from your team or another agency.</p>" },
+          { id: "svf3", title: "What about ongoing maintenance?", content: "<p>We offer monthly retainer packages for ongoing updates, security patches, and feature additions starting at $1,500/month.</p>" },
         ], style: "bordered", iconPosition: "right" }, settings: {} },
         { type: "spacer", content: { height: 32 }, settings: {} },
         { type: "heading", content: { text: "Ready to Get Started?", level: 2 }, settings: { align: "center" } },
-        { type: "text", content: { html: "<p>Tell us about your project and we'll get back to you within one business day with a free consultation.</p>" }, settings: { align: "center" } },
         { type: "button", content: { text: "Contact Us", url: "#", variant: "primary" }, settings: { align: "center" } },
       ],
     },
@@ -185,33 +170,24 @@ async function main() {
       category: "support",
       blocks: [
         { type: "heading", content: { text: "Frequently Asked Questions", level: 1 }, settings: { align: "center" } },
-        { type: "text", content: { html: "<p>Everything you need to know about our platform. Can't find an answer? Our support team is just a message away.</p>" }, settings: { align: "center" } },
+        { type: "text", content: { html: "<p>Everything you need to know about our platform.</p>" }, settings: { align: "center" } },
         { type: "spacer", content: { height: 32 }, settings: {} },
         { type: "heading", content: { text: "Getting Started", level: 2 }, settings: {} },
         { type: "accordion", content: { items: [
-          { id: "faq1", title: "How do I create my first website?", content: "<p>After signing up, click \"New Site\" from your dashboard. Give it a name, and you'll be taken to your site's page manager. Click \"New Page\" to start building with the visual editor. Choose a template or start from scratch — either way, you'll have a live page in minutes.</p>" },
-          { id: "faq2", title: "Do I need coding experience?", content: "<p>Not at all. The visual editor uses a drag-and-drop block system. You can build complete pages using pre-built blocks for text, images, buttons, forms, columns, and more. If you do know HTML, the code block lets you add custom elements too.</p>" },
-          { id: "faq3", title: "Can I import content from another platform?", content: "<p>Yes. You can import site backups in JSON format from the Sites page. If you're migrating from another CMS, you can export your content there and restructure it to match our import format, or contact support for migration assistance.</p>" },
+          { id: "faq1", title: "How do I create my first website?", content: "<p>After signing up, click \"New Site\" from your dashboard. Give it a name, and you'll be taken to your site's page manager.</p>" },
+          { id: "faq2", title: "Do I need coding experience?", content: "<p>Not at all. The visual editor uses a drag-and-drop block system.</p>" },
+          { id: "faq3", title: "Can I import content from another platform?", content: "<p>Yes. You can import site backups in JSON format from the Sites page.</p>" },
         ], style: "bordered", iconPosition: "right" }, settings: {} },
         { type: "spacer", content: { height: 24 }, settings: {} },
         { type: "heading", content: { text: "Features & Customization", level: 2 }, settings: {} },
         { type: "accordion", content: { items: [
-          { id: "faq4", title: "Can I use my own domain name?", content: "<p>Yes! You can connect a custom domain to your site. Go to Site Settings, enter your domain, and update your DNS records to point to our servers. We automatically provision and renew SSL certificates for all custom domains.</p>" },
-          { id: "faq5", title: "How do I customize the look and feel?", content: "<p>Each site has a theme system where you can set primary colors, background colors, and font presets. These cascade to all published pages. Individual blocks can also be styled with custom colors, padding, margins, and alignment.</p>" },
-          { id: "faq6", title: "Can I add forms to my pages?", content: "<p>Absolutely. The Form block lets you create contact forms, registration forms, surveys, and more. Submissions are stored in your dashboard where you can view, filter, and export them as CSV.</p>" },
-          { id: "faq7", title: "Is there SEO support?", content: "<p>Every page has SEO controls: custom meta titles, Open Graph images for social sharing, noindex toggles, and auto-generated descriptions. We also generate sitemaps and structured data (Schema.org) automatically.</p>" },
-        ], style: "bordered", iconPosition: "right" }, settings: {} },
-        { type: "spacer", content: { height: 24 }, settings: {} },
-        { type: "heading", content: { text: "Billing & Plans", level: 2 }, settings: {} },
-        { type: "accordion", content: { items: [
-          { id: "faq8", title: "Is there a free plan?", content: "<p>We offer a generous free tier that includes all core features including the visual editor, templates, form submissions, and media library. Premium features like custom domains, priority support, and advanced analytics are available on paid plans.</p>" },
-          { id: "faq9", title: "Can I switch plans at any time?", content: "<p>Yes. Upgrades take effect immediately with prorated billing. Downgrades take effect at the start of your next billing cycle. There are no long-term contracts — you can cancel anytime.</p>" },
-          { id: "faq10", title: "What's your refund policy?", content: "<p>We offer a full refund within 30 days of any payment, no questions asked. If you're not happy with the service, email support and we'll process your refund within 2 business days.</p>" },
+          { id: "faq4", title: "How do I customize the look and feel?", content: "<p>Each site has a theme system where you can set primary colors, background colors, and font presets.</p>" },
+          { id: "faq5", title: "Can I add forms to my pages?", content: "<p>Absolutely. The Form block lets you create contact forms, registration forms, surveys, and more.</p>" },
+          { id: "faq6", title: "Is there SEO support?", content: "<p>Every page has SEO controls: custom meta titles, Open Graph images for social sharing, noindex toggles, and auto-generated descriptions.</p>" },
         ], style: "bordered", iconPosition: "right" }, settings: {} },
         { type: "spacer", content: { height: 48 }, settings: {} },
         { type: "divider", content: {}, settings: { style: "solid" } },
         { type: "heading", content: { text: "Still Have Questions?", level: 2 }, settings: { align: "center" } },
-        { type: "text", content: { html: "<p>Our support team typically responds within a few hours during business days. We're here to help.</p>" }, settings: { align: "center" } },
         { type: "button", content: { text: "Contact Support", url: "#", variant: "outline" }, settings: { align: "center" } },
       ],
     },
@@ -221,54 +197,27 @@ async function main() {
       category: "about",
       blocks: [
         { type: "heading", content: { text: "About Our Company", level: 1 }, settings: { align: "center" } },
-        { type: "text", content: { html: "<p>We're a team of 25 designers, engineers, and strategists building tools that make the web more accessible. Founded in 2020, we've helped over 2,000 businesses create their online presence.</p>" }, settings: { align: "center" } },
-        { type: "spacer", content: { height: 32 }, settings: {} },
-        { type: "heading", content: { text: "Our Story", level: 2 }, settings: {} },
-        { type: "text", content: { html: "<p>It started with a frustration. In 2019, our founders were building websites for small businesses and kept running into the same problem: existing tools were either too complex for non-technical users or too limited for professional results.</p><p>So they set out to build something different — a visual page builder that's genuinely easy to use without sacrificing the quality and flexibility that professionals demand. Two years of development later, the platform launched to its first 100 users.</p><p>Today, we serve thousands of creators, agencies, and businesses worldwide. Our mission hasn't changed: make it possible for anyone to build a beautiful, professional website.</p>" }, settings: {} },
+        { type: "text", content: { html: "<p>We're a team of designers, engineers, and strategists building tools that make the web more accessible.</p>" }, settings: { align: "center" } },
         { type: "spacer", content: { height: 32 }, settings: {} },
         { type: "heading", content: { text: "Our Values", level: 2 }, settings: { align: "center" } },
         { type: "columns", content: { columns: [
           { blocks: [
             { id: "ab1", type: "heading", content: { text: "Simplicity First", level: 3 }, settings: { align: "center" } },
-            { id: "ab2", type: "text", content: { html: "<p>Every feature must earn its complexity. If we can't explain it in one sentence, we redesign it until we can.</p>" }, settings: { align: "center" } },
+            { id: "ab2", type: "text", content: { html: "<p>Every feature must earn its complexity.</p>" }, settings: { align: "center" } },
           ] },
           { blocks: [
             { id: "ab3", type: "heading", content: { text: "Craft Over Speed", level: 3 }, settings: { align: "center" } },
-            { id: "ab4", type: "text", content: { html: "<p>We ship when it's ready, not when the calendar says so. Quality compounds — cutting corners never pays off long-term.</p>" }, settings: { align: "center" } },
+            { id: "ab4", type: "text", content: { html: "<p>We ship when it's ready, not when the calendar says so.</p>" }, settings: { align: "center" } },
           ] },
           { blocks: [
             { id: "ab5", type: "heading", content: { text: "Transparent Always", level: 3 }, settings: { align: "center" } },
-            { id: "ab6", type: "text", content: { html: "<p>Open roadmap, honest pricing, clear communication. We share what we know, including our mistakes and what we learned.</p>" }, settings: { align: "center" } },
-          ] },
-        ] }, settings: { gap: "32px" } },
-        { type: "spacer", content: { height: 48 }, settings: {} },
-        { type: "heading", content: { text: "Meet the Team", level: 2 }, settings: { align: "center" } },
-        { type: "columns", content: { columns: [
-          { blocks: [
-            { id: "tm1", type: "heading", content: { text: "Sarah Chen", level: 3 }, settings: { align: "center" } },
-            { id: "tm2", type: "text", content: { html: "<p><strong>CEO & Co-Founder</strong></p><p>Former design lead at a Fortune 500 tech company. 12 years in product design. Believes the best tools are invisible — they get out of your way and let you create.</p>" }, settings: { align: "center" } },
-          ] },
-          { blocks: [
-            { id: "tm3", type: "heading", content: { text: "Marcus Johnson", level: 3 }, settings: { align: "center" } },
-            { id: "tm4", type: "text", content: { html: "<p><strong>CTO & Co-Founder</strong></p><p>Full-stack engineer and open-source advocate. Built distributed systems at scale before founding the company. Conference speaker and author of two technical books.</p>" }, settings: { align: "center" } },
-          ] },
-        ] }, settings: { gap: "32px" } },
-        { type: "spacer", content: { height: 16 }, settings: {} },
-        { type: "columns", content: { columns: [
-          { blocks: [
-            { id: "tm5", type: "heading", content: { text: "Priya Patel", level: 3 }, settings: { align: "center" } },
-            { id: "tm6", type: "text", content: { html: "<p><strong>Head of Product</strong></p><p>Product strategist with a background in user research and data science. Previously built products used by millions at a leading SaaS company.</p>" }, settings: { align: "center" } },
-          ] },
-          { blocks: [
-            { id: "tm7", type: "heading", content: { text: "David Kim", level: 3 }, settings: { align: "center" } },
-            { id: "tm8", type: "text", content: { html: "<p><strong>Head of Engineering</strong></p><p>Systems architect specializing in performance and reliability. Obsessed with sub-100ms response times and zero-downtime deployments.</p>" }, settings: { align: "center" } },
+            { id: "ab6", type: "text", content: { html: "<p>Open roadmap, honest pricing, clear communication.</p>" }, settings: { align: "center" } },
           ] },
         ] }, settings: { gap: "32px" } },
         { type: "spacer", content: { height: 32 }, settings: {} },
-        { type: "quote", content: { text: "Great products come from great teams. We hire for curiosity, empathy, and craft — and we give people the autonomy to do their best work.", attribution: "Sarah Chen, CEO", style: "filled" }, settings: {} },
+        { type: "quote", content: { text: "Great products come from great teams. We hire for curiosity, empathy, and craft.", attribution: "Sarah Chen, CEO", style: "filled" }, settings: {} },
         { type: "divider", content: {}, settings: { style: "solid" } },
         { type: "heading", content: { text: "Want to Join Us?", level: 2 }, settings: { align: "center" } },
-        { type: "text", content: { html: "<p>We're always looking for talented people who care deeply about building great products. Check out our open positions or send us a note.</p>" }, settings: { align: "center" } },
         { type: "button", content: { text: "View Open Positions", url: "#", variant: "primary" }, settings: { align: "center" } },
       ],
     },
@@ -278,51 +227,21 @@ async function main() {
       category: "event",
       blocks: [
         { type: "heading", content: { text: "Design & Dev Summit 2026", level: 1 }, settings: { align: "center" } },
-        { type: "text", content: { html: "<p><strong>March 15-16, 2026</strong> &bull; The Moscone Center, San Francisco</p><p>Join 800+ designers, developers, and product leaders for two days of talks, workshops, and networking. Early bird pricing ends February 28.</p>" }, settings: { align: "center" } },
+        { type: "text", content: { html: "<p><strong>March 15-16, 2026</strong> &bull; The Moscone Center, San Francisco</p><p>Join 800+ designers, developers, and product leaders for two days of talks, workshops, and networking.</p>" }, settings: { align: "center" } },
         { type: "button", content: { text: "Get Your Ticket", url: "#", variant: "primary" }, settings: { align: "center" } },
         { type: "spacer", content: { height: 48 }, settings: {} },
         { type: "columns", content: { columns: [
-          { blocks: [{ id: "ev1", type: "heading", content: { text: "20+", level: 2 }, settings: { align: "center" } }, { id: "ev2", type: "text", content: { html: "<p>Expert speakers from leading tech companies</p>" }, settings: { align: "center" } }] },
-          { blocks: [{ id: "ev3", type: "heading", content: { text: "800+", level: 2 }, settings: { align: "center" } }, { id: "ev4", type: "text", content: { html: "<p>Attendees from 30+ countries worldwide</p>" }, settings: { align: "center" } }] },
-          { blocks: [{ id: "ev5", type: "heading", content: { text: "2 Days", level: 2 }, settings: { align: "center" } }, { id: "ev6", type: "text", content: { html: "<p>Packed with talks, workshops, and networking</p>" }, settings: { align: "center" } }] },
-        ] }, settings: { gap: "24px" } },
-        { type: "spacer", content: { height: 32 }, settings: {} },
-        { type: "heading", content: { text: "Schedule", level: 2 }, settings: {} },
-        { type: "columns", content: { columns: [
-          { blocks: [
-            { id: "ev7", type: "heading", content: { text: "Day 1 — Talks", level: 3 }, settings: {} },
-            { id: "ev8", type: "text", content: { html: "<p><strong>9:00 AM</strong> — Opening Keynote: The Future of Digital Craft<br><strong>10:30 AM</strong> — Building Design Systems at Scale<br><strong>11:30 AM</strong> — Performance as a Feature, Not an Afterthought<br><strong>1:00 PM</strong> — Lunch & Networking<br><strong>2:00 PM</strong> — AI-Assisted Design: Promise vs. Reality<br><strong>3:30 PM</strong> — Accessibility Beyond Compliance<br><strong>5:00 PM</strong> — Lightning Talks (5 speakers x 10 min)<br><strong>6:30 PM</strong> — Welcome Reception & Drinks</p>" }, settings: {} },
-          ] },
-          { blocks: [
-            { id: "ev9", type: "heading", content: { text: "Day 2 — Workshops", level: 3 }, settings: {} },
-            { id: "ev10", type: "text", content: { html: "<p><strong>9:00 AM</strong> — Hands-on: Building with Modern CSS<br><strong>10:30 AM</strong> — Workshop: Rapid Prototyping Techniques<br><strong>12:00 PM</strong> — Panel: From Side Project to SaaS Product<br><strong>1:00 PM</strong> — Lunch<br><strong>2:00 PM</strong> — Workshop: User Research on a Budget<br><strong>3:30 PM</strong> — Portfolio Reviews with Industry Experts<br><strong>4:30 PM</strong> — Closing Keynote: What's Next for the Web<br><strong>5:30 PM</strong> — Farewell & Networking</p>" }, settings: {} },
-          ] },
-        ] }, settings: { gap: "32px" } },
-        { type: "spacer", content: { height: 32 }, settings: {} },
-        { type: "divider", content: {}, settings: { style: "solid" } },
-        { type: "heading", content: { text: "Ticket Options", level: 2 }, settings: { align: "center" } },
-        { type: "columns", content: { columns: [
-          { blocks: [
-            { id: "ev11", type: "heading", content: { text: "Standard", level: 3 }, settings: { align: "center" } },
-            { id: "ev12", type: "text", content: { html: "<p><strong>$299</strong> (early bird: $249)</p><p>Access to all talks, workshops, lunch both days, and the welcome reception.</p>" }, settings: { align: "center" } },
-          ] },
-          { blocks: [
-            { id: "ev13", type: "heading", content: { text: "VIP", level: 3 }, settings: { align: "center" } },
-            { id: "ev14", type: "text", content: { html: "<p><strong>$499</strong> (early bird: $399)</p><p>Everything in Standard plus front-row seating, speaker dinner, and 1-on-1 portfolio review.</p>" }, settings: { align: "center" } },
-          ] },
-          { blocks: [
-            { id: "ev15", type: "heading", content: { text: "Student", level: 3 }, settings: { align: "center" } },
-            { id: "ev16", type: "text", content: { html: "<p><strong>$149</strong></p><p>Full access to all sessions. Valid student ID required at check-in.</p>" }, settings: { align: "center" } },
-          ] },
+          { blocks: [{ id: "ev1", type: "heading", content: { text: "20+", level: 2 }, settings: { align: "center" } }, { id: "ev2", type: "text", content: { html: "<p>Expert speakers</p>" }, settings: { align: "center" } }] },
+          { blocks: [{ id: "ev3", type: "heading", content: { text: "800+", level: 2 }, settings: { align: "center" } }, { id: "ev4", type: "text", content: { html: "<p>Attendees worldwide</p>" }, settings: { align: "center" } }] },
+          { blocks: [{ id: "ev5", type: "heading", content: { text: "2 Days", level: 2 }, settings: { align: "center" } }, { id: "ev6", type: "text", content: { html: "<p>Talks & workshops</p>" }, settings: { align: "center" } }] },
         ] }, settings: { gap: "24px" } },
         { type: "spacer", content: { height: 32 }, settings: {} },
         { type: "heading", content: { text: "Register", level: 2 }, settings: {} },
         { type: "form", content: { fields: [
           { id: "name", type: "text", label: "Full Name", required: true, placeholder: "Your name" },
           { id: "email", type: "email", label: "Email", required: true, placeholder: "your@email.com" },
-          { id: "company", type: "text", label: "Company", required: false, placeholder: "Your company (optional)" },
           { id: "ticket", type: "select", label: "Ticket Type", required: true, placeholder: "Select ticket", options: ["Standard ($299)", "VIP ($499)", "Student ($149)"] },
-        ], submitText: "Register Now", successMessage: "You're registered! Check your email for confirmation and event details." }, settings: {} },
+        ], submitText: "Register Now", successMessage: "You're registered! Check your email for confirmation." }, settings: {} },
       ],
     },
     {
@@ -331,38 +250,33 @@ async function main() {
       category: "business",
       blocks: [
         { type: "heading", content: { text: "Simple, Transparent Pricing", level: 1 }, settings: { align: "center" } },
-        { type: "text", content: { html: "<p>No hidden fees, no surprises. Choose the plan that fits your needs and scale up as you grow. Every plan includes a 14-day free trial.</p>" }, settings: { align: "center" } },
+        { type: "text", content: { html: "<p>No hidden fees, no surprises. Choose the plan that fits your needs.</p>" }, settings: { align: "center" } },
         { type: "spacer", content: { height: 32 }, settings: {} },
         { type: "columns", content: { columns: [
           { blocks: [
             { id: "pr1", type: "heading", content: { text: "Starter", level: 3 }, settings: { align: "center" } },
-            { id: "pr2", type: "text", content: { html: "<p><strong style='font-size:2rem'>$9</strong>/month</p><p>Perfect for personal projects and portfolios</p><ul><li>1 website</li><li>10 pages</li><li>Basic templates</li><li>Form submissions (100/mo)</li><li>1 GB media storage</li><li>Community support</li></ul>" }, settings: { align: "center" } },
+            { id: "pr2", type: "text", content: { html: "<p><strong style='font-size:2rem'>$9</strong>/month</p><ul><li>1 website</li><li>10 pages</li><li>Basic templates</li><li>Community support</li></ul>" }, settings: { align: "center" } },
             { id: "pr3", type: "button", content: { text: "Start Free Trial", url: "#", variant: "outline" }, settings: { align: "center" } },
           ] },
           { blocks: [
             { id: "pr4", type: "heading", content: { text: "Professional", level: 3 }, settings: { align: "center" } },
-            { id: "pr5", type: "text", content: { html: "<p><strong style='font-size:2rem'>$29</strong>/month</p><p>For growing businesses and agencies</p><ul><li>5 websites</li><li>Unlimited pages</li><li>All templates + custom</li><li>Custom domain + SSL</li><li>Form submissions (5,000/mo)</li><li>10 GB media storage</li><li>Advanced SEO tools</li><li>Priority email support</li></ul>" }, settings: { align: "center" } },
+            { id: "pr5", type: "text", content: { html: "<p><strong style='font-size:2rem'>$29</strong>/month</p><ul><li>5 websites</li><li>Unlimited pages</li><li>Custom domain + SSL</li><li>Priority support</li></ul>" }, settings: { align: "center" } },
             { id: "pr6", type: "button", content: { text: "Start Free Trial", url: "#", variant: "primary" }, settings: { align: "center" } },
           ] },
           { blocks: [
             { id: "pr7", type: "heading", content: { text: "Enterprise", level: 3 }, settings: { align: "center" } },
-            { id: "pr8", type: "text", content: { html: "<p><strong style='font-size:2rem'>$99</strong>/month</p><p>For large teams and organizations</p><ul><li>Unlimited websites</li><li>Unlimited pages</li><li>White-label branding</li><li>Unlimited form submissions</li><li>100 GB media storage</li><li>API access</li><li>Dedicated account manager</li><li>Phone + chat support</li></ul>" }, settings: { align: "center" } },
+            { id: "pr8", type: "text", content: { html: "<p><strong style='font-size:2rem'>$99</strong>/month</p><ul><li>Unlimited websites</li><li>White-label branding</li><li>API access</li><li>Dedicated manager</li></ul>" }, settings: { align: "center" } },
             { id: "pr9", type: "button", content: { text: "Contact Sales", url: "#", variant: "outline" }, settings: { align: "center" } },
           ] },
         ] }, settings: { gap: "24px" } },
         { type: "spacer", content: { height: 48 }, settings: {} },
         { type: "divider", content: {}, settings: { style: "solid" } },
-        { type: "heading", content: { text: "Common Questions About Pricing", level: 2 }, settings: { align: "center" } },
         { type: "accordion", content: { items: [
-          { id: "pf1", title: "Can I switch plans at any time?", content: "<p>Yes. Upgrades take effect immediately with prorated billing for the remainder of your cycle. Downgrades apply at the start of your next billing period. No penalties or lock-in contracts.</p>" },
-          { id: "pf2", title: "What payment methods do you accept?", content: "<p>We accept all major credit cards (Visa, Mastercard, American Express) and PayPal. Enterprise customers can also pay via bank transfer or purchase order.</p>" },
-          { id: "pf3", title: "Is there a money-back guarantee?", content: "<p>Absolutely. If you're not satisfied within the first 30 days of any paid plan, we'll refund your payment in full — no questions asked. We want you to be confident in your choice.</p>" },
-          { id: "pf4", title: "Do you offer discounts for annual billing?", content: "<p>Yes! Annual billing saves you 20% compared to monthly. That's $86/year on Starter, $278/year on Professional, and $238/year on Enterprise.</p>" },
-          { id: "pf5", title: "What happens when I hit my storage limit?", content: "<p>We'll notify you when you reach 80% of your storage quota. You can upgrade your plan at any time, or remove unused media files to free up space. We never delete your content without permission.</p>" },
+          { id: "pf1", title: "Can I switch plans at any time?", content: "<p>Yes. Upgrades take effect immediately with prorated billing.</p>" },
+          { id: "pf2", title: "Is there a money-back guarantee?", content: "<p>Absolutely. 30-day full refund, no questions asked.</p>" },
+          { id: "pf3", title: "Do you offer annual billing?", content: "<p>Yes! Annual billing saves you 20% compared to monthly.</p>" },
         ], style: "bordered", iconPosition: "right" }, settings: {} },
         { type: "spacer", content: { height: 32 }, settings: {} },
-        { type: "heading", content: { text: "Ready to Get Started?", level: 2 }, settings: { align: "center" } },
-        { type: "text", content: { html: "<p>Start building for free today. No credit card required for the 14-day trial.</p>" }, settings: { align: "center" } },
         { type: "button", content: { text: "Start Your Free Trial", url: "#", variant: "primary" }, settings: { align: "center" } },
       ],
     },
@@ -372,28 +286,16 @@ async function main() {
       category: "general",
       blocks: [
         { type: "heading", content: { text: "Get in Touch", level: 1 }, settings: { align: "center" } },
-        { type: "text", content: { html: "<p>Have a question, feedback, or project in mind? We'd love to hear from you. Fill out the form below or reach out through any of our channels.</p>" }, settings: { align: "center" } },
+        { type: "text", content: { html: "<p>Have a question, feedback, or project in mind? We'd love to hear from you.</p>" }, settings: { align: "center" } },
         { type: "spacer", content: { height: 32 }, settings: {} },
-        { type: "columns", content: { columns: [
-          { blocks: [
-            { id: "ct1", type: "heading", content: { text: "Send Us a Message", level: 2 }, settings: {} },
-            { id: "ct2", type: "text", content: { html: "<p>We typically respond within one business day. For urgent matters, please call us directly.</p>" }, settings: {} },
-          ] },
-          { blocks: [
-            { id: "ct3", type: "heading", content: { text: "Other Ways to Reach Us", level: 2 }, settings: {} },
-            { id: "ct4", type: "text", content: { html: "<p><strong>Email</strong><br>hello@yourcompany.com</p><p><strong>Phone</strong><br>+1 (555) 123-4567<br>Mon-Fri, 9 AM - 6 PM EST</p><p><strong>Office</strong><br>123 Main Street, Suite 400<br>San Francisco, CA 94105</p>" }, settings: {} },
-          ] },
-        ] }, settings: { gap: "48px" } },
-        { type: "spacer", content: { height: 16 }, settings: {} },
         { type: "form", content: { fields: [
           { id: "name", type: "text", label: "Your Name", required: true, placeholder: "Full name" },
           { id: "email", type: "email", label: "Email Address", required: true, placeholder: "you@example.com" },
-          { id: "subject", type: "select", label: "What can we help with?", required: true, placeholder: "Select a topic", options: ["General Inquiry", "Project Consultation", "Technical Support", "Partnership Opportunity", "Press & Media"] },
-          { id: "message", type: "textarea", label: "Your Message", required: true, placeholder: "Tell us more about your question or project..." },
-        ], submitText: "Send Message", successMessage: "Thank you! We've received your message and will get back to you within one business day." }, settings: {} },
+          { id: "subject", type: "select", label: "What can we help with?", required: true, placeholder: "Select a topic", options: ["General Inquiry", "Project Consultation", "Technical Support", "Partnership Opportunity"] },
+          { id: "message", type: "textarea", label: "Your Message", required: true, placeholder: "Tell us more..." },
+        ], submitText: "Send Message", successMessage: "Thank you! We'll get back to you within one business day." }, settings: {} },
         { type: "spacer", content: { height: 32 }, settings: {} },
         { type: "divider", content: {}, settings: { style: "solid" } },
-        { type: "heading", content: { text: "Follow Us", level: 2 }, settings: { align: "center" } },
         { type: "social", content: { links: [
           { platform: "twitter", url: "https://twitter.com" },
           { platform: "linkedin", url: "https://linkedin.com" },
@@ -407,42 +309,24 @@ async function main() {
       category: "blog",
       blocks: [
         { type: "heading", content: { text: "Blog", level: 1 }, settings: {} },
-        { type: "text", content: { html: "<p>Insights on design, development, product strategy, and building for the modern web. Updated weekly.</p>" }, settings: {} },
+        { type: "text", content: { html: "<p>Insights on design, development, and product strategy.</p>" }, settings: {} },
         { type: "divider", content: {}, settings: { style: "solid" } },
         { type: "heading", content: { text: "Featured", level: 2 }, settings: {} },
         { type: "heading", content: { text: "How We Reduced Our API Response Time by 60%", level: 3 }, settings: {} },
-        { type: "text", content: { html: "<p>Performance isn't just a technical metric — it directly impacts user experience, conversion rates, and search rankings. When our median API response time crept above 400ms, we knew it was time to act. Here's the full story of how we diagnosed and fixed the issue.</p><p><em>February 2026 &bull; 8 min read</em></p>" }, settings: {} },
+        { type: "text", content: { html: "<p>Performance isn't just a technical metric — it directly impacts user experience, conversion rates, and search rankings.</p><p><em>February 2026 &bull; 8 min read</em></p>" }, settings: {} },
         { type: "button", content: { text: "Read Article", url: "#", variant: "outline" }, settings: {} },
         { type: "spacer", content: { height: 32 }, settings: {} },
         { type: "heading", content: { text: "Recent Posts", level: 2 }, settings: {} },
         { type: "columns", content: { columns: [
           { blocks: [
-            { id: "bi1", type: "heading", content: { text: "Designing for Accessibility: A Practical Guide", level: 3 }, settings: {} },
-            { id: "bi2", type: "text", content: { html: "<p>Accessibility isn't a feature — it's a fundamental aspect of good design. Here are 10 practical steps you can take today to make your websites more inclusive.</p><p><em>February 2026 &bull; 6 min read</em></p>" }, settings: {} },
+            { id: "bi1", type: "heading", content: { text: "Designing for Accessibility", level: 3 }, settings: {} },
+            { id: "bi2", type: "text", content: { html: "<p>Accessibility isn't a feature — it's a fundamental aspect of good design.</p><p><em>February 2026 &bull; 6 min</em></p>" }, settings: {} },
           ] },
           { blocks: [
             { id: "bi3", type: "heading", content: { text: "The Case for Boring Technology", level: 3 }, settings: {} },
-            { id: "bi4", type: "text", content: { html: "<p>Why we chose proven, \"boring\" technologies for our stack — and how it saved us months of debugging and migration headaches down the road.</p><p><em>January 2026 &bull; 5 min read</em></p>" }, settings: {} },
+            { id: "bi4", type: "text", content: { html: "<p>Why we chose proven technologies for our stack — and how it saved us months.</p><p><em>January 2026 &bull; 5 min</em></p>" }, settings: {} },
           ] },
         ] }, settings: { gap: "32px" } },
-        { type: "spacer", content: { height: 16 }, settings: {} },
-        { type: "columns", content: { columns: [
-          { blocks: [
-            { id: "bi5", type: "heading", content: { text: "Building a Design System from Scratch", level: 3 }, settings: {} },
-            { id: "bi6", type: "text", content: { html: "<p>Lessons learned from creating a component library that serves both our product team and our customers' published websites.</p><p><em>January 2026 &bull; 10 min read</em></p>" }, settings: {} },
-          ] },
-          { blocks: [
-            { id: "bi7", type: "heading", content: { text: "Why We Switched to Server Components", level: 3 }, settings: {} },
-            { id: "bi8", type: "text", content: { html: "<p>A technical deep-dive into our migration to React Server Components and the measurable impact on bundle size and initial load time.</p><p><em>December 2025 &bull; 12 min read</em></p>" }, settings: {} },
-          ] },
-        ] }, settings: { gap: "32px" } },
-        { type: "spacer", content: { height: 32 }, settings: {} },
-        { type: "divider", content: {}, settings: { style: "solid" } },
-        { type: "heading", content: { text: "Subscribe to Our Newsletter", level: 2 }, settings: { align: "center" } },
-        { type: "text", content: { html: "<p>Get our best articles delivered to your inbox every week. No spam, unsubscribe anytime.</p>" }, settings: { align: "center" } },
-        { type: "form", content: { fields: [
-          { id: "email", type: "email", label: "Email", required: true, placeholder: "your@email.com" },
-        ], submitText: "Subscribe", successMessage: "You're subscribed! Check your email to confirm." }, settings: {} },
       ],
     },
     {
@@ -451,25 +335,16 @@ async function main() {
       category: "support",
       blocks: [
         { type: "heading", content: { text: "Getting Started Guide", level: 1 }, settings: {} },
-        { type: "text", content: { html: "<p>Everything you need to know to set up your first site, build pages, and publish to the web. This guide covers the core concepts in about 10 minutes.</p>" }, settings: {} },
+        { type: "text", content: { html: "<p>Everything you need to set up your first site, build pages, and publish to the web.</p>" }, settings: {} },
         { type: "toc", content: {}, settings: {} },
         { type: "divider", content: {}, settings: { style: "solid" } },
         { type: "heading", content: { text: "Creating Your First Site", level: 2 }, settings: {} },
-        { type: "text", content: { html: "<p>After logging in, you'll land on the dashboard. Here's how to create your first site:</p><ol><li>Click the <strong>\"New Site\"</strong> button on the Sites page</li><li>Enter a name for your site (e.g., \"My Portfolio\")</li><li>Your site URL is auto-generated from the name — you can customize it later</li><li>Click <strong>\"Create\"</strong> and you'll be taken to your site's page manager</li></ol><p>Every site can have multiple pages, its own theme, navigation, and footer. Think of a site as a complete website project.</p>" }, settings: {} },
+        { type: "text", content: { html: "<p>After logging in, you'll land on the dashboard. Click <strong>\"New Site\"</strong>, enter a name, and you'll be taken to your page manager.</p>" }, settings: {} },
         { type: "heading", content: { text: "Building Pages with Blocks", level: 2 }, settings: {} },
-        { type: "text", content: { html: "<p>Pages are built using <strong>blocks</strong> — modular content elements that you can add, rearrange, and customize. The editor provides 14 block types:</p><ul><li><strong>Content:</strong> Heading, Text, Quote, Code</li><li><strong>Media:</strong> Image, Video</li><li><strong>Layout:</strong> Columns, Spacer, Divider</li><li><strong>Interactive:</strong> Button, Form, Accordion, Table of Contents, Social Links</li></ul><p>To add a block, click the <strong>\"+\"</strong> button in the sidebar's Blocks tab, or between existing blocks on the canvas.</p>" }, settings: {} },
-        { type: "heading", content: { text: "Customizing Block Appearance", level: 2 }, settings: {} },
-        { type: "text", content: { html: "<p>Every block has two types of configuration:</p><p><strong>Content settings</strong> control what the block displays — text, images, URLs, form fields, etc.</p><p><strong>Style settings</strong> control how it looks — colors, alignment, padding, margins, font sizes, and visibility. Select any block and use the Settings panel in the sidebar to adjust these.</p>" }, settings: {} },
-        { type: "code", content: { code: "<div style=\"padding: 1.5rem; background: #f8f9fa; border-radius: 8px; font-family: system-ui; font-size: 0.9rem; line-height: 1.6;\">\n<strong>Tip:</strong> Use the \"hidden\" toggle in block settings to hide blocks on the published site without deleting them. This is useful for draft content or seasonal promotions.\n</div>", language: "html" }, settings: {} },
-        { type: "heading", content: { text: "Publishing Your Pages", level: 2 }, settings: {} },
-        { type: "text", content: { html: "<p>When you're ready to share your work:</p><ol><li>Click <strong>\"Publish\"</strong> in the editor toolbar (or use <strong>Ctrl/Cmd + S</strong> to save first)</li><li>Your page is immediately live at its public URL</li><li>To schedule a page for later, click the dropdown arrow next to Publish and choose <strong>\"Schedule for later\"</strong></li><li>To take a page offline, click <strong>\"Unpublish\"</strong> from the toolbar menu</li></ol><p>Published pages use Incremental Static Regeneration (ISR), so they're served fast from the cache and automatically refreshed.</p>" }, settings: {} },
+        { type: "text", content: { html: "<p>Pages are built using <strong>blocks</strong> — modular content elements. The editor provides 14 block types across content, media, layout, and interactive categories.</p>" }, settings: {} },
         { type: "heading", content: { text: "Keyboard Shortcuts", level: 2 }, settings: {} },
-        { type: "text", content: { html: "<p>Speed up your workflow with these keyboard shortcuts:</p><ul><li><strong>Ctrl/Cmd + S</strong> — Save changes</li><li><strong>Ctrl/Cmd + Z</strong> — Undo last change</li><li><strong>Ctrl/Cmd + Shift + Z</strong> — Redo</li><li><strong>Ctrl/Cmd + D</strong> — Duplicate selected block</li><li><strong>Alt + Arrow Up/Down</strong> — Move selected block up or down</li><li><strong>Delete / Backspace</strong> — Remove selected block</li><li><strong>Escape</strong> — Deselect current block</li><li><strong>?</strong> — Show all keyboard shortcuts</li></ul>" }, settings: {} },
+        { type: "text", content: { html: "<ul><li><strong>Ctrl/Cmd + S</strong> — Save</li><li><strong>Ctrl/Cmd + Z</strong> — Undo</li><li><strong>Ctrl/Cmd + Shift + Z</strong> — Redo</li><li><strong>Ctrl/Cmd + D</strong> — Duplicate block</li><li><strong>Alt + Arrow</strong> — Move block</li><li><strong>?</strong> — Show shortcuts</li></ul>" }, settings: {} },
         { type: "divider", content: {}, settings: { style: "solid" } },
-        { type: "heading", content: { text: "Next Steps", level: 2 }, settings: {} },
-        { type: "text", content: { html: "<p>Now that you know the basics, here are some things to explore:</p><ul><li><strong>Templates:</strong> Create pages from pre-built templates to save time</li><li><strong>Media Library:</strong> Upload and manage images, videos, and documents</li><li><strong>Site Settings:</strong> Customize your theme colors, fonts, and footer</li><li><strong>Navigation:</strong> Control which pages appear in your site's navigation bar</li><li><strong>SEO:</strong> Set meta titles, Open Graph images, and noindex flags per page</li><li><strong>Forms:</strong> Add contact forms and view submissions in your dashboard</li></ul>" }, settings: {} },
-        { type: "heading", content: { text: "Need Help?", level: 2 }, settings: { align: "center" } },
-        { type: "text", content: { html: "<p>If you run into any issues or have questions, our support team is here for you.</p>" }, settings: { align: "center" } },
         { type: "button", content: { text: "Contact Support", url: "#", variant: "outline" }, settings: { align: "center" } },
       ],
     },
@@ -491,44 +366,45 @@ async function main() {
       },
     });
   }
-  console.log("Created system templates");
+  console.log("Upserted", templates.length, "system templates");
 
-  // Create demo site with theme and footer
-  const site = await prisma.site.upsert({
-    where: { slug: "demo-portfolio" },
-    update: {},
-    create: {
-      name: "Demo Portfolio",
-      slug: "demo-portfolio",
-      description: "A demo portfolio site showcasing Vellum's capabilities",
+  // ──────────────────────────────────────────────
+  // 4. Create demo site: "Atlas Creative"
+  // ──────────────────────────────────────────────
+  const site = await prisma.site.create({
+    data: {
+      name: "Atlas Creative",
+      slug: "atlas-studio",
+      description: "A design & development studio crafting exceptional digital experiences",
       userId: user.id,
       theme: {
         colors: {
-          primary: "#6366F1",
-          background: "#FAF9F7",
+          primary: "#4F46E5",
+          background: "#FAFAF9",
           surface: "#FFFFFF",
           text: "#1C1917",
         },
         fontPreset: "modern",
       },
       footer: {
-        text: "Built with Vellum",
+        text: "Atlas Creative — Design & Development Studio",
         links: [
-          { label: "Home", url: "/s/demo-portfolio" },
-          { label: "Contact", url: "/s/demo-portfolio/contact" },
+          { label: "Home", url: "/s/atlas-studio" },
+          { label: "Services", url: "/s/atlas-studio/services" },
+          { label: "Journal", url: "/s/atlas-studio/journal" },
+          { label: "Contact", url: "/s/atlas-studio/contact" },
         ],
         showBranding: true,
       },
     },
   });
+  console.log("Created site:", site.name, `(/s/${site.slug})`);
 
-  console.log("Created demo site:", site.name);
-
-  // --- Home Page (enhanced) ---
-  const homePage = await prisma.page.upsert({
-    where: { siteId_slug: { siteId: site.id, slug: "home" } },
-    update: {},
-    create: {
+  // ──────────────────────────────────────────────
+  // 5. PAGE 1 — Homepage (showcase of ALL 14 block types)
+  // ──────────────────────────────────────────────
+  const homePage = await prisma.page.create({
+    data: {
       title: "Home",
       slug: "home",
       isHomepage: true,
@@ -537,37 +413,96 @@ async function main() {
       showInNav: true,
       siteId: site.id,
       sortOrder: 0,
+      metaTitle: "Atlas Creative — Design & Development Studio",
     },
   });
 
-  await prisma.block.deleteMany({ where: { pageId: homePage.id } });
-
   const homeBlocks = [
+    // ── HERO ──
     {
       type: "heading",
-      content: { text: "Welcome to Vellum", level: 1 },
-      settings: { align: "center" },
+      content: { text: "We Craft Digital Experiences That Matter", level: 1 },
+      settings: { align: "center", marginBottom: "8px" },
     },
     {
       type: "text",
       content: {
-        html: "<p>The elegant visual page builder for creators, designers, and developers. Build beautiful websites without writing code.</p>",
+        html: "<p>Atlas Creative is a design and development studio that partners with ambitious companies to build products people love. From brand identity to full-stack applications, we bring ideas to life with precision and care.</p>",
       },
       settings: { align: "center" },
     },
     {
       type: "button",
-      content: { text: "Explore the Editor", url: "#", variant: "primary" },
+      content: { text: "Explore Our Work", url: "/s/atlas-studio/services", variant: "primary" },
       settings: { align: "center" },
     },
     {
       type: "spacer",
-      content: { height: 64 },
+      content: { height: 48 },
+      settings: {},
+    },
+
+    // ── TABLE OF CONTENTS ──
+    {
+      type: "toc",
+      content: { maxDepth: 3, style: "boxed", ordered: false },
+      settings: { marginBottom: "16px" },
+    },
+
+    // ── WHAT WE DO ──
+    {
+      type: "divider",
+      content: {},
+      settings: { style: "solid" },
+    },
+    {
+      type: "heading",
+      content: { text: "What We Do", level: 2 },
+      settings: { align: "center", marginTop: "32px" },
+    },
+    {
+      type: "text",
+      content: {
+        html: "<p>We combine strategic thinking with world-class execution across three disciplines. Every engagement starts with understanding your goals and ends with measurable results.</p>",
+      },
+      settings: { align: "center", marginBottom: "24px" },
+    },
+    {
+      type: "columns",
+      content: {
+        columns: [
+          {
+            blocks: [
+              { id: "svc1", type: "heading", content: { text: "Strategy & Research", level: 3 }, settings: { align: "center" } },
+              { id: "svc2", type: "text", content: { html: "<p>User research, competitive analysis, and product strategy that align your business goals with real user needs. We uncover the insights that drive smart design decisions.</p>" }, settings: { align: "center" } },
+            ],
+          },
+          {
+            blocks: [
+              { id: "svc3", type: "heading", content: { text: "Design & Branding", level: 3 }, settings: { align: "center" } },
+              { id: "svc4", type: "text", content: { html: "<p>Visual identity, UI/UX design, and design systems that scale. We create cohesive brand experiences across every touchpoint — from your website to your product.</p>" }, settings: { align: "center" } },
+            ],
+          },
+          {
+            blocks: [
+              { id: "svc5", type: "heading", content: { text: "Engineering", level: 3 }, settings: { align: "center" } },
+              { id: "svc6", type: "text", content: { html: "<p>Full-stack development with React, Next.js, and Node.js. We build performant, accessible, and maintainable applications that stand the test of time.</p>" }, settings: { align: "center" } },
+            ],
+          },
+        ],
+      },
+      settings: { gap: "32px" },
+    },
+
+    // ── STATS ──
+    {
+      type: "spacer",
+      content: { height: 48 },
       settings: {},
     },
     {
       type: "heading",
-      content: { text: "Everything You Need", level: 2 },
+      content: { text: "By the Numbers", level: 2 },
       settings: { align: "center" },
     },
     {
@@ -576,74 +511,253 @@ async function main() {
         columns: [
           {
             blocks: [
-              {
-                id: "f1",
-                type: "heading",
-                content: { text: "Visual Editor", level: 3 },
-                settings: { align: "center" },
-              },
-              {
-                id: "f2",
-                type: "text",
-                content: {
-                  html: "<p>Drag-and-drop blocks to build your pages visually. No coding required.</p>",
-                },
-                settings: { align: "center" },
-              },
+              { id: "st1", type: "heading", content: { text: "120+", level: 2 }, settings: { align: "center" } },
+              { id: "st2", type: "text", content: { html: "<p>Projects delivered for clients across 14 countries, from startups to Fortune 500 companies</p>" }, settings: { align: "center" } },
             ],
           },
           {
             blocks: [
-              {
-                id: "f3",
-                type: "heading",
-                content: { text: "Responsive Design", level: 3 },
-                settings: { align: "center" },
-              },
-              {
-                id: "f4",
-                type: "text",
-                content: {
-                  html: "<p>Every page looks great on desktop, tablet, and mobile devices.</p>",
-                },
-                settings: { align: "center" },
-              },
+              { id: "st3", type: "heading", content: { text: "98%", level: 2 }, settings: { align: "center" } },
+              { id: "st4", type: "text", content: { html: "<p>Client satisfaction rate, with most engagements leading to ongoing partnerships and referrals</p>" }, settings: { align: "center" } },
             ],
           },
           {
             blocks: [
-              {
-                id: "f5",
-                type: "heading",
-                content: { text: "One-Click Publish", level: 3 },
-                settings: { align: "center" },
-              },
-              {
-                id: "f6",
-                type: "text",
-                content: {
-                  html: "<p>Publish your pages instantly and share them with the world.</p>",
-                },
-                settings: { align: "center" },
-              },
+              { id: "st5", type: "heading", content: { text: "15", level: 2 }, settings: { align: "center" } },
+              { id: "st6", type: "text", content: { html: "<p>Designers, engineers, and strategists — a senior team with an average of 10 years of experience</p>" }, settings: { align: "center" } },
             ],
           },
         ],
       },
-      settings: { gap: "32px" },
+      settings: { gap: "24px" },
+    },
+
+    // ── TESTIMONIAL ──
+    {
+      type: "spacer",
+      content: { height: 48 },
+      settings: {},
     },
     {
       type: "divider",
       content: {},
-      settings: { style: "solid", color: "#E7E5E4" },
+      settings: { style: "dashed" },
     },
     {
       type: "quote",
       content: {
-        text: "Vellum transformed how I build websites. The editor is intuitive and the results are beautiful.",
-        attribution: "A Happy Creator",
+        text: "Atlas Creative transformed our digital presence. They took the time to understand our business, challenged our assumptions, and delivered a product that exceeded every expectation. The attention to detail is remarkable.",
+        attribution: "Elena Vasquez, CEO of Meridian Health",
+        style: "filled",
       },
       settings: {},
+    },
+    {
+      type: "divider",
+      content: {},
+      settings: { style: "dashed" },
+    },
+
+    // ── OUR PROCESS (Accordion) ──
+    {
+      type: "spacer",
+      content: { height: 48 },
+      settings: {},
+    },
+    {
+      type: "heading",
+      content: { text: "Our Process", level: 2 },
+      settings: { align: "center" },
+    },
+    {
+      type: "text",
+      content: {
+        html: "<p>Every project follows a proven four-phase process. This structure keeps things on track while leaving room for creative exploration.</p>",
+      },
+      settings: { align: "center", marginBottom: "16px" },
+    },
+    {
+      type: "accordion",
+      content: {
+        items: [
+          {
+            id: "proc1",
+            title: "1. Discovery & Strategy",
+            content: "<p>We begin with deep research: stakeholder interviews, user analysis, competitive auditing, and technical assessment. This phase produces a clear project brief, success metrics, and a realistic timeline. We believe that understanding the problem thoroughly is half the solution.</p>",
+          },
+          {
+            id: "proc2",
+            title: "2. Design & Prototype",
+            content: "<p>Armed with insights, we move into design. Wireframes establish structure, visual designs bring personality, and interactive prototypes let you experience the product before a single line of code is written. We share progress weekly and iterate based on your feedback.</p>",
+          },
+          {
+            id: "proc3",
+            title: "3. Build & Iterate",
+            content: "<p>Development happens in focused sprints. We ship working features early and often, testing with real users along the way. Our engineering practices prioritize clean code, automated testing, and thorough documentation — because what we build needs to last.</p>",
+          },
+          {
+            id: "proc4",
+            title: "4. Launch & Evolve",
+            content: "<p>Launch is just the beginning. We handle deployment, performance monitoring, and post-launch optimization. Every project includes 30 days of dedicated support. After that, many clients choose an ongoing retainer for continuous improvement.</p>",
+          },
+        ],
+        style: "bordered",
+        iconPosition: "right",
+      },
+      settings: {},
+    },
+
+    // ── SECOND TESTIMONIAL ──
+    {
+      type: "spacer",
+      content: { height: 32 },
+      settings: {},
+    },
+    {
+      type: "quote",
+      content: {
+        text: "Working with Atlas is like having a world-class product team on speed dial. They don't just execute — they think strategically about what will actually move the needle for your business.",
+        attribution: "Marcus Chen, Founder of CloudSync",
+        style: "bordered",
+      },
+      settings: {},
+    },
+
+    // ── TECH SHOWCASE (Code Block) ──
+    {
+      type: "spacer",
+      content: { height: 48 },
+      settings: {},
+    },
+    {
+      type: "heading",
+      content: { text: "Built with Modern Technology", level: 2 },
+      settings: {},
+    },
+    {
+      type: "text",
+      content: {
+        html: "<p>We choose tools that balance developer experience with production reliability. Our stack is modern but proven — no hype-driven decisions, just solid engineering. Here's a glimpse of how we build:</p>",
+      },
+      settings: {},
+    },
+    {
+      type: "code",
+      content: {
+        code: `<div style="padding: 1.5rem; background: #1e1e2e; color: #cdd6f4; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.7; overflow-x: auto;">
+<span style="color: #89b4fa;">// Modern React with Server Components</span>
+<span style="color: #cba6f7;">export default</span> <span style="color: #89dceb;">async function</span> <span style="color: #a6e3a1;">ProjectPage</span>({ params }) {
+  <span style="color: #cba6f7;">const</span> project = <span style="color: #cba6f7;">await</span> getProject(params.slug);
+
+  <span style="color: #cba6f7;">return</span> (
+    <span style="color: #89dceb;">&lt;article&gt;</span>
+      <span style="color: #89dceb;">&lt;h1&gt;</span>{project.title}<span style="color: #89dceb;">&lt;/h1&gt;</span>
+      <span style="color: #89dceb;">&lt;BlockRenderer</span> blocks={project.blocks} <span style="color: #89dceb;">/&gt;</span>
+    <span style="color: #89dceb;">&lt;/article&gt;</span>
+  );
+}
+</div>`,
+        language: "html",
+      },
+      settings: {},
+    },
+
+    // ── IMAGE SHOWCASE ──
+    {
+      type: "spacer",
+      content: { height: 48 },
+      settings: {},
+    },
+    {
+      type: "heading",
+      content: { text: "Featured Project", level: 2 },
+      settings: { align: "center" },
+    },
+    {
+      type: "image",
+      content: {
+        src: "",
+        alt: "Atlas Creative — Meridian Health App redesign showcasing the clean, modern interface across mobile and desktop devices",
+        caption: "Meridian Health — Complete product redesign delivering a 40% increase in user engagement",
+      },
+      settings: { align: "center", rounded: true, shadow: true },
+    },
+
+    // ── VIDEO EMBED ──
+    {
+      type: "spacer",
+      content: { height: 48 },
+      settings: {},
+    },
+    {
+      type: "heading",
+      content: { text: "See Us in Action", level: 2 },
+      settings: { align: "center" },
+    },
+    {
+      type: "text",
+      content: {
+        html: "<p>Watch our design process in action — from initial sketches to polished product.</p>",
+      },
+      settings: { align: "center" },
+    },
+    {
+      type: "video",
+      content: {
+        url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        provider: "youtube",
+      },
+      settings: { aspectRatio: "16/9" },
+    },
+
+    // ── CONTACT CTA + FORM ──
+    {
+      type: "spacer",
+      content: { height: 48 },
+      settings: {},
+    },
+    {
+      type: "divider",
+      content: {},
+      settings: { style: "solid" },
+    },
+    {
+      type: "heading",
+      content: { text: "Start a Conversation", level: 2 },
+      settings: { align: "center", marginTop: "32px" },
+    },
+    {
+      type: "text",
+      content: {
+        html: "<p>Have a project in mind? Tell us about it — we respond to every inquiry within one business day. No pressure, no sales pitch, just an honest conversation about how we can help.</p>",
+      },
+      settings: { align: "center", marginBottom: "24px" },
+    },
+    {
+      type: "form",
+      content: {
+        fields: [
+          { id: "name", type: "text", label: "Your Name", required: true, placeholder: "Full name" },
+          { id: "email", type: "email", label: "Email Address", required: true, placeholder: "you@example.com" },
+          { id: "budget", type: "select", label: "Project Budget", required: false, placeholder: "Select a range", options: ["Under $10K", "$10K – $25K", "$25K – $50K", "$50K – $100K", "$100K+"] },
+          { id: "message", type: "textarea", label: "Tell Us About Your Project", required: true, placeholder: "What are you building? What problem are you solving? What does success look like?" },
+        ],
+        submitText: "Send Message",
+        successMessage: "Thank you! We've received your message and will get back to you within one business day.",
+      },
+      settings: {},
+    },
+
+    // ── SOCIAL FOOTER ──
+    {
+      type: "spacer",
+      content: { height: 32 },
+      settings: {},
+    },
+    {
+      type: "divider",
+      content: {},
+      settings: { style: "solid" },
     },
     {
       type: "social",
@@ -652,6 +766,7 @@ async function main() {
           { platform: "twitter", url: "https://twitter.com" },
           { platform: "github", url: "https://github.com" },
           { platform: "linkedin", url: "https://linkedin.com" },
+          { platform: "dribbble", url: "https://dribbble.com" },
         ],
       },
       settings: { align: "center" },
@@ -667,12 +782,13 @@ async function main() {
       pageId: homePage.id,
     })),
   });
+  console.log("Created homepage with", homeBlocks.length, "blocks (all 14 block types)");
 
-  // --- About Page ---
-  const aboutPage = await prisma.page.upsert({
-    where: { siteId_slug: { siteId: site.id, slug: "about" } },
-    update: {},
-    create: {
+  // ──────────────────────────────────────────────
+  // 6. PAGE 2 — About
+  // ──────────────────────────────────────────────
+  const aboutPage = await prisma.page.create({
+    data: {
       title: "About",
       slug: "about",
       status: "PUBLISHED",
@@ -680,21 +796,37 @@ async function main() {
       showInNav: true,
       siteId: site.id,
       sortOrder: 1,
+      metaTitle: "About — Atlas Creative",
     },
   });
-
-  await prisma.block.deleteMany({ where: { pageId: aboutPage.id } });
 
   const aboutBlocks = [
     {
       type: "heading",
-      content: { text: "About This Project", level: 1 },
+      content: { text: "We Build Things That Last", level: 1 },
+      settings: { align: "center" },
+    },
+    {
+      type: "text",
+      content: {
+        html: "<p>Atlas Creative was founded in 2020 with a simple conviction: the best digital products come from teams that care as much about craft as they do about outcomes. We're a team of 15 designers, engineers, and strategists who've spent the last five years proving that conviction right.</p>",
+      },
+      settings: { align: "center" },
+    },
+    {
+      type: "spacer",
+      content: { height: 48 },
+      settings: {},
+    },
+    {
+      type: "heading",
+      content: { text: "Our Story", level: 2 },
       settings: {},
     },
     {
       type: "text",
       content: {
-        html: "<p>Vellum is a portfolio-grade CMS named after fine parchment, embodying elegance and craftsmanship in every detail.</p><p>It features a visual page builder with drag-and-drop blocks, a media library, template system, and one-click publishing.</p>",
+        html: "<p>It started with a frustration. Our founders, Elena and Marcus, were building products at different companies and kept hitting the same wall: great ideas compromised by rushed execution, beautiful designs undermined by poor engineering, and smart strategies lost in translation between teams.</p><p>They believed a small, senior team that bridged strategy, design, and engineering could do better work than agencies ten times their size. Atlas Creative launched with three people, a handful of clients, and a commitment to proving that thesis.</p><p>Five years later, we've partnered with over 120 companies across 14 countries. Our work has been recognized by Awwwards, CSS Design Awards, and featured in design publications worldwide. More importantly, our client retention rate sits at 89% — because we build relationships, not just products.</p>",
       },
       settings: {},
     },
@@ -704,48 +836,121 @@ async function main() {
       settings: {},
     },
     {
+      type: "heading",
+      content: { text: "What We Believe", level: 2 },
+      settings: { align: "center" },
+    },
+    {
       type: "columns",
       content: {
         columns: [
           {
             blocks: [
-              {
-                id: "a1",
-                type: "heading",
-                content: { text: "Our Mission", level: 3 },
-                settings: {},
-              },
-              {
-                id: "a2",
-                type: "text",
-                content: {
-                  html: "<p>To empower creators with tools that are both powerful and delightful to use. We believe great design should be accessible to everyone.</p>",
-                },
-                settings: {},
-              },
+              { id: "ab1", type: "heading", content: { text: "Simplicity Is Hard", level: 3 }, settings: { align: "center" } },
+              { id: "ab2", type: "text", content: { html: "<p>Anyone can add complexity. The real skill is removing it. We obsess over making things feel effortless — even when the underlying problem is deeply complex.</p>" }, settings: { align: "center" } },
             ],
           },
           {
             blocks: [
-              {
-                id: "a3",
-                type: "heading",
-                content: { text: "Our Values", level: 3 },
-                settings: {},
-              },
-              {
-                id: "a4",
-                type: "text",
-                content: {
-                  html: "<p><strong>Simplicity</strong> over complexity. <strong>Elegance</strong> over excess. <strong>Craft</strong> over shortcuts. Every feature is thoughtfully designed.</p>",
-                },
-                settings: {},
-              },
+              { id: "ab3", type: "heading", content: { text: "Details Compound", level: 3 }, settings: { align: "center" } },
+              { id: "ab4", type: "text", content: { html: "<p>A pixel here, a millisecond there — small choices accumulate into the difference between good and exceptional. We sweat the small stuff because it's never actually small.</p>" }, settings: { align: "center" } },
+            ],
+          },
+          {
+            blocks: [
+              { id: "ab5", type: "heading", content: { text: "Honesty Wins", level: 3 }, settings: { align: "center" } },
+              { id: "ab6", type: "text", content: { html: "<p>We'll tell you if your idea needs rethinking. We'll flag risks early. We'll admit when we're wrong. Radical honesty builds trust, and trust builds great products.</p>" }, settings: { align: "center" } },
             ],
           },
         ],
       },
       settings: { gap: "32px" },
+    },
+    {
+      type: "spacer",
+      content: { height: 48 },
+      settings: {},
+    },
+    {
+      type: "heading",
+      content: { text: "The Team", level: 2 },
+      settings: { align: "center" },
+    },
+    {
+      type: "columns",
+      content: {
+        columns: [
+          {
+            blocks: [
+              { id: "tm1", type: "heading", content: { text: "Elena Vasquez", level: 3 }, settings: { align: "center" } },
+              { id: "tm2", type: "text", content: { html: "<p><strong>CEO & Co-Founder</strong></p><p>Former design lead at Stripe. 12 years in product design. Believes the best tools are invisible — they get out of your way and let you create.</p>" }, settings: { align: "center" } },
+            ],
+          },
+          {
+            blocks: [
+              { id: "tm3", type: "heading", content: { text: "Marcus Chen", level: 3 }, settings: { align: "center" } },
+              { id: "tm4", type: "text", content: { html: "<p><strong>CTO & Co-Founder</strong></p><p>Full-stack engineer and open-source contributor. Built distributed systems at scale before founding Atlas. Author of two technical books on web performance.</p>" }, settings: { align: "center" } },
+            ],
+          },
+        ],
+      },
+      settings: { gap: "32px" },
+    },
+    {
+      type: "columns",
+      content: {
+        columns: [
+          {
+            blocks: [
+              { id: "tm5", type: "heading", content: { text: "Priya Nair", level: 3 }, settings: { align: "center" } },
+              { id: "tm6", type: "text", content: { html: "<p><strong>Head of Design</strong></p><p>Brand strategist with a background in typography and motion design. Previously built design systems at Figma used by thousands of teams.</p>" }, settings: { align: "center" } },
+            ],
+          },
+          {
+            blocks: [
+              { id: "tm7", type: "heading", content: { text: "David Kim", level: 3 }, settings: { align: "center" } },
+              { id: "tm8", type: "text", content: { html: "<p><strong>Head of Engineering</strong></p><p>Systems architect specializing in performance and reliability. Obsessed with sub-100ms response times and zero-downtime deployments.</p>" }, settings: { align: "center" } },
+            ],
+          },
+        ],
+      },
+      settings: { gap: "32px" },
+    },
+    {
+      type: "spacer",
+      content: { height: 32 },
+      settings: {},
+    },
+    {
+      type: "quote",
+      content: {
+        text: "We don't just hire talented people — we hire people who genuinely care about the work. That's the difference between a team and a group of contractors.",
+        attribution: "Elena Vasquez, CEO",
+        style: "filled",
+      },
+      settings: {},
+    },
+    {
+      type: "divider",
+      content: {},
+      settings: { style: "solid" },
+    },
+    {
+      type: "heading",
+      content: { text: "Join the Team", level: 2 },
+      settings: { align: "center" },
+    },
+    {
+      type: "text",
+      content: {
+        html: "<p>We're always looking for curious, talented people who care deeply about craft. We offer competitive salaries, remote flexibility, and an environment where your best work is expected and supported.</p>",
+      },
+      settings: { align: "center" },
+    },
+    {
+      type: "button",
+      content: { text: "View Open Positions", url: "#", variant: "primary" },
+      settings: { align: "center" },
     },
   ];
 
@@ -758,109 +963,41 @@ async function main() {
       pageId: aboutPage.id,
     })),
   });
+  console.log("Created About page with", aboutBlocks.length, "blocks");
 
-  // --- Contact Page (with form) ---
-  const contactPage = await prisma.page.upsert({
-    where: { siteId_slug: { siteId: site.id, slug: "contact" } },
-    update: {},
-    create: {
-      title: "Contact",
-      slug: "contact",
+  // ──────────────────────────────────────────────
+  // 7. PAGE 3 — Services
+  // ──────────────────────────────────────────────
+  const servicesPage = await prisma.page.create({
+    data: {
+      title: "Services",
+      slug: "services",
       status: "PUBLISHED",
       publishedAt: new Date(),
       showInNav: true,
       siteId: site.id,
       sortOrder: 2,
+      metaTitle: "Services — Atlas Creative",
     },
   });
 
-  await prisma.block.deleteMany({ where: { pageId: contactPage.id } });
-
-  const contactBlocks = [
+  const servicesBlocks = [
     {
       type: "heading",
-      content: { text: "Get in Touch", level: 1 },
-      settings: {},
-    },
-    {
-      type: "text",
-      content: {
-        html: "<p>We'd love to hear from you. Fill out the form below and we'll get back to you shortly.</p>",
-      },
-      settings: {},
-    },
-    {
-      type: "divider",
-      content: {},
-      settings: { style: "solid" },
-    },
-    {
-      type: "form",
-      content: {
-        fields: [
-          { id: "name", type: "text", label: "Name", required: true, placeholder: "Your name" },
-          { id: "email", type: "email", label: "Email", required: true, placeholder: "your@email.com" },
-          {
-            id: "subject",
-            type: "select",
-            label: "Subject",
-            required: true,
-            placeholder: "Select a topic",
-            options: ["General Inquiry", "Support", "Partnership", "Feedback"],
-          },
-          { id: "message", type: "textarea", label: "Message", required: true, placeholder: "Tell us more..." },
-        ],
-        submitText: "Send Message",
-        successMessage: "Thank you! We'll be in touch soon.",
-      },
-      settings: {},
-    },
-  ];
-
-  await prisma.block.createMany({
-    data: contactBlocks.map((block, i) => ({
-      type: block.type,
-      content: block.content,
-      settings: block.settings,
-      sortOrder: i,
-      pageId: contactPage.id,
-    })),
-  });
-
-  // --- Portfolio Page (columns layout) ---
-  const portfolioPage = await prisma.page.upsert({
-    where: { siteId_slug: { siteId: site.id, slug: "portfolio" } },
-    update: {},
-    create: {
-      title: "Portfolio",
-      slug: "portfolio",
-      status: "PUBLISHED",
-      publishedAt: new Date(),
-      showInNav: true,
-      siteId: site.id,
-      sortOrder: 3,
-    },
-  });
-
-  await prisma.block.deleteMany({ where: { pageId: portfolioPage.id } });
-
-  const portfolioBlocks = [
-    {
-      type: "heading",
-      content: { text: "Our Work", level: 1 },
+      content: { text: "What We Can Build Together", level: 1 },
       settings: { align: "center" },
     },
     {
       type: "text",
       content: {
-        html: "<p>A curated collection of projects showcasing our design and development expertise.</p>",
+        html: "<p>We offer end-to-end product design and development services. Every engagement is tailored to your specific goals, timeline, and budget. Here's what we do best.</p>",
       },
       settings: { align: "center" },
     },
     {
-      type: "divider",
-      content: {},
-      settings: { style: "solid" },
+      type: "spacer",
+      content: { height: 48 },
+      settings: {},
     },
     {
       type: "columns",
@@ -868,38 +1005,20 @@ async function main() {
         columns: [
           {
             blocks: [
-              {
-                id: "p1",
-                type: "heading",
-                content: { text: "Brand Identity", level: 3 },
-                settings: {},
-              },
-              {
-                id: "p2",
-                type: "text",
-                content: {
-                  html: "<p>Complete brand redesign for a tech startup, including logo, typography, and color system. The new identity increased brand recognition by 40%.</p>",
-                },
-                settings: {},
-              },
+              { id: "sv1", type: "heading", content: { text: "Brand & Identity", level: 3 }, settings: { align: "center" } },
+              { id: "sv2", type: "text", content: { html: "<p>Logo design, visual identity, brand guidelines, and design systems that give your company a cohesive, memorable presence across every touchpoint.</p><p><strong>Starting at $8,000</strong></p>" }, settings: { align: "center" } },
             ],
           },
           {
             blocks: [
-              {
-                id: "p3",
-                type: "heading",
-                content: { text: "E-Commerce Platform", level: 3 },
-                settings: {},
-              },
-              {
-                id: "p4",
-                type: "text",
-                content: {
-                  html: "<p>Custom online store with seamless checkout flow and inventory management. Built for scale with 99.9% uptime and sub-second load times.</p>",
-                },
-                settings: {},
-              },
+              { id: "sv3", type: "heading", content: { text: "Web Design & Dev", level: 3 }, settings: { align: "center" } },
+              { id: "sv4", type: "text", content: { html: "<p>Marketing sites, landing pages, and content platforms. Responsive, fast, accessible, and built to convert. We handle everything from concept to deployment.</p><p><strong>Starting at $12,000</strong></p>" }, settings: { align: "center" } },
+            ],
+          },
+          {
+            blocks: [
+              { id: "sv5", type: "heading", content: { text: "Product Design", level: 3 }, settings: { align: "center" } },
+              { id: "sv6", type: "text", content: { html: "<p>End-to-end UX/UI for SaaS products, mobile apps, and internal tools. User research, wireframing, prototyping, and design systems built for scale.</p><p><strong>Starting at $15,000</strong></p>" }, settings: { align: "center" } },
             ],
           },
         ],
@@ -908,7 +1027,7 @@ async function main() {
     },
     {
       type: "spacer",
-      content: { height: 32 },
+      content: { height: 24 },
       settings: {},
     },
     {
@@ -917,38 +1036,20 @@ async function main() {
         columns: [
           {
             blocks: [
-              {
-                id: "p5",
-                type: "heading",
-                content: { text: "Mobile App", level: 3 },
-                settings: {},
-              },
-              {
-                id: "p6",
-                type: "text",
-                content: {
-                  html: "<p>Cross-platform fitness tracking app with social features, real-time sync, and offline support. Over 50,000 active users.</p>",
-                },
-                settings: {},
-              },
+              { id: "sv7", type: "heading", content: { text: "Full-Stack Development", level: 3 }, settings: { align: "center" } },
+              { id: "sv8", type: "text", content: { html: "<p>Custom web applications, APIs, and integrations. React, Next.js, Node.js, PostgreSQL, and cloud infrastructure. Performance-first, test-driven, deployment-ready.</p><p><strong>Starting at $20,000</strong></p>" }, settings: { align: "center" } },
             ],
           },
           {
             blocks: [
-              {
-                id: "p7",
-                type: "heading",
-                content: { text: "Dashboard Design", level: 3 },
-                settings: {},
-              },
-              {
-                id: "p8",
-                type: "text",
-                content: {
-                  html: "<p>Analytics dashboard for a SaaS platform with real-time data visualization, custom reports, and role-based access control.</p>",
-                },
-                settings: {},
-              },
+              { id: "sv9", type: "heading", content: { text: "Consulting & Audits", level: 3 }, settings: { align: "center" } },
+              { id: "sv10", type: "text", content: { html: "<p>Design system audits, accessibility reviews, performance optimization, and technical architecture consulting. Expert guidance without long-term commitment.</p><p><strong>$250/hour</strong></p>" }, settings: { align: "center" } },
+            ],
+          },
+          {
+            blocks: [
+              { id: "sv11", type: "heading", content: { text: "Retainer Partnership", level: 3 }, settings: { align: "center" } },
+              { id: "sv12", type: "text", content: { html: "<p>Ongoing design and development support. A dedicated team that knows your product inside out. Perfect for companies that need continuous iteration.</p><p><strong>From $5,000/month</strong></p>" }, settings: { align: "center" } },
             ],
           },
         ],
@@ -956,57 +1057,116 @@ async function main() {
       settings: { gap: "32px" },
     },
     {
+      type: "spacer",
+      content: { height: 48 },
+      settings: {},
+    },
+    {
       type: "divider",
       content: {},
       settings: { style: "solid" },
     },
     {
-      type: "quote",
+      type: "heading",
+      content: { text: "Frequently Asked Questions", level: 2 },
+      settings: { align: "center", marginTop: "32px" },
+    },
+    {
+      type: "accordion",
       content: {
-        text: "Their attention to detail and commitment to quality made all the difference. Highly recommended for any creative project.",
-        attribution: "Client Testimonial",
+        items: [
+          {
+            id: "faq1",
+            title: "How long does a typical project take?",
+            content: "<p>Brand identity projects take 4-6 weeks. Website design and development typically runs 6-10 weeks. Product design and full-stack applications range from 10-20 weeks depending on scope. We'll give you a detailed timeline during discovery.</p>",
+          },
+          {
+            id: "faq2",
+            title: "What's your design process like?",
+            content: "<p>We follow a four-phase approach: Discovery (research and strategy), Design (wireframes, visuals, prototypes), Build (development and testing), and Launch (deployment and optimization). We share progress weekly and iterate based on your feedback throughout.</p>",
+          },
+          {
+            id: "faq3",
+            title: "Do you work with startups?",
+            content: "<p>Absolutely — startups make up about 40% of our client base. We understand the unique constraints of early-stage companies and can work within limited budgets and tight timelines. We've helped several startups go from idea to launched product in under 8 weeks.</p>",
+          },
+          {
+            id: "faq4",
+            title: "Can you work with our existing team?",
+            content: "<p>Yes. We frequently embed with in-house teams for specific projects or phases. Whether you need design support, engineering capacity, or strategic oversight, we integrate smoothly with existing workflows and tools.</p>",
+          },
+          {
+            id: "faq5",
+            title: "What happens after launch?",
+            content: "<p>Every project includes 30 days of post-launch support at no extra cost. After that, most clients transition to a monthly retainer for ongoing improvements, bug fixes, and new feature development. We're invested in long-term success, not one-off projects.</p>",
+          },
+        ],
+        style: "bordered",
+        iconPosition: "right",
       },
       settings: {},
+    },
+    {
+      type: "spacer",
+      content: { height: 48 },
+      settings: {},
+    },
+    {
+      type: "heading",
+      content: { text: "Let's Talk About Your Project", level: 2 },
+      settings: { align: "center" },
+    },
+    {
+      type: "text",
+      content: {
+        html: "<p>Every great project starts with a conversation. Tell us what you're building and we'll share how we can help — no obligation, no sales pitch.</p>",
+      },
+      settings: { align: "center" },
+    },
+    {
+      type: "button",
+      content: { text: "Get in Touch", url: "/s/atlas-studio/contact", variant: "primary" },
+      settings: { align: "center" },
     },
   ];
 
   await prisma.block.createMany({
-    data: portfolioBlocks.map((block, i) => ({
+    data: servicesBlocks.map((block, i) => ({
       type: block.type,
       content: block.content,
       settings: block.settings,
       sortOrder: i,
-      pageId: portfolioPage.id,
+      pageId: servicesPage.id,
     })),
   });
+  console.log("Created Services page with", servicesBlocks.length, "blocks");
 
-  // --- Blog Post Page (rich content) ---
-  const blogPage = await prisma.page.upsert({
-    where: { siteId_slug: { siteId: site.id, slug: "building-better-websites" } },
-    update: {},
-    create: {
-      title: "Building Better Websites",
-      slug: "building-better-websites",
-      description: "An introduction to block-based editing and why it matters for modern web development.",
+  // ──────────────────────────────────────────────
+  // 8. PAGE 4 — Journal (Blog Post)
+  // ──────────────────────────────────────────────
+  const journalPage = await prisma.page.create({
+    data: {
+      title: "Why We Bet on Boring Technology",
+      slug: "journal",
+      description: "Our philosophy on choosing proven tools over shiny new ones, and why it matters for our clients.",
       status: "PUBLISHED",
       publishedAt: new Date(),
       showInNav: true,
       siteId: site.id,
-      sortOrder: 4,
+      sortOrder: 3,
+      metaTitle: "Why We Bet on Boring Technology — Atlas Creative",
     },
   });
 
-  await prisma.block.deleteMany({ where: { pageId: blogPage.id } });
-
-  const blogBlocks = [
+  const journalBlocks = [
     {
       type: "heading",
-      content: { text: "Building Better Websites with Block-Based Editing", level: 1 },
+      content: { text: "Why We Bet on Boring Technology", level: 1 },
       settings: {},
     },
     {
       type: "text",
-      content: { html: "<p><em>Published February 2026</em></p>" },
+      content: { html: "<p><em>Published February 2026 &bull; 7 min read</em></p>" },
       settings: {},
     },
     {
@@ -1015,61 +1175,139 @@ async function main() {
       settings: { style: "solid" },
     },
     {
+      type: "toc",
+      content: { maxDepth: 2, style: "boxed", ordered: false },
+      settings: {},
+    },
+    {
       type: "text",
       content: {
-        html: "<p>Block-based editors have revolutionized how we create web content. Instead of wrestling with raw HTML or complex WYSIWYG editors, blocks give you <strong>composable, predictable building elements</strong> that always render consistently.</p><p>Here's what makes them special:</p><ul><li>Each block has a single responsibility</li><li>Blocks can be rearranged with drag and drop</li><li>Settings are scoped to individual blocks</li><li>Content stays structured and semantic</li></ul>",
+        html: "<p>In an industry obsessed with the next big framework, we've built our entire practice on a contrarian bet: <strong>boring technology wins.</strong> Not always in blog posts or Twitter threads, but where it actually matters — in production, at scale, over years.</p><p>This isn't a Luddite manifesto. We love new tools. But after building 120+ projects, we've learned the hard way that novelty is a cost, not a feature.</p>",
       },
       settings: {},
     },
     {
       type: "heading",
-      content: { text: "The Power of Composition", level: 2 },
+      content: { text: "The Innovation Token Budget", level: 2 },
       settings: {},
     },
     {
       type: "text",
       content: {
-        html: "<p>The real magic happens when you combine blocks together. A simple landing page might use headings, text, buttons, and columns. A blog post adds quotes, code snippets, and images. The same building blocks, arranged differently, create entirely different experiences.</p>",
+        html: "<p>Dan McKinley coined the idea of \"innovation tokens\" — every team gets a limited number to spend on new, unproven technology. Spend them wisely on things that differentiate your product. Spend them foolishly on commodity problems, and you'll burn engineering hours debugging issues that the React/Next.js/PostgreSQL ecosystem solved years ago.</p><p>Our rule of thumb: <strong>use boring tools for commodity problems, save innovation for your unique value proposition.</strong> If your competitive advantage isn't \"we have a novel database,\" don't use a novel database.</p>",
       },
       settings: {},
     },
     {
       type: "quote",
       content: {
-        text: "The best tools are the ones that get out of your way and let you focus on creating.",
-        attribution: "Design Philosophy",
+        text: "The purpose of a system is what it does. If your system delivers value to users reliably, nobody cares whether you used the latest framework to build it.",
+        attribution: "Adapted from Stafford Beer's POSIWID principle",
+        style: "bordered",
       },
       settings: {},
     },
     {
       type: "heading",
-      content: { text: "Embedding Content", level: 2 },
+      content: { text: "Our Stack (and Why)", level: 2 },
       settings: {},
     },
     {
       type: "text",
       content: {
-        html: "<p>Modern websites need to embed external content seamlessly. Vellum supports video embeds from YouTube and Vimeo, custom HTML via code blocks, and rich social media links &mdash; all with proper sanitization and security.</p>",
+        html: "<p>Here's what we use for most client projects, and the reasoning behind each choice:</p>",
+      },
+      settings: {},
+    },
+    {
+      type: "columns",
+      content: {
+        columns: [
+          {
+            blocks: [
+              { id: "j1", type: "heading", content: { text: "Frontend", level: 3 }, settings: {} },
+              { id: "j2", type: "text", content: { html: "<p><strong>React + Next.js.</strong> Massive ecosystem, excellent TypeScript support, battle-tested performance patterns. Server Components eliminated most of our bundle size concerns. When a junior developer has a question, the answer is one Google search away.</p>" }, settings: {} },
+            ],
+          },
+          {
+            blocks: [
+              { id: "j3", type: "heading", content: { text: "Backend", level: 3 }, settings: {} },
+              { id: "j4", type: "text", content: { html: "<p><strong>Node.js + PostgreSQL + Prisma.</strong> This combination handles everything from simple CRUD to complex analytics queries. PostgreSQL's reliability record is decades long. Prisma gives us type-safe queries without writing raw SQL for the 90% case.</p>" }, settings: {} },
+            ],
+          },
+        ],
+      },
+      settings: { gap: "32px" },
+    },
+    {
+      type: "heading",
+      content: { text: "The Cost of Novelty", level: 2 },
+      settings: {},
+    },
+    {
+      type: "text",
+      content: {
+        html: "<p>We've seen the cost of chasing trends firsthand. A few real examples from our early days:</p><ul><li><strong>The \"cutting-edge\" CSS framework</strong> that was abandoned by its maintainer 6 months after we shipped. We spent 3 weeks migrating.</li><li><strong>The serverless database</strong> that looked amazing in demos but had cold start times that made our API unusable at 8 AM Monday mornings.</li><li><strong>The state management library</strong> with elegant abstractions that turned into debugging nightmares the moment we needed to handle optimistic updates with error recovery.</li></ul><p>Each of these cost us real money, real client frustration, and real credibility. We learned.</p>",
       },
       settings: {},
     },
     {
       type: "code",
       content: {
-        code: '<div style="padding: 2rem; background: #f8f9fa; border-radius: 8px; text-align: center;">\n  <h3>Custom HTML Embed</h3>\n  <p>Code blocks let you embed any safe HTML content directly into your pages.</p>\n</div>',
+        code: `<div style="padding: 1.5rem; background: #fef3c7; border-radius: 8px; font-family: system-ui; font-size: 0.9rem; line-height: 1.7; border-left: 4px solid #f59e0b;">
+<strong>Our Technology Decision Framework</strong>
+
+Before adopting any tool, we ask five questions:
+1. Has it been in production at scale for > 2 years?
+2. Is the community large enough to survive a core maintainer leaving?
+3. Can a mid-level developer be productive with it in < 1 week?
+4. Are the failure modes well-documented and understood?
+5. Does it solve a problem we actually have (not one we might have)?
+
+If the answer to any of these is "no," we need a very compelling reason to proceed.
+</div>`,
         language: "html",
       },
       settings: {},
     },
     {
       type: "heading",
-      content: { text: "What's Next?", level: 2 },
+      content: { text: "When We Do Innovate", level: 2 },
       settings: {},
     },
     {
       type: "text",
       content: {
-        html: "<p>Block-based editing is still evolving. Future improvements will include collaborative editing, version history, and even more block types. The foundation is solid &mdash; building on it is the exciting part.</p><p>Ready to try it yourself? <strong>Jump into the editor</strong> and start building.</p>",
+        html: "<p>Boring doesn't mean static. We do adopt new tools — carefully, deliberately, and for specific reasons:</p><ol><li><strong>React Server Components:</strong> Adopted after 18 months of maturity in Next.js. The bundle size and performance improvements were undeniable, and the mental model simplified our codebase.</li><li><strong>Edge deployment:</strong> We moved static assets and certain API routes to the edge once the tooling stabilized. The latency improvements for international clients were significant.</li><li><strong>AI-assisted code review:</strong> We use AI tools in our development workflow, but as assistants, not replacements. They catch bugs, suggest optimizations, and help with documentation.</li></ol><p>The common thread: each adoption happened after the technology proved itself in production elsewhere, not because it was trendy.</p>",
+      },
+      settings: {},
+    },
+    {
+      type: "heading",
+      content: { text: "The Takeaway", level: 2 },
+      settings: {},
+    },
+    {
+      type: "text",
+      content: {
+        html: "<p>Our clients don't hire us because of our tech stack. They hire us because we deliver reliable, well-crafted products on time and on budget. Boring technology is what makes that possible.</p><p>The next time someone pitches you a tool because it's \"the future,\" ask them: <strong>is it boring enough to bet your business on?</strong> If not, maybe wait until it is.</p>",
+      },
+      settings: {},
+    },
+    {
+      type: "spacer",
+      content: { height: 32 },
+      settings: {},
+    },
+    {
+      type: "divider",
+      content: {},
+      settings: { style: "solid" },
+    },
+    {
+      type: "text",
+      content: {
+        html: '<p><em>This is part of our ongoing series on how we work at Atlas Creative. Want to work with a team that values substance over hype? <a href="/s/atlas-studio/contact">Get in touch</a>.</em></p>',
       },
       settings: {},
     },
@@ -1086,18 +1324,217 @@ async function main() {
   ];
 
   await prisma.block.createMany({
-    data: blogBlocks.map((block, i) => ({
+    data: journalBlocks.map((block, i) => ({
       type: block.type,
       content: block.content,
       settings: block.settings,
       sortOrder: i,
-      pageId: blogPage.id,
+      pageId: journalPage.id,
     })),
   });
+  console.log("Created Journal page with", journalBlocks.length, "blocks");
 
-  console.log("Created demo pages with blocks (5 pages)");
-  console.log("\nSeed complete!");
-  console.log("Demo credentials: demo@vellum.app / password123");
+  // ──────────────────────────────────────────────
+  // 9. PAGE 5 — Contact
+  // ──────────────────────────────────────────────
+  const contactPage = await prisma.page.create({
+    data: {
+      title: "Contact",
+      slug: "contact",
+      status: "PUBLISHED",
+      publishedAt: new Date(),
+      showInNav: true,
+      siteId: site.id,
+      sortOrder: 4,
+      metaTitle: "Contact — Atlas Creative",
+    },
+  });
+
+  const contactBlocks = [
+    {
+      type: "heading",
+      content: { text: "Let's Build Something Great", level: 1 },
+      settings: { align: "center" },
+    },
+    {
+      type: "text",
+      content: {
+        html: "<p>Whether you have a detailed brief or just a spark of an idea, we'd love to hear from you. Every project starts with a conversation — no commitment required.</p>",
+      },
+      settings: { align: "center" },
+    },
+    {
+      type: "spacer",
+      content: { height: 32 },
+      settings: {},
+    },
+    {
+      type: "columns",
+      content: {
+        columns: [
+          {
+            blocks: [
+              { id: "ct1", type: "heading", content: { text: "Send Us a Message", level: 2 }, settings: {} },
+              { id: "ct2", type: "text", content: { html: "<p>Fill out the form and we'll get back to you within one business day. We respond to every inquiry personally — no automated replies, no sales bots.</p>" }, settings: {} },
+            ],
+          },
+          {
+            blocks: [
+              { id: "ct3", type: "heading", content: { text: "Other Ways to Reach Us", level: 2 }, settings: {} },
+              { id: "ct4", type: "text", content: { html: "<p><strong>Email</strong><br>hello@atlascreative.studio</p><p><strong>Phone</strong><br>+1 (415) 555-0132<br>Mon-Fri, 9 AM – 6 PM PST</p><p><strong>Office</strong><br>580 Howard Street, Suite 400<br>San Francisco, CA 94105</p>" }, settings: {} },
+            ],
+          },
+        ],
+      },
+      settings: { gap: "48px" },
+    },
+    {
+      type: "spacer",
+      content: { height: 16 },
+      settings: {},
+    },
+    {
+      type: "form",
+      content: {
+        fields: [
+          { id: "name", type: "text", label: "Your Name", required: true, placeholder: "Full name" },
+          { id: "email", type: "email", label: "Email Address", required: true, placeholder: "you@company.com" },
+          { id: "company", type: "text", label: "Company", required: false, placeholder: "Your company (optional)" },
+          { id: "interest", type: "select", label: "What are you looking for?", required: true, placeholder: "Select a service", options: ["Brand & Identity", "Web Design & Development", "Product Design", "Full-Stack Development", "Consulting & Audit", "Retainer Partnership", "Something Else"] },
+          { id: "budget", type: "select", label: "Approximate Budget", required: false, placeholder: "Select a range (optional)", options: ["Under $10K", "$10K – $25K", "$25K – $50K", "$50K – $100K", "$100K+", "Not sure yet"] },
+          { id: "message", type: "textarea", label: "Tell Us About Your Project", required: true, placeholder: "What are you building? What problem are you solving? What does success look like? The more context you share, the better our initial conversation will be." },
+        ],
+        submitText: "Send Message",
+        successMessage: "Thank you for reaching out! We've received your message and will get back to you within one business day.",
+      },
+      settings: {},
+    },
+    {
+      type: "spacer",
+      content: { height: 32 },
+      settings: {},
+    },
+    {
+      type: "divider",
+      content: {},
+      settings: { style: "solid" },
+    },
+    {
+      type: "heading",
+      content: { text: "Follow Our Work", level: 3 },
+      settings: { align: "center" },
+    },
+    {
+      type: "social",
+      content: {
+        links: [
+          { platform: "twitter", url: "https://twitter.com" },
+          { platform: "dribbble", url: "https://dribbble.com" },
+          { platform: "github", url: "https://github.com" },
+          { platform: "linkedin", url: "https://linkedin.com" },
+        ],
+      },
+      settings: { align: "center" },
+    },
+  ];
+
+  await prisma.block.createMany({
+    data: contactBlocks.map((block, i) => ({
+      type: block.type,
+      content: block.content,
+      settings: block.settings,
+      sortOrder: i,
+      pageId: contactPage.id,
+    })),
+  });
+  console.log("Created Contact page with", contactBlocks.length, "blocks");
+
+  // ──────────────────────────────────────────────
+  // 10. PAGE 6 — Case Studies (DRAFT — shows draft feature)
+  // ──────────────────────────────────────────────
+  const draftPage = await prisma.page.create({
+    data: {
+      title: "Case Studies",
+      slug: "case-studies",
+      status: "DRAFT",
+      showInNav: false,
+      siteId: site.id,
+      sortOrder: 5,
+    },
+  });
+
+  const draftBlocks = [
+    {
+      type: "heading",
+      content: { text: "Case Studies", level: 1 },
+      settings: { align: "center" },
+    },
+    {
+      type: "text",
+      content: {
+        html: "<p>Deep dives into our most impactful projects — the challenges, our approach, and the results. This page is currently being written and will be published soon.</p>",
+      },
+      settings: { align: "center" },
+    },
+    {
+      type: "spacer",
+      content: { height: 32 },
+      settings: {},
+    },
+    {
+      type: "heading",
+      content: { text: "Meridian Health — Product Redesign", level: 2 },
+      settings: {},
+    },
+    {
+      type: "text",
+      content: {
+        html: "<p><strong>Challenge:</strong> Meridian Health's wellness app had strong user acquisition but poor retention. Users signed up but stopped engaging after the first week.</p><p><strong>Our Approach:</strong> We conducted 30 user interviews, identified three core friction points in the onboarding flow, and redesigned the first-week experience from scratch. We introduced personalized goal-setting, habit streaks with social accountability, and a simplified dashboard that surfaces the most relevant data.</p><p><strong>Results:</strong> 7-day retention increased from 23% to 61%. Monthly active users grew by 40% within three months. The app was featured in the App Store's \"Apps We Love\" editorial.</p>",
+      },
+      settings: {},
+    },
+    {
+      type: "divider",
+      content: {},
+      settings: { style: "dashed" },
+    },
+    {
+      type: "heading",
+      content: { text: "CloudSync — SaaS Dashboard", level: 2 },
+      settings: {},
+    },
+    {
+      type: "text",
+      content: {
+        html: "<p><strong>Challenge:</strong> CloudSync's analytics dashboard had become a \"Frankenstein\" of features bolted on over four years. Users complained about information overload and couldn't find the data they needed.</p><p><strong>Our Approach:</strong> Rather than redesigning everything at once, we used analytics data to identify the 5 most-used features and the 15 least-used. We rebuilt the core experience around what users actually needed, progressively disclosed advanced features, and added a custom report builder for power users.</p><p><strong>Results:</strong> Average task completion time dropped by 35%. Support tickets related to \"can't find X\" decreased by 60%. NPS score improved from 32 to 67.</p>",
+      },
+      settings: {},
+    },
+  ];
+
+  await prisma.block.createMany({
+    data: draftBlocks.map((block, i) => ({
+      type: block.type,
+      content: block.content,
+      settings: block.settings,
+      sortOrder: i,
+      pageId: draftPage.id,
+    })),
+  });
+  console.log("Created Case Studies page (DRAFT) with", draftBlocks.length, "blocks");
+
+  // ──────────────────────────────────────────────
+  // Summary
+  // ──────────────────────────────────────────────
+  const totalBlocks = homeBlocks.length + aboutBlocks.length + servicesBlocks.length + journalBlocks.length + contactBlocks.length + draftBlocks.length;
+  console.log("\n────────────────────────────────────");
+  console.log("Seed complete!");
+  console.log("────────────────────────────────────");
+  console.log(`Site:   ${site.name} (/s/${site.slug})`);
+  console.log(`Pages:  6 (5 published + 1 draft)`);
+  console.log(`Blocks: ${totalBlocks} total`);
+  console.log(`Demo:   demo@vellum.app / password123`);
+  console.log("────────────────────────────────────");
 }
 
 main()

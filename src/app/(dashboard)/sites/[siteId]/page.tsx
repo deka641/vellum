@@ -69,6 +69,16 @@ export default function SiteDetailPage() {
   const [deletePageId, setDeletePageId] = useState<string | null>(null);
   const [permDeletePageId, setPermDeletePageId] = useState<string | null>(null);
   const [fetchError, setFetchError] = useState(false);
+  const [contentSearchResults, setContentSearchResults] = useState<Array<{
+    pageId: string;
+    pageTitle: string;
+    pageSlug: string;
+    status: string;
+    matchType: string;
+    snippet: string;
+  }> | null>(null);
+  const [contentSearching, setContentSearching] = useState(false);
+  const contentSearchTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     setFetchError(false);
@@ -302,6 +312,31 @@ export default function SiteDetailPage() {
     });
   }
 
+  function handleContentSearch(query: string) {
+    setSearchQuery(query);
+    setContentSearchResults(null);
+
+    if (contentSearchTimerRef.current) clearTimeout(contentSearchTimerRef.current);
+    if (query.trim().length < 3) return;
+
+    contentSearchTimerRef.current = setTimeout(async () => {
+      setContentSearching(true);
+      try {
+        const res = await fetch(
+          `/api/sites/${params.siteId}/search?q=${encodeURIComponent(query.trim())}`
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setContentSearchResults(data.results);
+        }
+      } catch {
+        // Silently fail — local filter still works
+      } finally {
+        setContentSearching(false);
+      }
+    }, 400);
+  }
+
   async function handleDuplicatePage(pageId: string) {
     try {
       const sourcePage = site?.pages.find((p) => p.id === pageId);
@@ -510,9 +545,9 @@ export default function SiteDetailPage() {
                 <input
                   className={styles.searchInput}
                   type="text"
-                  placeholder="Search pages..."
+                  placeholder="Search pages and content..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => handleContentSearch(e.target.value)}
                 />
               </div>
               <select
@@ -525,6 +560,36 @@ export default function SiteDetailPage() {
                 <option value="PUBLISHED">Published</option>
               </select>
             </div>
+            {contentSearching && (
+              <div className={styles.searchLoading}>Searching content...</div>
+            )}
+            {contentSearchResults && contentSearchResults.length > 0 && !contentSearching && (
+              <div className={styles.searchResults}>
+                <div className={styles.searchResultsHeader}>
+                  <span>Content matches ({contentSearchResults.length})</span>
+                  <button className={styles.contentSearchBtn} onClick={() => setContentSearchResults(null)}>
+                    Clear
+                  </button>
+                </div>
+                {contentSearchResults.map((r) => (
+                  <Link
+                    key={r.pageId}
+                    href={`/editor/${r.pageId}`}
+                    className={styles.searchResultItem}
+                  >
+                    <span className={styles.searchResultTitle}>{r.pageTitle}</span>
+                    <div className={styles.searchResultMeta}>
+                      <span className={styles.matchBadge}>{r.matchType}</span>
+                      <span>{r.status === "PUBLISHED" ? "Published" : "Draft"}</span>
+                    </div>
+                    <span className={styles.searchResultSnippet}>{r.snippet}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+            {contentSearchResults && contentSearchResults.length === 0 && !contentSearching && searchQuery.trim().length >= 3 && (
+              <div className={styles.searchLoading}>No content matches found</div>
+            )}
             <PageList
               pages={site.pages.filter((p) => {
                 const q = searchQuery.toLowerCase();

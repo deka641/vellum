@@ -1,7 +1,7 @@
 .nav {
   max-width: 1080px;
   margin: 0 auto;
-  padding: var(--space-3) var(--space-6) 0;
+  padding: var(--space-4) var(--space-6) 0;
 }
 
 .list {

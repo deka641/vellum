@@ -220,7 +220,7 @@ export const updatePageSchema = z.object({
 export const updateBlocksSchema = z.object({
   blocks: z.array(blockSchema).max(500).optional(),
   title: z.string().min(1).max(200).optional(),
-  expectedUpdatedAt: z.string().min(1),
+  expectedUpdatedAt: z.string().min(1).optional(),
 });
 
 // --- Media ---

@@ -35,9 +35,11 @@ export function useAutosave() {
       expectedUpdatedAt: state.lastSavedAt || new Date().toISOString(),
     };
 
-    // Skip optimistic locking when force-saving (conflict resolution)
+    // Skip optimistic locking when force-saving (conflict resolution).
+    // resolveConflictKeepLocal already updates lastSavedAt to the server's
+    // version, so this is a safety fallback for edge cases.
     if (forceNextSaveRef.current) {
-      body.expectedUpdatedAt = state.lastSavedAt || new Date().toISOString();
+      delete body.expectedUpdatedAt;
     }
     forceNextSaveRef.current = false;
 

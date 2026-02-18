@@ -43,6 +43,8 @@ function getShortcutGroups(): ShortcutGroup[] {
     {
       title: "Block actions",
       shortcuts: [
+        { label: "Copy block", keys: [mod, "C"] },
+        { label: "Paste block", keys: [mod, "V"] },
         { label: "Duplicate block", keys: [mod, "D"] },
         { label: "Delete block", keys: ["Delete / Backspace"] },
         { label: "Deselect block", keys: ["Escape"] },

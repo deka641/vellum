@@ -76,6 +76,8 @@ interface EditorState {
   updateColumnBlockSettings: (parentId: string, blockId: string, settings: Partial<BlockSettings>) => void;
   moveBlockInColumn: (parentId: string, colIndex: number, fromIndex: number, toIndex: number) => void;
 
+  copyBlock: (id: string) => void;
+  pasteBlock: () => void;
   undo: () => void;
   redo: () => void;
 }
@@ -302,11 +304,14 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     }),
 
   resolveConflictKeepLocal: () =>
-    set({
+    set((state) => ({
       conflict: null,
       isDirty: true,
       blocksDirty: true,
-    }),
+      // Update lastSavedAt to server's version so the next save's
+      // expectedUpdatedAt matches the current server state
+      lastSavedAt: state.conflict?.serverUpdatedAt ?? state.lastSavedAt,
+    })),
 
   duplicateBlock: (id) =>
     set((state) => {
@@ -367,6 +372,86 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     }),
 
   setPreviewMode: (mode) => set({ previewMode: mode }),
+
+  copyBlock: (id) => {
+    const state = get();
+    // Find block at top level
+    let block = state.blocks.find((b) => b.id === id);
+    // Search inside columns if not found
+    if (!block) {
+      for (const b of state.blocks) {
+        if (b.type !== "columns") continue;
+        const cols = (b.content as ColumnsContent).columns;
+        for (const col of cols) {
+          const found = col.blocks.find((cb) => cb.id === id);
+          if (found) { block = found; break; }
+        }
+        if (block) break;
+      }
+    }
+    if (!block) return;
+    try {
+      localStorage.setItem("vellum-clipboard", JSON.stringify(structuredClone(block)));
+    } catch {
+      // localStorage full or unavailable — silently ignore
+    }
+  },
+
+  pasteBlock: () =>
+    set((state) => {
+      let raw: string | null;
+      try {
+        raw = localStorage.getItem("vellum-clipboard");
+      } catch {
+        return state;
+      }
+      if (!raw) return state;
+
+      let parsed: EditorBlock;
+      try {
+        parsed = JSON.parse(raw) as EditorBlock;
+      } catch {
+        return state;
+      }
+      if (!parsed || !parsed.type || !parsed.id) return state;
+
+      // Clone with new IDs
+      function cloneBlock(block: EditorBlock): EditorBlock {
+        const cloned = structuredClone(block);
+        cloned.id = generateId();
+        if (cloned.type === "columns") {
+          const cols = cloned.content as ColumnsContent;
+          cols.columns = cols.columns.map((col) => ({
+            blocks: col.blocks.map(cloneBlock),
+          }));
+        }
+        return cloned;
+      }
+
+      const newBlock = cloneBlock(parsed);
+
+      // Insert after selected block, or at end
+      const newBlocks = [...state.blocks];
+      if (state.selectedBlockId) {
+        const idx = newBlocks.findIndex((b) => b.id === state.selectedBlockId);
+        if (idx !== -1) {
+          newBlocks.splice(idx + 1, 0, newBlock);
+        } else {
+          newBlocks.push(newBlock);
+        }
+      } else {
+        newBlocks.push(newBlock);
+      }
+
+      return {
+        blocks: newBlocks,
+        selectedBlockId: newBlock.id,
+        isDirty: true,
+        blocksDirty: true,
+        saveError: null,
+        ...pushHistory({ ...state, blocks: newBlocks }),
+      };
+    }),
 
   // Column-aware actions
   addBlockToColumn: (parentId, colIndex, type) =>

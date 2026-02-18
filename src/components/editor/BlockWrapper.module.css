@@ -74,6 +74,22 @@
   background: var(--color-bg-secondary);
 }
 
+.copyButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-md);
+  color: var(--color-text-tertiary);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.copyButton:hover {
+  color: var(--color-accent);
+  background: var(--color-bg-secondary);
+}
+
 .deleteButton {
   display: flex;
   align-items: center;

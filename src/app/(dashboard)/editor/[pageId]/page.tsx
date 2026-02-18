@@ -105,6 +105,34 @@ export default function EditorPage() {
           duplicateBlock(selectedBlockId);
         }
       }
+      if ((e.metaKey || e.ctrlKey) && e.key === "c") {
+        const target = e.target as HTMLElement;
+        const isEditing =
+          target.isContentEditable ||
+          target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.closest(".tiptap");
+        if (isEditing) return;
+        const { selectedBlockId, copyBlock } = useEditorStore.getState();
+        if (selectedBlockId) {
+          e.preventDefault();
+          copyBlock(selectedBlockId);
+        }
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === "v") {
+        const target = e.target as HTMLElement;
+        const isEditing =
+          target.isContentEditable ||
+          target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.closest(".tiptap");
+        if (isEditing) return;
+        const clipboard = localStorage.getItem("vellum-clipboard");
+        if (clipboard) {
+          e.preventDefault();
+          useEditorStore.getState().pasteBlock();
+        }
+      }
       if (e.altKey && (e.key === "ArrowUp" || e.key === "ArrowDown")) {
         const target = e.target as HTMLElement;
         const isEditing =
