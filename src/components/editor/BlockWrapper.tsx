@@ -17,14 +17,12 @@ interface BlockWrapperProps {
 
 export const BlockWrapper = memo(function BlockWrapper({ id, children }: BlockWrapperProps) {
   const isSelected = useEditorStore((s) => s.selectedBlockId === id);
-  const { isHidden, marginTop, marginBottom } = useEditorStore((s) => {
+  const isHidden = useEditorStore((s) => {
     const block = s.blocks.find((b) => b.id === id);
-    return {
-      isHidden: block?.settings.hidden === true,
-      marginTop: block?.settings.marginTop,
-      marginBottom: block?.settings.marginBottom,
-    };
+    return block?.settings.hidden === true;
   });
+  const marginTop = useEditorStore((s) => s.blocks.find((b) => b.id === id)?.settings.marginTop);
+  const marginBottom = useEditorStore((s) => s.blocks.find((b) => b.id === id)?.settings.marginBottom);
   const isExiting = useEditorStore((s) => s.exitingBlockIds.has(id));
   const isSettled = useEditorStore((s) => s.settledBlockId === id);
   const selectBlock = useEditorStore((s) => s.selectBlock);

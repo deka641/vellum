@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { LayoutTemplate, Trash2, Plus } from "lucide-react";
+import { LayoutTemplate, Trash2, Plus, RefreshCw, Eye } from "lucide-react";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { Card } from "@/components/ui/Card/Card";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { Button } from "@/components/ui/Button/Button";
 import { Skeleton } from "@/components/ui/Skeleton/Skeleton";
+import { useToast } from "@/components/ui/Toast/Toast";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +19,7 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/Dialog/Dialog";
+import { TemplatePreview } from "@/components/dashboard/TemplatePreview";
 import styles from "./templates.module.css";
 
 interface Template {
@@ -37,12 +39,17 @@ interface Site {
 
 export default function TemplatesPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
 
   // Delete state
   const [deleteTarget, setDeleteTarget] = useState<Template | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // Preview state
+  const [previewTarget, setPreviewTarget] = useState<Template | null>(null);
 
   // Use template state
   const [useTarget, setUseTarget] = useState<Template | null>(null);
@@ -52,24 +59,38 @@ export default function TemplatesPage() {
   const [creating, setCreating] = useState(false);
   const [useError, setUseError] = useState("");
 
-  useEffect(() => {
-    fetch("/api/templates")
-      .then((res) => res.json())
-      .then(setTemplates)
-      .finally(() => setLoading(false));
+  const fetchTemplates = useCallback(async () => {
+    setLoading(true);
+    setFetchError(false);
+    try {
+      const res = await fetch("/api/templates");
+      if (!res.ok) throw new Error("Failed to load templates");
+      const data = await res.json();
+      setTemplates(data);
+    } catch (err) {
+      console.error("Failed to fetch templates:", err);
+      setFetchError(true);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchTemplates();
+  }, [fetchTemplates]);
 
   async function handleDelete() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
       const res = await fetch(`/api/templates/${deleteTarget.id}`, { method: "DELETE" });
-      if (res.ok) {
-        setTemplates((prev) => prev.filter((t) => t.id !== deleteTarget.id));
-        setDeleteTarget(null);
-      }
-    } catch {
-      // silently fail
+      if (!res.ok) throw new Error("Delete failed");
+      setTemplates((prev) => prev.filter((t) => t.id !== deleteTarget.id));
+      setDeleteTarget(null);
+      toast("Template deleted", "info");
+    } catch (err) {
+      console.error("Failed to delete template:", err);
+      toast("Failed to delete template. Please try again.", "error");
     } finally {
       setDeleting(false);
     }
@@ -82,10 +103,17 @@ export default function TemplatesPage() {
     setUseError("");
     // Fetch sites
     fetch("/api/sites")
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load sites");
+        return res.json();
+      })
       .then((data: Site[]) => {
         setSites(data);
         if (data.length > 0) setSelectedSiteId(data[0].id);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch sites:", err);
+        setUseError("Failed to load sites. Please close and try again.");
       });
   }
 
@@ -138,6 +166,17 @@ export default function TemplatesPage() {
               <Skeleton key={i} height={200} />
             ))}
           </div>
+        ) : fetchError ? (
+          <div className={styles.empty}>
+            <div className={styles.emptyIconCircle}>
+              <LayoutTemplate size={28} strokeWidth={1.5} />
+            </div>
+            <h3>Failed to load templates</h3>
+            <p>Something went wrong. Please try again.</p>
+            <Button leftIcon={<RefreshCw size={16} />} onClick={fetchTemplates}>
+              Retry
+            </Button>
+          </div>
         ) : templates.length === 0 ? (
           <div className={styles.empty}>
             <div className={styles.emptyIconCircle}>
@@ -169,6 +208,14 @@ export default function TemplatesPage() {
                     </Badge>
                   </div>
                   <div className={styles.templateActions}>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      leftIcon={<Eye size={14} />}
+                      onClick={() => setPreviewTarget(template)}
+                    >
+                      Preview
+                    </Button>
                     <Button
                       size="sm"
                       variant="ghost"
@@ -215,6 +262,16 @@ export default function TemplatesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Template preview dialog */}
+      {previewTarget && (
+        <TemplatePreview
+          open={!!previewTarget}
+          onClose={() => setPreviewTarget(null)}
+          name={previewTarget.name}
+          blocks={previewTarget.blocks}
+        />
+      )}
 
       {/* Use template dialog */}
       <Dialog open={!!useTarget} onOpenChange={(open) => !open && setUseTarget(null)}>

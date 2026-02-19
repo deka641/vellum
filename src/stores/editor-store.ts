@@ -95,6 +95,9 @@ function pushHistory(state: EditorState): Partial<EditorState> {
 const CONTENT_HISTORY_DEBOUNCE = 500;
 let contentHistoryTimer: ReturnType<typeof setTimeout> | null = null;
 
+// Track pending remove-block timers so undo/redo can cancel them
+const pendingRemoveTimers = new Set<ReturnType<typeof setTimeout>>();
+
 export type BlockLocation =
   | { level: "top"; index: number }
   | { level: "column"; parentId: string; colIndex: number; index: number };
@@ -191,7 +194,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       };
     });
     // Actually remove after animation completes
-    setTimeout(() => {
+    const timer = setTimeout(() => {
+      pendingRemoveTimers.delete(timer);
       set((state) => {
         const newExiting = new Set(state.exitingBlockIds);
         newExiting.delete(id);
@@ -206,6 +210,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         };
       });
     }, 200);
+    pendingRemoveTimers.add(timer);
   },
 
   updateBlockContent: (id, content) => {
@@ -486,7 +491,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       };
     });
     // Actually remove after animation completes
-    setTimeout(() => {
+    const timer = setTimeout(() => {
+      pendingRemoveTimers.delete(timer);
       set((state) => {
         const newExiting = new Set(state.exitingBlockIds);
         newExiting.delete(blockId);
@@ -507,6 +513,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         };
       });
     }, 200);
+    pendingRemoveTimers.add(timer);
   },
 
   updateColumnBlockContent: (parentId, blockId, content) => {
@@ -579,7 +586,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     }
   },
 
-  undo: () =>
+  undo: () => {
+    // Cancel pending remove-block timers to prevent them from firing after undo
+    for (const timer of pendingRemoveTimers) clearTimeout(timer);
+    pendingRemoveTimers.clear();
     set((state) => {
       if (state.historyIndex <= 0) return state;
       const newIndex = state.historyIndex - 1;
@@ -588,10 +598,15 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         historyIndex: newIndex,
         isDirty: true,
         blocksDirty: true,
+        exitingBlockIds: new Set(),
       };
-    }),
+    });
+  },
 
-  redo: () =>
+  redo: () => {
+    // Cancel pending remove-block timers to prevent them from firing after redo
+    for (const timer of pendingRemoveTimers) clearTimeout(timer);
+    pendingRemoveTimers.clear();
     set((state) => {
       if (state.historyIndex >= state.history.length - 1) return state;
       const newIndex = state.historyIndex + 1;
@@ -600,6 +615,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         historyIndex: newIndex,
         isDirty: true,
         blocksDirty: true,
+        exitingBlockIds: new Set(),
       };
-    }),
+    });
+  },
 }));

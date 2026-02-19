@@ -37,6 +37,38 @@
   color: var(--color-text-tertiary);
 }
 
+.filterChips {
+  display: flex;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+}
+
+.filterChip {
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-secondary);
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.filterChip:hover {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+.filterChipActive {
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+}
+
+.filterChipActive:hover {
+  background: var(--color-accent-hover);
+  color: var(--color-text-inverse);
+}
+
 .noResults {
   text-align: center;
   padding: var(--space-4);

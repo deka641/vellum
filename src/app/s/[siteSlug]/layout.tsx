@@ -46,6 +46,7 @@ export default async function PublishedSiteLayout({ params, children }: Props) {
 
   return (
     <div className={styles.layout} style={themeVars as React.CSSProperties}>
+      <style>{`html{scroll-behavior:smooth}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}`}</style>
       <ReadingProgress />
       <a href="#main-content" className={styles.skipLink}>Skip to content</a>
       {site.favicon && <link rel="icon" href={sanitizeUrl(site.favicon)} />}

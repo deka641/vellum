@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import {
   Type,
   AlignLeft,
@@ -161,14 +161,37 @@ interface AddBlockMenuProps {
   onAdd: (type: BlockType) => void;
 }
 
+const ALL_CATEGORIES = [{ key: "all", label: "All" }, ...blockCategories] as const;
+
 export function AddBlockMenu({ onAdd }: AddBlockMenuProps) {
   const [filter, setFilter] = useState("");
+  const [activeCategory, setActiveCategory] = useState("all");
+  const inputRef = useRef<HTMLInputElement>(null);
   const lowerFilter = filter.toLowerCase();
 
-  const hasResults = blockCategories.some((cat) =>
-    Object.values(blockDefinitions).some(
-      (b) => b.category === cat.key && (!lowerFilter || b.label.toLowerCase().includes(lowerFilter))
-    )
+  const filteredBlocks = useMemo(() => {
+    return Object.values(blockDefinitions).filter((b) => {
+      if (activeCategory !== "all" && b.category !== activeCategory) return false;
+      if (lowerFilter && !b.label.toLowerCase().includes(lowerFilter)) return false;
+      return true;
+    });
+  }, [activeCategory, lowerFilter]);
+
+  const categoriesToShow = useMemo(() => {
+    if (activeCategory !== "all") {
+      return [blockCategories.find((c) => c.key === activeCategory)!];
+    }
+    return [...blockCategories];
+  }, [activeCategory]);
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Enter" && filteredBlocks.length > 0) {
+        e.preventDefault();
+        onAdd(filteredBlocks[0].type);
+      }
+    },
+    [filteredBlocks, onAdd]
   );
 
   return (
@@ -176,21 +199,34 @@ export function AddBlockMenu({ onAdd }: AddBlockMenuProps) {
       <div className={styles.searchWrapper}>
         <Search size={14} className={styles.searchIcon} />
         <input
+          ref={inputRef}
           className={styles.searchInput}
           type="text"
           placeholder="Search blocks..."
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
+          onKeyDown={handleKeyDown}
         />
       </div>
-      {blockCategories.map((cat) => {
-        const blocks = Object.values(blockDefinitions).filter(
-          (b) => b.category === cat.key && (!lowerFilter || b.label.toLowerCase().includes(lowerFilter))
-        );
+      <div className={styles.filterChips}>
+        {ALL_CATEGORIES.map((cat) => (
+          <button
+            key={cat.key}
+            className={`${styles.filterChip} ${activeCategory === cat.key ? styles.filterChipActive : ""}`}
+            onClick={() => setActiveCategory(cat.key)}
+          >
+            {cat.label}
+          </button>
+        ))}
+      </div>
+      {categoriesToShow.map((cat) => {
+        const blocks = filteredBlocks.filter((b) => b.category === cat.key);
         if (blocks.length === 0) return null;
         return (
           <div key={cat.key} className={styles.category}>
-            <span className={styles.categoryLabel}>{cat.label}</span>
+            {activeCategory === "all" && (
+              <span className={styles.categoryLabel}>{cat.label}</span>
+            )}
             <div className={styles.grid}>
               {blocks.map((block) => (
                 <button
@@ -209,8 +245,8 @@ export function AddBlockMenu({ onAdd }: AddBlockMenuProps) {
           </div>
         );
       })}
-      {!hasResults && filter && (
-        <p className={styles.noResults}>No blocks matching &ldquo;{filter}&rdquo;</p>
+      {filteredBlocks.length === 0 && (filter || activeCategory !== "all") && (
+        <p className={styles.noResults}>No blocks matching &ldquo;{filter || activeCategory}&rdquo;</p>
       )}
     </div>
   );

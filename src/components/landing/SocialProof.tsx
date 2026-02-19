@@ -8,7 +8,7 @@ import styles from "./landing.module.css";
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const stats = [
-  { icon: <Blocks size={20} />, value: 12, display: "12", label: "Block Types" },
+  { icon: <Blocks size={20} />, value: 14, display: "14", label: "Block Types" },
   { icon: <FileText size={20} />, value: null, display: "Unlimited", label: "Pages & Sites" },
   { icon: <Palette size={20} />, value: 6, display: "6", label: "Theme Presets" },
 ];

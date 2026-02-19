@@ -8,8 +8,12 @@ const MAX_RETRIES = 3;
 const BASE_DELAY = 2000;
 
 export function useAutosave() {
-  const { blocks, pageId, pageTitle, isDirty, blocksDirty, conflict, setDirty, setBlocksDirty, setSaving, setSaveError, setLastSavedAt, setConflict } =
-    useEditorStore();
+  // Only subscribe to values needed as reactive effect dependencies
+  const blocksDirty = useEditorStore((s) => s.blocksDirty);
+  const conflict = useEditorStore((s) => s.conflict);
+  const blocks = useEditorStore((s) => s.blocks);
+  const pageTitle = useEditorStore((s) => s.pageTitle);
+
   const { toast } = useToast();
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const retryCountRef = useRef(0);
@@ -24,10 +28,8 @@ export function useAutosave() {
   }, [blocksDirty, blocks, pageTitle]);
 
   const saveWithRetry = useCallback(async (): Promise<{ success: boolean; conflict?: boolean }> => {
-    if (!pageId) return { success: false };
-
-    // Read latest state directly from store — no stale refs
     const state = useEditorStore.getState();
+    if (!state.pageId) return { success: false };
 
     const body: Record<string, unknown> = {
       blocks: state.blocks,
@@ -36,14 +38,12 @@ export function useAutosave() {
     };
 
     // Skip optimistic locking when force-saving (conflict resolution).
-    // resolveConflictKeepLocal already updates lastSavedAt to the server's
-    // version, so this is a safety fallback for edge cases.
     if (forceNextSaveRef.current) {
       delete body.expectedUpdatedAt;
     }
     forceNextSaveRef.current = false;
 
-    const res = await fetch(`/api/pages/${pageId}/blocks`, {
+    const res = await fetch(`/api/pages/${state.pageId}/blocks`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -52,7 +52,6 @@ export function useAutosave() {
     if (res.status === 409) {
       const data = await res.json().catch(() => ({}));
       if (data.serverState && Array.isArray(data.serverState.blocks)) {
-        // Validate each block has required fields before putting in store
         const validBlocks = data.serverState.blocks.every(
           (b: unknown) =>
             b != null &&
@@ -61,7 +60,7 @@ export function useAutosave() {
             "type" in b && typeof (b as Record<string, unknown>).type === "string"
         );
         if (validBlocks && typeof data.serverState.title === "string" && typeof data.serverState.updatedAt === "string") {
-          setConflict({
+          useEditorStore.getState().setConflict({
             serverBlocks: data.serverState.blocks.map((b: { id: string; type: string; content: unknown; settings: unknown; parentId: string | null }) => ({
               id: b.id,
               type: b.type,
@@ -86,22 +85,22 @@ export function useAutosave() {
 
     const data = await res.json();
     if (data.updatedAt) {
-      setLastSavedAt(data.updatedAt);
+      useEditorStore.getState().setLastSavedAt(data.updatedAt);
     }
 
     return { success: true };
-  }, [pageId, setConflict, setLastSavedAt]);
+  }, []);
 
   const save = useCallback(async () => {
-    if (!pageId || isSavingRef.current) return;
+    const state = useEditorStore.getState();
+    if (!state.pageId || isSavingRef.current) return;
 
     isSavingRef.current = true;
-    setSaving(true);
+    state.setSaving(true);
 
     // Snapshot what we're about to save
-    const snapshotState = useEditorStore.getState();
-    const snapshotBlocks = snapshotState.blocks;
-    const snapshotTitle = snapshotState.pageTitle;
+    const snapshotBlocks = state.blocks;
+    const snapshotTitle = state.pageTitle;
 
     for (let attempt = 0; attempt <= MAX_RETRIES - 1; attempt++) {
       try {
@@ -110,20 +109,20 @@ export function useAutosave() {
         if (result.conflict) {
           toast("This page was modified in another session", "info");
           isSavingRef.current = false;
-          setSaving(false);
+          useEditorStore.getState().setSaving(false);
           return;
         }
 
         // Only clear dirty if store state hasn't diverged during save
         const currentState = useEditorStore.getState();
         if (currentState.blocks === snapshotBlocks && currentState.pageTitle === snapshotTitle) {
-          setDirty(false);
-          setBlocksDirty(false);
+          currentState.setDirty(false);
+          currentState.setBlocksDirty(false);
         }
-        setSaveError(null);
+        currentState.setSaveError(null);
         retryCountRef.current = 0;
         isSavingRef.current = false;
-        setSaving(false);
+        currentState.setSaving(false);
         return;
       } catch (err) {
         const message = err instanceof Error ? err.message : "Save failed";
@@ -134,14 +133,14 @@ export function useAutosave() {
           await new Promise((resolve) => setTimeout(resolve, delay));
         } else {
           toast(`Unable to save: ${message}`, "error");
-          setSaveError(message);
+          useEditorStore.getState().setSaveError(message);
         }
       }
     }
 
     isSavingRef.current = false;
-    setSaving(false);
-  }, [pageId, saveWithRetry, setDirty, setBlocksDirty, setSaving, setSaveError, toast]);
+    useEditorStore.getState().setSaving(false);
+  }, [saveWithRetry, toast]);
 
   const forceSave = useCallback(async () => {
     forceNextSaveRef.current = true;

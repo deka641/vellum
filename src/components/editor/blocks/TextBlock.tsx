@@ -34,6 +34,7 @@ export function TextBlock({ id, content, settings }: TextBlockProps) {
       }),
     ],
     content: content.html,
+    immediatelyRender: false,
     onUpdate: ({ editor }) => {
       isLocalUpdate.current = true;
       updateBlockContent(id, { html: editor.getHTML() });

@@ -20,8 +20,8 @@ export function Footer() {
             </div>
             <div className={styles.footerLinkGroup}>
               <h4 className={styles.footerLinkTitle}>Resources</h4>
-              <Link href="/register" className={styles.footerLink}>Templates</Link>
-              <Link href="/register" className={styles.footerLink}>Media Library</Link>
+              <Link href="#features" className={styles.footerLink}>Features</Link>
+              <Link href="/register" className={styles.footerLink}>Create Free Account</Link>
             </div>
             <div className={styles.footerLinkGroup}>
               <h4 className={styles.footerLinkTitle}>Legal</h4>

@@ -115,6 +115,11 @@
   background: var(--color-bg-secondary);
 }
 
+.navLink:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
 .navLinkActive {
   color: var(--color-accent);
   background: var(--color-accent-light);
@@ -141,6 +146,11 @@
 
 .menuButton:hover {
   background: var(--color-bg-secondary);
+}
+
+.menuButton:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
 }
 
 /* --- Mobile nav --- */
@@ -205,6 +215,12 @@
   color: var(--color-accent);
 }
 
+.footerLink:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
 .footerBrand {
   font-family: var(--font-body);
   font-size: var(--text-xs);
@@ -258,7 +274,22 @@
 .notFoundLink:hover {
   background: var(--color-accent-hover);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.06);
-  transform: translateY(-1px);
+}
+
+@media (hover: hover) {
+  .notFoundLink:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.notFoundLink:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.notFoundLink:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
 
 /* --- Responsive --- */

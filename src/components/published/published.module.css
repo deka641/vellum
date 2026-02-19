@@ -33,6 +33,22 @@
   color: var(--color-text-primary);
   letter-spacing: -0.025em;
   line-height: var(--leading-tight);
+  scroll-margin-top: 80px;
+}
+
+.heading:target {
+  animation: headingHighlight 1.2s ease-out;
+}
+
+@keyframes headingHighlight {
+  0%, 15% { background-color: var(--color-accent-light); }
+  100% { background-color: transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heading:target {
+    animation: none;
+  }
 }
 
 .heading[data-level="1"] {
@@ -170,7 +186,11 @@
 .btn-primary:hover {
   background: var(--color-accent-hover);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.06);
-  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
 .btn-secondary {
@@ -180,7 +200,10 @@
 
 .btn-secondary:hover {
   background: var(--color-bg-tertiary);
-  transform: translateY(-1px);
+}
+
+.btn-secondary:active {
+  transform: translateY(0);
 }
 
 .btn-outline {
@@ -191,7 +214,23 @@
 .btn-outline:hover {
   background: var(--color-accent);
   color: var(--color-text-inverse);
-  transform: translateY(-1px);
+}
+
+.btn-outline:active {
+  transform: translateY(0);
+}
+
+@media (hover: hover) {
+  .btn-primary:hover,
+  .btn-secondary:hover,
+  .btn-outline:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
 
 /* --- Divider --- */
@@ -378,7 +417,22 @@
 .formSubmit:hover:not(:disabled) {
   background: var(--color-accent-hover);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.06);
-  transform: translateY(-1px);
+}
+
+@media (hover: hover) {
+  .formSubmit:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+}
+
+.formSubmit:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.formSubmit:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
 
 .formSubmit:disabled {
@@ -417,6 +471,11 @@
 .formResetBtn:hover {
   background: var(--color-accent);
   color: var(--color-text-inverse);
+}
+
+.formResetBtn:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
 
 /* Form select */
@@ -542,7 +601,18 @@
 
 .socialLink:hover {
   color: var(--color-accent);
-  transform: translateY(-2px);
+}
+
+@media (hover: hover) {
+  .socialLink:hover {
+    transform: translateY(-2px);
+  }
+}
+
+.socialLink:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
 
 .socialPill {
@@ -557,7 +627,17 @@
 .socialPill:hover {
   border-color: var(--color-accent);
   background: var(--color-accent-light);
-  transform: translateY(-2px);
+}
+
+@media (hover: hover) {
+  .socialPill:hover {
+    transform: translateY(-2px);
+  }
+}
+
+.socialPill:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
 
 /* --- Accordion --- */
@@ -607,6 +687,11 @@
 
 .accordionSummary:hover {
   background: var(--color-bg-secondary);
+}
+
+.accordionSummary:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
 }
 
 .accordionSummary::-webkit-details-marker {
@@ -699,4 +784,16 @@ details[open] > .accordionSummary::after {
 
 .tocLink:hover {
   color: var(--color-accent);
+}
+
+.tocLink:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.text a:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
