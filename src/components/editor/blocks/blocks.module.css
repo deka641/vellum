@@ -297,7 +297,7 @@
   border-radius: var(--radius-md);
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .columns { grid-template-columns: 1fr; }
 }
 
@@ -651,6 +651,59 @@
 
 .formAddOption:hover {
   text-decoration: underline;
+}
+
+.formValidation {
+  padding: var(--space-1) var(--space-2);
+}
+
+.formValidationToggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: var(--space-1) 0;
+}
+
+.formValidationToggle:hover {
+  color: var(--color-accent);
+}
+
+.formValidationFields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+}
+
+.formValidationRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.formValidationLabel {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  min-width: 70px;
+}
+
+.formValidationInput {
+  font-size: var(--text-xs);
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  width: 70px;
+}
+
+.formValidationInput:focus {
+  outline: none;
+  border-color: var(--color-border-focus);
 }
 
 .formSettings {
@@ -1018,6 +1071,196 @@
 
 .accordionAddBtn:hover {
   background: var(--color-accent-light);
+}
+
+/* Table */
+.tableEditor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tableHeaderCell {
+  position: relative;
+  padding: 0;
+  background: var(--color-bg-secondary);
+  border-bottom: 2px solid var(--color-border);
+  border-right: 1px solid var(--color-border-light);
+}
+
+.tableHeaderCell:last-of-type {
+  border-right: none;
+}
+
+.tableCell {
+  padding: 0;
+  border-bottom: 1px solid var(--color-border-light);
+  border-right: 1px solid var(--color-border-light);
+}
+
+.tableCell:last-of-type {
+  border-right: none;
+}
+
+.tableCellInput {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  background: transparent;
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+  outline: none;
+}
+
+.tableCellInput:focus {
+  background: var(--color-accent-light);
+}
+
+.tableHeaderCell .tableCellInput {
+  font-weight: var(--weight-semibold);
+}
+
+.tableStripedRow {
+  background: var(--color-bg-secondary);
+}
+
+.tableRemoveColBtn {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-tertiary);
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.tableHeaderCell:hover .tableRemoveColBtn {
+  opacity: 1;
+}
+
+.tableRemoveColBtn:hover {
+  color: var(--color-error);
+  background: var(--color-error-light);
+}
+
+.tableAddColCell {
+  width: 36px;
+  padding: 0;
+  background: transparent;
+  border-bottom: 2px solid var(--color-border);
+}
+
+.tableAddColBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: var(--space-2);
+  color: var(--color-accent);
+}
+
+.tableAddColBtn:hover {
+  background: var(--color-accent-light);
+}
+
+.tableRowActions {
+  width: 28px;
+  padding: 0;
+  text-align: center;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.tableRemoveRowBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin: 0 auto;
+  color: var(--color-text-tertiary);
+  border-radius: var(--radius-sm);
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+tr:hover .tableRemoveRowBtn {
+  opacity: 1;
+}
+
+.tableRemoveRowBtn:hover {
+  color: var(--color-error);
+  background: var(--color-error-light);
+}
+
+.tableFooter {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.tableAddRowBtn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--color-accent);
+  border: 1px dashed var(--color-accent);
+  border-radius: var(--radius-sm);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.tableAddRowBtn:hover {
+  background: var(--color-accent-light);
+}
+
+.tableStripedToggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.tableStripedToggle input {
+  accent-color: var(--color-accent);
+}
+
+.tableCaptionInput {
+  font-size: var(--text-sm);
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.tableCaptionInput::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+.tableCaptionInput:focus {
+  outline: none;
+  border-color: var(--color-border-focus);
 }
 
 /* Table of Contents */

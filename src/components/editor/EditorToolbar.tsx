@@ -48,7 +48,7 @@ function useRelativeTime(dateStr: string | null): string {
 
   useEffect(() => {
     update();
-    const id = setInterval(update, 30_000);
+    const id = setInterval(update, 10_000);
     return () => clearInterval(id);
   }, [update]);
 

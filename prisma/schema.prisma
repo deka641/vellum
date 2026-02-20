@@ -20,18 +20,19 @@ model User {
 }
 
 model Site {
-  id          String   @id @default(cuid())
-  name        String
-  slug        String   @unique
-  description String?
-  favicon     String?
-  theme       Json     @default("{}")
-  footer      Json     @default("{}")
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  pages       Page[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                String   @id @default(cuid())
+  name              String
+  slug              String   @unique
+  description       String?
+  favicon           String?
+  notificationEmail String?
+  theme             Json     @default("{}")
+  footer            Json     @default("{}")
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pages             Page[]
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   @@index([userId])
 }

@@ -14,7 +14,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const rl = rateLimit(`submissions-get:${session.user.id}`, "mutation");
+    const rl = rateLimit(`submissions-get:${session.user.id}`, "read");
     if (!rl.success) return rateLimitResponse(rl);
 
     const { siteId } = await params;

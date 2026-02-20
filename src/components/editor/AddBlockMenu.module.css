@@ -283,6 +283,25 @@
   opacity: 0.5;
 }
 
+.previewTable {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+}
+
+.previewTableRow {
+  display: flex;
+  gap: 2px;
+}
+
+.previewTableCell {
+  flex: 1;
+  height: 6px;
+  background: var(--color-border);
+  border-radius: 1px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .blockButton {
     transition: none;

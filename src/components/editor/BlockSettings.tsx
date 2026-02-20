@@ -79,7 +79,7 @@ export function BlockSettings() {
     }
   };
 
-  const hasAlign = ["heading", "text", "button", "quote", "social"].includes(block.type);
+  const hasAlign = ["heading", "text", "button", "quote", "social", "divider"].includes(block.type);
   const hasStyle = ["heading", "text", "button", "image", "columns", "quote", "code", "divider", "video"].includes(block.type);
 
   return (
@@ -383,6 +383,47 @@ export function BlockSettings() {
                     clear
                   </button>
                 )}
+              </div>
+            </div>
+            <div className={styles.field}>
+              <label className={styles.label}>Thickness</label>
+              <div className={styles.buttonGroup}>
+                {([
+                  { label: "Thin", value: "1px" },
+                  { label: "Medium", value: "2px" },
+                  { label: "Thick", value: "4px" },
+                ] as const).map((t) => (
+                  <button
+                    key={t.label}
+                    className={`${styles.alignBtn} ${
+                      (block.settings.thickness || "1px") === t.value ? styles.active : ""
+                    }`}
+                    onClick={() => handleSettingsUpdate(block.id, { thickness: t.value })}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className={styles.field}>
+              <label className={styles.label}>Width</label>
+              <div className={styles.buttonGroup}>
+                {([
+                  { label: "Full", value: "" },
+                  { label: "75%", value: "75%" },
+                  { label: "50%", value: "50%" },
+                  { label: "25%", value: "25%" },
+                ] as const).map((w) => (
+                  <button
+                    key={w.label}
+                    className={`${styles.alignBtn} ${
+                      (block.settings.maxWidth || "") === w.value ? styles.active : ""
+                    }`}
+                    onClick={() => handleSettingsUpdate(block.id, { maxWidth: w.value || undefined })}
+                  >
+                    {w.label}
+                  </button>
+                ))}
               </div>
             </div>
           </>

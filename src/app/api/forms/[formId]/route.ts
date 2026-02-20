@@ -6,6 +6,8 @@ import { db } from "@/lib/db";
 import { rateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 import { apiError } from "@/lib/api-helpers";
 import { parseBody, formSubmissionSchema } from "@/lib/validations";
+import { notifyFormSubmission } from "@/lib/notify";
+import { logger } from "@/lib/logger";
 
 export async function POST(
   req: Request,
@@ -51,6 +53,7 @@ export async function POST(
     // Verify the page exists and is published
     const page = await db.page.findFirst({
       where: { id: pageId, status: "PUBLISHED" },
+      include: { site: { select: { name: true, notificationEmail: true } } },
     });
 
     if (!page) {
@@ -88,6 +91,16 @@ export async function POST(
         data: sanitizedData,
       },
     });
+
+    // Send notification email if configured
+    if (page.site?.notificationEmail) {
+      notifyFormSubmission({
+        to: page.site.notificationEmail,
+        siteName: page.site.name,
+        pageTitle: page.title,
+        data: sanitizedData,
+      }).catch((err) => logger.warn("form-notification", "Failed to send notification", err));
+    }
 
     revalidateTag("dashboard", { expire: 0 });
     return NextResponse.json({ id: submission.id }, { status: 201 });

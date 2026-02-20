@@ -19,7 +19,7 @@
   gap: var(--space-5);
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .page {
     padding: var(--space-8) var(--space-4);
   }
@@ -134,7 +134,7 @@
   margin-bottom: 0;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .text {
     line-height: 1.75;
   }
@@ -233,6 +233,11 @@
   outline-offset: 2px;
 }
 
+.btn-secondary:focus-visible,
+.btn-outline:focus-visible {
+  box-shadow: 0 0 0 4px var(--color-accent-muted);
+}
+
 /* --- Divider --- */
 
 .divider {
@@ -254,7 +259,7 @@
   gap: var(--space-3);
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .columns {
     grid-template-columns: 1fr !important;
     gap: var(--space-6) !important;
@@ -325,7 +330,7 @@
   content: "\2014\00a0";
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .quote {
     padding: var(--space-5) var(--space-5);
   }
@@ -376,10 +381,10 @@
               box-shadow var(--duration-fast) var(--ease-out);
 }
 
-.formInput:focus {
+.formInput:focus-visible {
   outline: none;
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px var(--color-accent-light);
+  box-shadow: 0 0 0 3px var(--color-accent-muted);
 }
 
 .formTextarea {
@@ -396,13 +401,16 @@
               box-shadow var(--duration-fast) var(--ease-out);
 }
 
-.formTextarea:focus {
+.formTextarea:focus-visible {
   outline: none;
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px var(--color-accent-light);
+  box-shadow: 0 0 0 3px var(--color-accent-muted);
 }
 
 .formSubmit {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
   align-self: flex-start;
   padding: 0.8rem var(--space-8);
   font-size: var(--text-base);
@@ -438,6 +446,28 @@
 .formSubmit:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.formSpinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--color-text-inverse);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: formSpin 0.6s linear infinite;
+}
+
+@keyframes formSpin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .formSpinner {
+    animation: none;
+    border-top-color: var(--color-text-inverse);
+    opacity: 0.5;
+  }
 }
 
 .formNote {
@@ -491,10 +521,10 @@
               box-shadow var(--duration-fast) var(--ease-out);
 }
 
-.formSelect:focus {
+.formSelect:focus-visible {
   outline: none;
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px var(--color-accent-light);
+  box-shadow: 0 0 0 3px var(--color-accent-muted);
 }
 
 .formError {
@@ -507,7 +537,7 @@
   border-color: var(--color-error) !important;
 }
 
-.formInputError:focus {
+.formInputError:focus-visible {
   border-color: var(--color-error) !important;
   box-shadow: 0 0 0 3px var(--color-error-light);
 }
@@ -558,7 +588,7 @@
   overflow: hidden;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .formBlock {
     padding: var(--space-5);
   }
@@ -796,4 +826,57 @@ details[open] > .accordionSummary::after {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
+}
+
+/* --- Table --- */
+
+.tableContainer {
+  margin: 0;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+}
+
+.tableHeader {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-primary);
+  background: var(--color-bg-secondary);
+  border-bottom: 2px solid var(--color-border);
+}
+
+.tableCell {
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-text-primary);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.tableStriped tbody tr:nth-child(even) {
+  background: var(--color-bg-secondary);
+}
+
+.tableCaption {
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  font-style: italic;
+  color: var(--color-text-tertiary);
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .tableContainer {
+    margin-left: calc(-1 * var(--space-4));
+    margin-right: calc(-1 * var(--space-4));
+  }
+
+  .tableHeader,
+  .tableCell {
+    padding: var(--space-2) var(--space-3);
+  }
 }

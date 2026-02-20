@@ -5,6 +5,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Trash2, Copy, Clipboard, Eye, EyeOff } from "lucide-react";
 import { useEditorStore } from "@/stores/editor-store";
+import { useShallow } from "zustand/react/shallow";
 import { useToast } from "@/components/ui/Toast/Toast";
 import { ErrorBoundary, BlockErrorFallback } from "@/components/ErrorBoundary";
 import { cn } from "@/lib/utils";
@@ -17,12 +18,16 @@ interface BlockWrapperProps {
 
 export const BlockWrapper = memo(function BlockWrapper({ id, children }: BlockWrapperProps) {
   const isSelected = useEditorStore((s) => s.selectedBlockId === id);
-  const isHidden = useEditorStore((s) => {
-    const block = s.blocks.find((b) => b.id === id);
-    return block?.settings.hidden === true;
-  });
-  const marginTop = useEditorStore((s) => s.blocks.find((b) => b.id === id)?.settings.marginTop);
-  const marginBottom = useEditorStore((s) => s.blocks.find((b) => b.id === id)?.settings.marginBottom);
+  const { isHidden, marginTop, marginBottom } = useEditorStore(
+    useShallow((s) => {
+      const block = s.blocks.find((b) => b.id === id);
+      return {
+        isHidden: block?.settings.hidden === true,
+        marginTop: block?.settings.marginTop as string | undefined,
+        marginBottom: block?.settings.marginBottom as string | undefined,
+      };
+    })
+  );
   const isExiting = useEditorStore((s) => s.exitingBlockIds.has(id));
   const isSettled = useEditorStore((s) => s.settledBlockId === id);
   const selectBlock = useEditorStore((s) => s.selectBlock);

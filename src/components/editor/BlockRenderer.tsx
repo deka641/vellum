@@ -1,6 +1,6 @@
 "use client";
 
-import type { EditorBlock, HeadingContent, TextContent, ImageContent, ButtonContent, SpacerContent, DividerContent, ColumnsContent, VideoContent, QuoteContent, FormContent, CodeContent, SocialContent, AccordionContent, TocContent } from "@/types/blocks";
+import type { EditorBlock, HeadingContent, TextContent, ImageContent, ButtonContent, SpacerContent, DividerContent, ColumnsContent, VideoContent, QuoteContent, FormContent, CodeContent, SocialContent, AccordionContent, TocContent, TableContent } from "@/types/blocks";
 import { ErrorBoundary, BlockErrorFallback } from "@/components/ErrorBoundary";
 import { useEditorStore } from "@/stores/editor-store";
 import {
@@ -18,6 +18,7 @@ import {
   SocialBlock,
   AccordionBlock,
   TocBlock,
+  TableBlock,
 } from "./blocks";
 
 interface BlockRendererProps {
@@ -54,6 +55,8 @@ function BlockContent({ block }: BlockRendererProps) {
       return <AccordionBlock id={block.id} content={block.content as AccordionContent} settings={block.settings} />;
     case "toc":
       return <TocBlock id={block.id} content={block.content as TocContent} settings={block.settings} />;
+    case "table":
+      return <TableBlock id={block.id} content={block.content as TableContent} settings={block.settings} />;
     default:
       return <div>Unknown block type: {block.type}</div>;
   }

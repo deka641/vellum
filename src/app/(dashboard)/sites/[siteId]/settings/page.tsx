@@ -24,6 +24,7 @@ export default function SiteSettingsPage() {
   const [footerText, setFooterText] = useState("");
   const [footerLinks, setFooterLinks] = useState<{ label: string; url: string }[]>([]);
   const [showBranding, setShowBranding] = useState(true);
+  const [notificationEmail, setNotificationEmail] = useState("");
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [uploadingFavicon, setUploadingFavicon] = useState(false);
@@ -39,6 +40,7 @@ export default function SiteSettingsPage() {
         setFavicon(site.favicon || null);
         const parsed = parseSiteTheme(site.theme);
         if (parsed) setTheme(parsed);
+        setNotificationEmail(site.notificationEmail || "");
         if (site.footer && typeof site.footer === "object") {
           const f = site.footer as { text?: string; links?: { label: string; url: string }[]; showBranding?: boolean };
           setFooterText(f.text || "");
@@ -82,6 +84,7 @@ export default function SiteSettingsPage() {
           description,
           theme,
           favicon,
+          notificationEmail: notificationEmail.trim() || null,
           footer: {
             text: footerText || undefined,
             links: footerLinks.filter((l) => l.label && l.url),
@@ -139,6 +142,13 @@ export default function SiteSettingsPage() {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
+          />
+          <Input
+            label="Notification email"
+            type="email"
+            value={notificationEmail}
+            onChange={(e) => setNotificationEmail(e.target.value)}
+            placeholder="Receive form submissions at this email"
           />
 
           <div className={styles.faviconSection}>

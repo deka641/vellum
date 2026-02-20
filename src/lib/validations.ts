@@ -32,13 +32,14 @@ const blockTypeEnum = z.enum([
   "social",
   "accordion",
   "toc",
+  "table",
 ]);
 
 // Allowlisted block setting keys and safe value patterns
 const ALLOWED_SETTING_KEYS = new Set([
   "textColor", "backgroundColor", "fontSize", "paddingY", "paddingX",
   "marginTop", "marginBottom", "hidden", "align", "style", "color",
-  "gap", "rounded", "shadow", "aspectRatio",
+  "gap", "rounded", "shadow", "aspectRatio", "thickness", "maxWidth",
 ]);
 
 const safeCssValuePattern = /^[a-zA-Z0-9#.,% ()_-]+$/;
@@ -74,6 +75,7 @@ const codeContentSchema = z.object({ code: z.string().optional(), language: z.st
 const socialContentSchema = z.object({ links: z.array(z.object({ platform: z.string(), url: z.string() }).passthrough()).optional() }).passthrough();
 const accordionContentSchema = z.object({ items: z.array(z.object({ id: z.string(), title: z.string(), content: z.string() }).passthrough()).optional() }).passthrough();
 const tocContentSchema = z.object({}).passthrough();
+const tableContentSchema = z.object({ headers: z.array(z.string()).optional(), rows: z.array(z.array(z.string())).optional(), caption: z.string().optional(), striped: z.boolean().optional() }).passthrough();
 
 const blockContentByType: Record<string, z.ZodType> = {
   heading: headingContentSchema,
@@ -90,6 +92,7 @@ const blockContentByType: Record<string, z.ZodType> = {
   social: socialContentSchema,
   accordion: accordionContentSchema,
   toc: tocContentSchema,
+  table: tableContentSchema,
 };
 
 interface ParsedBlock {
@@ -172,6 +175,7 @@ export const updateSiteSchema = z.object({
   theme: siteThemeSchema.optional(),
   favicon: z.string().max(2000).nullable().optional(),
   footer: siteFooterSchema.optional(),
+  notificationEmail: z.string().email().max(254).nullable().optional(),
 });
 
 // --- Pages ---
@@ -305,7 +309,7 @@ export const resetPasswordSchema = z.object({
 
 // --- Block hierarchy validation ---
 
-export const DISALLOWED_NESTED_TYPES = ["columns", "form", "video"];
+export const DISALLOWED_NESTED_TYPES = ["columns", "form", "video", "table"];
 
 interface BlockLike {
   type: string;

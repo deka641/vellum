@@ -165,6 +165,11 @@ export function PublishedBlock({ block, pageId, allBlocks }: PublishedBlockProps
           style={{
             borderStyle: (settings.style as CSSProperties["borderStyle"]) || "solid",
             borderColor: (settings.color as string) || "var(--color-border)",
+            borderTopWidth: (settings.thickness as string) || "1px",
+            maxWidth: (settings.maxWidth as string) || "100%",
+            margin: settings.align === "center" ? "var(--space-6) auto" :
+                    settings.align === "right" ? "var(--space-6) 0 var(--space-6) auto" :
+                    "var(--space-6) 0",
           }}
         />
       );
@@ -350,6 +355,39 @@ export function PublishedBlock({ block, pageId, allBlocks }: PublishedBlockProps
             </details>
           ))}
         </div>
+      );
+    }
+
+    case "table": {
+      const headers = (content.headers || []) as string[];
+      const tableRows = (content.rows || []) as string[][];
+      const caption = content.caption as string | undefined;
+      const striped = content.striped !== false;
+      if (headers.length === 0 && tableRows.length === 0) return null;
+      return (
+        <figure className={styles.tableContainer} style={extraStyle}>
+          <table className={`${styles.table} ${striped ? styles.tableStriped : ""}`}>
+            {headers.length > 0 && (
+              <thead>
+                <tr>
+                  {headers.map((h, i) => (
+                    <th key={i} className={styles.tableHeader}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+            )}
+            <tbody>
+              {tableRows.map((row, ri) => (
+                <tr key={ri}>
+                  {row.map((cell, ci) => (
+                    <td key={ci} className={styles.tableCell}>{cell}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {caption && <figcaption className={styles.tableCaption}>{caption}</figcaption>}
+        </figure>
       );
     }
 

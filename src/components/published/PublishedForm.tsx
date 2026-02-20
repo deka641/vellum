@@ -10,6 +10,12 @@ interface FormField {
   required: boolean;
   placeholder?: string;
   options?: string[];
+  minLength?: number;
+  maxLength?: number;
+  min?: number;
+  max?: number;
+  pattern?: string;
+  patternMessage?: string;
 }
 
 interface PublishedFormProps {
@@ -39,8 +45,48 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
         continue;
       }
 
-      if (field.type === "email" && value && !EMAIL_REGEX.test(value)) {
+      if (!value) continue;
+
+      if (field.type === "email" && !EMAIL_REGEX.test(value)) {
         errors[field.id] = "Please enter a valid email address";
+        continue;
+      }
+
+      if (field.minLength && value.length < field.minLength) {
+        errors[field.id] = `Must be at least ${field.minLength} characters`;
+        continue;
+      }
+
+      if (field.maxLength && value.length > field.maxLength) {
+        errors[field.id] = `Must be no more than ${field.maxLength} characters`;
+        continue;
+      }
+
+      if (field.type === "number") {
+        const num = parseFloat(value);
+        if (isNaN(num)) {
+          errors[field.id] = "Please enter a valid number";
+          continue;
+        }
+        if (field.min !== undefined && num < field.min) {
+          errors[field.id] = `Must be at least ${field.min}`;
+          continue;
+        }
+        if (field.max !== undefined && num > field.max) {
+          errors[field.id] = `Must be no more than ${field.max}`;
+          continue;
+        }
+      }
+
+      if (field.pattern) {
+        try {
+          const regex = new RegExp(field.pattern);
+          if (!regex.test(value)) {
+            errors[field.id] = field.patternMessage || "Invalid format";
+          }
+        } catch {
+          // Invalid regex — skip validation
+        }
       }
     }
     return errors;
@@ -154,6 +200,8 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
               aria-invalid={hasError || undefined}
               aria-describedby={hasError ? errorId : undefined}
               onChange={() => clearFieldError(field.id)}
+              {...(field.minLength ? { minLength: field.minLength } : {})}
+              {...(field.maxLength ? { maxLength: field.maxLength } : {})}
             />
             {hasError && <span id={errorId} className={styles.formError} role="alert">{fieldErrors[field.id]}</span>}
           </>
@@ -228,6 +276,11 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
               aria-invalid={hasError || undefined}
               aria-describedby={hasError ? errorId : undefined}
               onChange={() => clearFieldError(field.id)}
+              {...(field.minLength ? { minLength: field.minLength } : {})}
+              {...(field.maxLength ? { maxLength: field.maxLength } : {})}
+              {...(field.type === "number" && field.min !== undefined ? { min: field.min } : {})}
+              {...(field.type === "number" && field.max !== undefined ? { max: field.max } : {})}
+              {...(field.pattern ? { pattern: field.pattern } : {})}
             />
             {hasError && <span id={errorId} className={styles.formError} role="alert">{fieldErrors[field.id]}</span>}
           </>
@@ -252,7 +305,14 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
       ))}
       {error && <p role="alert" style={{ color: "var(--color-error)", fontSize: "var(--text-sm)" }}>{error}</p>}
       <button type="submit" className={styles.formSubmit} disabled={submitting}>
-        {submitting ? "Submitting..." : submitText || "Submit"}
+        {submitting ? (
+          <>
+            <span className={styles.formSpinner} aria-hidden="true" />
+            Submitting...
+          </>
+        ) : (
+          submitText || "Submit"
+        )}
       </button>
     </form>
   );

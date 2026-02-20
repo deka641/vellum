@@ -15,6 +15,7 @@ const PRESETS = {
   mutation: { limit: 30, windowMs: 60 * 1000 },         // 30 req / 1 min
   autosave: { limit: 60, windowMs: 60 * 1000 },         // 60 req / 1 min
   upload: { limit: 20, windowMs: 60 * 1000 },           // 20 req / 1 min
+  read: { limit: 60, windowMs: 60 * 1000 },             // 60 req / 1 min
 } as const;
 
 export type RateLimitPreset = keyof typeof PRESETS;

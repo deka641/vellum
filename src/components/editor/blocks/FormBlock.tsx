@@ -14,7 +14,8 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Plus, Trash2, GripVertical } from "lucide-react";
+import { useState } from "react";
+import { Plus, Trash2, GripVertical, ChevronDown, ChevronUp } from "lucide-react";
 import { useEditorStore } from "@/stores/editor-store";
 import { generateId } from "@/lib/utils";
 import type { FormContent, FormField } from "@/types/blocks";
@@ -104,7 +105,13 @@ export function FormBlock({ id, content }: FormBlockProps) {
     updateField(fieldId, { options: (field.options || []).filter((_, i) => i !== optionIndex) });
   }
 
+  const [expandedValidation, setExpandedValidation] = useState<string | null>(null);
+
   const hasOptions = (type: string) => type === "select" || type === "radio";
+  const hasLengthValidation = (type: string) => ["text", "email", "textarea", "tel"].includes(type);
+  const hasRangeValidation = (type: string) => type === "number";
+  const hasPatternValidation = (type: string) => ["text", "tel"].includes(type);
+  const hasValidation = (type: string) => hasLengthValidation(type) || hasRangeValidation(type) || hasPatternValidation(type);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
@@ -215,6 +222,96 @@ export function FormBlock({ id, content }: FormBlockProps) {
                     <Plus size={12} />
                     Add option
                   </button>
+                </div>
+              )}
+              {hasValidation(field.type) && (
+                <div className={styles.formValidation}>
+                  <button
+                    className={styles.formValidationToggle}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setExpandedValidation(expandedValidation === field.id ? null : field.id);
+                    }}
+                  >
+                    Validation
+                    {expandedValidation === field.id ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                  </button>
+                  {expandedValidation === field.id && (
+                    <div className={styles.formValidationFields}>
+                      {hasLengthValidation(field.type) && (
+                        <div className={styles.formValidationRow}>
+                          <label className={styles.formValidationLabel}>Min length</label>
+                          <input
+                            type="number"
+                            className={styles.formValidationInput}
+                            value={field.minLength ?? ""}
+                            onChange={(e) => updateField(field.id, { minLength: e.target.value ? parseInt(e.target.value, 10) : undefined })}
+                            placeholder="0"
+                            min={0}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                          <label className={styles.formValidationLabel}>Max length</label>
+                          <input
+                            type="number"
+                            className={styles.formValidationInput}
+                            value={field.maxLength ?? ""}
+                            onChange={(e) => updateField(field.id, { maxLength: e.target.value ? parseInt(e.target.value, 10) : undefined })}
+                            placeholder="None"
+                            min={1}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                      )}
+                      {hasRangeValidation(field.type) && (
+                        <div className={styles.formValidationRow}>
+                          <label className={styles.formValidationLabel}>Min value</label>
+                          <input
+                            type="number"
+                            className={styles.formValidationInput}
+                            value={field.min ?? ""}
+                            onChange={(e) => updateField(field.id, { min: e.target.value ? parseFloat(e.target.value) : undefined })}
+                            placeholder="None"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                          <label className={styles.formValidationLabel}>Max value</label>
+                          <input
+                            type="number"
+                            className={styles.formValidationInput}
+                            value={field.max ?? ""}
+                            onChange={(e) => updateField(field.id, { max: e.target.value ? parseFloat(e.target.value) : undefined })}
+                            placeholder="None"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                      )}
+                      {hasPatternValidation(field.type) && (
+                        <>
+                          <div className={styles.formValidationRow}>
+                            <label className={styles.formValidationLabel}>Pattern (regex)</label>
+                            <input
+                              className={styles.formValidationInput}
+                              style={{ flex: 1 }}
+                              value={field.pattern ?? ""}
+                              onChange={(e) => updateField(field.id, { pattern: e.target.value || undefined })}
+                              placeholder="e.g. ^[0-9]+$"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </div>
+                          <div className={styles.formValidationRow}>
+                            <label className={styles.formValidationLabel}>Error message</label>
+                            <input
+                              className={styles.formValidationInput}
+                              style={{ flex: 1 }}
+                              value={field.patternMessage ?? ""}
+                              onChange={(e) => updateField(field.id, { patternMessage: e.target.value || undefined })}
+                              placeholder="Invalid format"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </SortableFormField>

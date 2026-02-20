@@ -265,6 +265,12 @@ function sanitizeBlockContent(block: BlockLike): BlockLike {
           placeholder: typeof field.placeholder === "string"
             ? sanitize(field.placeholder, { allowedTags: [], allowedAttributes: {} })
             : field.placeholder,
+          pattern: typeof field.pattern === "string" && field.pattern.length <= 200
+            ? field.pattern
+            : undefined,
+          patternMessage: typeof field.patternMessage === "string"
+            ? sanitize(field.patternMessage, { allowedTags: [], allowedAttributes: {} }).slice(0, 200)
+            : undefined,
         }));
       }
       if (typeof content.submitText === "string") {
@@ -303,6 +309,24 @@ function sanitizeBlockContent(block: BlockLike): BlockLike {
             ? sanitizeRichHtml(item.content)
             : "",
         }));
+      }
+      break;
+
+    case "table":
+      if (Array.isArray(content.headers)) {
+        content.headers = (content.headers as string[]).map((h) =>
+          typeof h === "string" ? sanitize(h, { allowedTags: [], allowedAttributes: {} }) : ""
+        );
+      }
+      if (Array.isArray(content.rows)) {
+        content.rows = (content.rows as string[][]).map((row) =>
+          Array.isArray(row) ? row.map((cell) =>
+            typeof cell === "string" ? sanitize(cell, { allowedTags: [], allowedAttributes: {} }) : ""
+          ) : []
+        );
+      }
+      if (typeof content.caption === "string") {
+        content.caption = sanitize(content.caption, { allowedTags: [], allowedAttributes: {} });
       }
       break;
   }

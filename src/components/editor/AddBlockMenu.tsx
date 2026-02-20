@@ -17,6 +17,7 @@ import {
   Search,
   ChevronDown,
   List,
+  Table,
 } from "lucide-react";
 import { type BlockType } from "@/types/blocks";
 import { blockDefinitions, blockCategories } from "@/lib/blocks";
@@ -37,6 +38,7 @@ const iconMap: Record<string, React.ReactNode> = {
   Share2: <Share2 size={20} />,
   ChevronDown: <ChevronDown size={20} />,
   List: <List size={20} />,
+  Table: <Table size={20} />,
 };
 
 function BlockPreview({ type }: { type: string }) {
@@ -150,6 +152,23 @@ function BlockPreview({ type }: { type: string }) {
           <div className={styles.previewTocLine} />
           <div className={styles.previewTocLine} style={{ marginLeft: "6px", width: "60%" }} />
           <div className={styles.previewTocLine} style={{ width: "55%" }} />
+        </div>
+      );
+    case "table":
+      return (
+        <div className={styles.preview}>
+          <div className={styles.previewTable}>
+            <div className={styles.previewTableRow}>
+              <div className={styles.previewTableCell} style={{ background: "var(--color-text-tertiary)", opacity: 0.5 }} />
+              <div className={styles.previewTableCell} style={{ background: "var(--color-text-tertiary)", opacity: 0.5 }} />
+              <div className={styles.previewTableCell} style={{ background: "var(--color-text-tertiary)", opacity: 0.5 }} />
+            </div>
+            <div className={styles.previewTableRow}>
+              <div className={styles.previewTableCell} />
+              <div className={styles.previewTableCell} />
+              <div className={styles.previewTableCell} />
+            </div>
+          </div>
         </div>
       );
     default:

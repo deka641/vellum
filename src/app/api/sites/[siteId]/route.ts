@@ -83,6 +83,7 @@ export async function PATCH(
         ...(parsed.data.theme !== undefined && { theme: parsed.data.theme }),
         ...(parsed.data.favicon !== undefined && { favicon: parsed.data.favicon ? sanitizeUrl(parsed.data.favicon) : parsed.data.favicon }),
         ...(parsed.data.footer !== undefined && { footer: parsed.data.footer }),
+        ...(parsed.data.notificationEmail !== undefined && { notificationEmail: parsed.data.notificationEmail }),
       },
     });
 

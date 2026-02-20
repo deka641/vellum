@@ -12,7 +12,8 @@ export type BlockType =
   | "code"
   | "social"
   | "accordion"
-  | "toc";
+  | "toc"
+  | "table";
 
 export interface HeadingContent {
   text: string;
@@ -72,6 +73,12 @@ export interface FormField {
   required: boolean;
   placeholder?: string;
   options?: string[];
+  minLength?: number;
+  maxLength?: number;
+  min?: number;
+  max?: number;
+  pattern?: string;
+  patternMessage?: string;
 }
 
 export interface CodeContent {
@@ -107,6 +114,13 @@ export interface TocContent {
   ordered: boolean;
 }
 
+export interface TableContent {
+  headers: string[];
+  rows: string[][];
+  caption?: string;
+  striped: boolean;
+}
+
 export interface FormContent {
   fields: FormField[];
   submitText: string;
@@ -127,13 +141,15 @@ export type BlockContent =
   | CodeContent
   | SocialContent
   | AccordionContent
-  | TocContent;
+  | TocContent
+  | TableContent;
 
 export interface BlockSettings {
   align?: "left" | "center" | "right";
   color?: string;
   maxWidth?: string;
   width?: string;
+  thickness?: string;
   aspectRatio?: string;
   rounded?: boolean;
   shadow?: boolean;

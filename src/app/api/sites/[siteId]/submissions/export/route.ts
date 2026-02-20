@@ -15,6 +15,24 @@ function escapeCsv(value: string): string {
   return str;
 }
 
+function safeStringValue(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return "";
+  }
+}
+
+function safeRecord(raw: unknown): Record<string, unknown> {
+  if (typeof raw === "object" && raw !== null && !Array.isArray(raw)) {
+    return raw as Record<string, unknown>;
+  }
+  return {};
+}
+
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ siteId: string }> }
@@ -26,7 +44,7 @@ export async function GET(
     }
 
     const userId = session.user.id;
-    const rl = rateLimit(`submissions-export:${userId}`, "mutation");
+    const rl = rateLimit(`submissions-export:${userId}`, "read");
     if (!rl.success) return rateLimitResponse(rl);
 
     const { siteId } = await params;
@@ -74,7 +92,7 @@ export async function GET(
       });
 
       for (const sub of batch) {
-        const data = sub.data as Record<string, string>;
+        const data = safeRecord(sub.data);
         Object.keys(data).forEach((k) => allKeys.add(k));
       }
 
@@ -110,11 +128,11 @@ export async function GET(
             });
 
             for (const sub of batch) {
-              const data = sub.data as Record<string, string>;
+              const data = safeRecord(sub.data);
               const csvRow = [
                 sub.page.title,
                 new Date(sub.createdAt).toISOString(),
-                ...keysArray.map((k) => data[k] || ""),
+                ...keysArray.map((k) => safeStringValue(data[k])),
               ];
               controller.enqueue(encoder.encode(csvRow.map(escapeCsv).join(",") + "\n"));
             }

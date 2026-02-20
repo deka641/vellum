@@ -144,6 +144,19 @@ export const blockDefinitions: Record<BlockType, BlockDefinition> = {
     defaultContent: { maxDepth: 3, style: "boxed", ordered: false },
     defaultSettings: {},
   },
+  table: {
+    type: "table",
+    label: "Table",
+    icon: "Table",
+    category: "layout",
+    defaultContent: {
+      headers: ["Column 1", "Column 2", "Column 3"],
+      rows: [["", "", ""], ["", "", ""]],
+      caption: "",
+      striped: true,
+    },
+    defaultSettings: {},
+  },
 };
 
 export function createBlock(type: BlockType): EditorBlock {
