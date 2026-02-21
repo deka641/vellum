@@ -22,7 +22,10 @@ export default function SiteSettingsPage() {
   const [theme, setTheme] = useState<SiteTheme>(DEFAULT_THEME);
   const [favicon, setFavicon] = useState<string | null>(null);
   const [footerText, setFooterText] = useState("");
+  const [footerDescription, setFooterDescription] = useState("");
   const [footerLinks, setFooterLinks] = useState<{ label: string; url: string }[]>([]);
+  const [footerColumns, setFooterColumns] = useState<{ title: string; links: { label: string; url: string }[] }[]>([]);
+  const [footerSocialLinks, setFooterSocialLinks] = useState<{ platform: string; url: string }[]>([]);
   const [showBranding, setShowBranding] = useState(true);
   const [notificationEmail, setNotificationEmail] = useState("");
   const [saving, setSaving] = useState(false);
@@ -42,9 +45,18 @@ export default function SiteSettingsPage() {
         if (parsed) setTheme(parsed);
         setNotificationEmail(site.notificationEmail || "");
         if (site.footer && typeof site.footer === "object") {
-          const f = site.footer as { text?: string; links?: { label: string; url: string }[]; showBranding?: boolean };
+          const f = site.footer as {
+            text?: string; description?: string;
+            links?: { label: string; url: string }[];
+            columns?: { title?: string; links: { label: string; url: string }[] }[];
+            socialLinks?: { platform: string; url: string }[];
+            showBranding?: boolean;
+          };
           setFooterText(f.text || "");
+          setFooterDescription(f.description || "");
           setFooterLinks(f.links || []);
+          setFooterColumns((f.columns || []).map((c) => ({ title: c.title || "", links: c.links || [] })));
+          setFooterSocialLinks(f.socialLinks || []);
           setShowBranding(f.showBranding !== false);
         }
       })
@@ -87,7 +99,12 @@ export default function SiteSettingsPage() {
           notificationEmail: notificationEmail.trim() || null,
           footer: {
             text: footerText || undefined,
+            description: footerDescription || undefined,
             links: footerLinks.filter((l) => l.label && l.url),
+            columns: footerColumns
+              .map((c) => ({ title: c.title || undefined, links: c.links.filter((l) => l.label && l.url) }))
+              .filter((c) => c.links.length > 0),
+            socialLinks: footerSocialLinks.filter((sl) => sl.platform && sl.url),
             showBranding,
           },
         }),
@@ -202,6 +219,12 @@ export default function SiteSettingsPage() {
               onChange={(e) => setFooterText(e.target.value)}
               placeholder="e.g. &copy; 2026 My Company"
             />
+            <Input
+              label="Footer description"
+              value={footerDescription}
+              onChange={(e) => setFooterDescription(e.target.value)}
+              placeholder="A short tagline or description"
+            />
             <div className={styles.footerLinksEditor}>
               <label className={styles.footerLinksLabel}>Footer links</label>
               {footerLinks.map((link, i) => (
@@ -242,6 +265,136 @@ export default function SiteSettingsPage() {
               >
                 <Plus size={14} />
                 Add link
+              </button>
+            </div>
+            <div className={styles.footerLinksEditor}>
+              <label className={styles.footerLinksLabel}>Footer columns</label>
+              {footerColumns.map((col, ci) => (
+                <div key={ci} className={styles.footerColumnEditor}>
+                  <div className={styles.footerLinkRow}>
+                    <input
+                      className={styles.footerLinkInput}
+                      value={col.title}
+                      onChange={(e) => {
+                        const updated = [...footerColumns];
+                        updated[ci] = { ...updated[ci], title: e.target.value };
+                        setFooterColumns(updated);
+                      }}
+                      placeholder="Column title"
+                    />
+                    <button
+                      type="button"
+                      className={styles.footerLinkRemove}
+                      onClick={() => setFooterColumns(footerColumns.filter((_, j) => j !== ci))}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                  {col.links.map((link, li) => (
+                    <div key={li} className={styles.footerLinkRow} style={{ paddingLeft: 16 }}>
+                      <input
+                        className={styles.footerLinkInput}
+                        value={link.label}
+                        onChange={(e) => {
+                          const updated = [...footerColumns];
+                          const links = [...updated[ci].links];
+                          links[li] = { ...links[li], label: e.target.value };
+                          updated[ci] = { ...updated[ci], links };
+                          setFooterColumns(updated);
+                        }}
+                        placeholder="Label"
+                      />
+                      <input
+                        className={styles.footerLinkInput}
+                        value={link.url}
+                        onChange={(e) => {
+                          const updated = [...footerColumns];
+                          const links = [...updated[ci].links];
+                          links[li] = { ...links[li], url: e.target.value };
+                          updated[ci] = { ...updated[ci], links };
+                          setFooterColumns(updated);
+                        }}
+                        placeholder="https://..."
+                      />
+                      <button
+                        type="button"
+                        className={styles.footerLinkRemove}
+                        onClick={() => {
+                          const updated = [...footerColumns];
+                          updated[ci] = { ...updated[ci], links: updated[ci].links.filter((_, j) => j !== li) };
+                          setFooterColumns(updated);
+                        }}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    className={styles.footerLinkAdd}
+                    onClick={() => {
+                      const updated = [...footerColumns];
+                      updated[ci] = { ...updated[ci], links: [...updated[ci].links, { label: "", url: "" }] };
+                      setFooterColumns(updated);
+                    }}
+                    style={{ marginLeft: 16 }}
+                  >
+                    <Plus size={14} /> Add link to column
+                  </button>
+                </div>
+              ))}
+              {footerColumns.length < 4 && (
+                <button
+                  type="button"
+                  className={styles.footerLinkAdd}
+                  onClick={() => setFooterColumns([...footerColumns, { title: "", links: [{ label: "", url: "" }] }])}
+                >
+                  <Plus size={14} /> Add column
+                </button>
+              )}
+            </div>
+            <div className={styles.footerLinksEditor}>
+              <label className={styles.footerLinksLabel}>Social links</label>
+              {footerSocialLinks.map((sl, i) => (
+                <div key={i} className={styles.footerLinkRow}>
+                  <select
+                    className={styles.footerLinkInput}
+                    value={sl.platform}
+                    onChange={(e) => {
+                      const updated = [...footerSocialLinks];
+                      updated[i] = { ...updated[i], platform: e.target.value };
+                      setFooterSocialLinks(updated);
+                    }}
+                  >
+                    {["twitter", "facebook", "instagram", "linkedin", "youtube", "github", "tiktok", "email", "discord", "threads", "bluesky", "mastodon", "pinterest", "dribbble", "behance", "whatsapp"].map((p) => (
+                      <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
+                    ))}
+                  </select>
+                  <input
+                    className={styles.footerLinkInput}
+                    value={sl.url}
+                    onChange={(e) => {
+                      const updated = [...footerSocialLinks];
+                      updated[i] = { ...updated[i], url: e.target.value };
+                      setFooterSocialLinks(updated);
+                    }}
+                    placeholder="https://..."
+                  />
+                  <button
+                    type="button"
+                    className={styles.footerLinkRemove}
+                    onClick={() => setFooterSocialLinks(footerSocialLinks.filter((_, j) => j !== i))}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                className={styles.footerLinkAdd}
+                onClick={() => setFooterSocialLinks([...footerSocialLinks, { platform: "twitter", url: "" }])}
+              >
+                <Plus size={14} /> Add social link
               </button>
             </div>
             <label className={styles.checkboxRow}>

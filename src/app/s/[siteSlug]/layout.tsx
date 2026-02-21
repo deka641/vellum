@@ -21,7 +21,7 @@ export default async function PublishedSiteLayout({ params, children }: Props) {
     where: { slug: siteSlug },
     include: {
       pages: {
-        where: { status: "PUBLISHED", showInNav: true },
+        where: { status: "PUBLISHED", showInNav: true, deletedAt: null },
         orderBy: { sortOrder: "asc" },
         select: { id: true, title: true, slug: true, isHomepage: true },
       },

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight, Type, AlignLeft, Image as ImageIcon, MousePointer, Columns2, Settings2, Plus } from "lucide-react";
-import { Button } from "@/components/ui/Button/Button";
 import styles from "./landing.module.css";
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -137,15 +136,12 @@ export function Hero() {
           stunning websites without writing a single line of code.
         </p>
         <div className={styles.heroCta}>
-          <Link href="/register">
-            <Button size="lg" rightIcon={<ArrowRight size={18} />}>
-              Get started free
-            </Button>
+          <Link href="/register" className={styles.heroCtaPrimary}>
+            Get started free
+            <ArrowRight size={18} />
           </Link>
-          <Link href="/login">
-            <Button variant="ghost" size="lg">
-              Sign in
-            </Button>
+          <Link href="/login" className={styles.heroCtaGhost}>
+            Sign in
           </Link>
         </div>
       </motion.div>

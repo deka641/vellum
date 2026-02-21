@@ -14,6 +14,14 @@ const PLATFORMS = [
   "github",
   "tiktok",
   "email",
+  "discord",
+  "threads",
+  "bluesky",
+  "mastodon",
+  "pinterest",
+  "dribbble",
+  "behance",
+  "whatsapp",
 ] as const;
 
 interface SocialBlockProps {

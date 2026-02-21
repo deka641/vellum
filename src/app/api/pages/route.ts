@@ -84,15 +84,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Site not found" }, { status: 404 });
     }
 
-    let slug = slugify(title);
-    const existingPage = await db.page.findFirst({
-      where: { siteId, slug },
-    });
-    if (existingPage) {
-      slug = `${slug}-${Date.now().toString(36)}`;
-    }
-
     const page = await db.$transaction(async (tx) => {
+      let slug = slugify(title);
+      const existingPage = await tx.page.findFirst({
+        where: { siteId, slug },
+      });
+      if (existingPage) {
+        slug = `${slug}-${Date.now().toString(36)}`;
+      }
+
       const count = await tx.page.count({ where: { siteId } });
 
       const p = await tx.page.create({

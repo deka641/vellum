@@ -117,6 +117,18 @@ export function findBlockLocation(blocks: EditorBlock[], blockId: string): Block
   return null;
 }
 
+function cloneBlock(block: EditorBlock): EditorBlock {
+  const cloned = structuredClone(block);
+  cloned.id = generateId();
+  if (cloned.type === "columns") {
+    const cols = cloned.content as ColumnsContent;
+    cols.columns = cols.columns.map((col) => ({
+      blocks: col.blocks.map(cloneBlock),
+    }));
+  }
+  return cloned;
+}
+
 export const useEditorStore = create<EditorState>((set, get) => ({
   blocks: [],
   selectedBlockId: null,
@@ -320,18 +332,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   duplicateBlock: (id) =>
     set((state) => {
-      function cloneBlock(block: EditorBlock): EditorBlock {
-        const cloned = structuredClone(block);
-        cloned.id = generateId();
-        if (cloned.type === "columns") {
-          const cols = cloned.content as ColumnsContent;
-          cols.columns = cols.columns.map((col) => ({
-            blocks: col.blocks.map(cloneBlock),
-          }));
-        }
-        return cloned;
-      }
-
       // Try top-level first
       const topIndex = state.blocks.findIndex((b) => b.id === id);
       if (topIndex !== -1) {
@@ -419,19 +419,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         return state;
       }
       if (!parsed || !parsed.type || !parsed.id) return state;
-
-      // Clone with new IDs
-      function cloneBlock(block: EditorBlock): EditorBlock {
-        const cloned = structuredClone(block);
-        cloned.id = generateId();
-        if (cloned.type === "columns") {
-          const cols = cloned.content as ColumnsContent;
-          cols.columns = cols.columns.map((col) => ({
-            blocks: col.blocks.map(cloneBlock),
-          }));
-        }
-        return cloned;
-      }
 
       const newBlock = cloneBlock(parsed);
 

@@ -10,9 +10,11 @@ interface ScrollRevealProps {
 
 export function ScrollReveal({ children, delay = 0 }: ScrollRevealProps) {
   const ref = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const el = ref.current;
     if (!el) return;
 
@@ -37,11 +39,17 @@ export function ScrollReveal({ children, delay = 0 }: ScrollRevealProps) {
     return () => observer.disconnect();
   }, []);
 
+  // Before hydration: render fully visible (no animation classes)
+  // After hydration: apply reveal class, then transition to visible
+  const className = mounted
+    ? `${styles.reveal} ${visible ? styles.visible : ""}`
+    : styles.visible;
+
   return (
     <div
       ref={ref}
-      className={`${styles.reveal} ${visible ? styles.visible : ""}`}
-      style={delay > 0 && !visible ? { transitionDelay: `${delay}ms` } : undefined}
+      className={className}
+      style={delay > 0 && mounted && !visible ? { transitionDelay: `${delay}ms` } : undefined}
     >
       {children}
     </div>

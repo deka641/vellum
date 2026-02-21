@@ -15,7 +15,7 @@ const getDashboardData = unstable_cache(
         db.site.count({ where: { userId } }),
         db.page.groupBy({
           by: ["status"],
-          where: { site: { userId } },
+          where: { site: { userId }, deletedAt: null },
           _count: true,
         }),
         db.formSubmission.count({
@@ -26,7 +26,7 @@ const getDashboardData = unstable_cache(
         }),
         db.media.count({ where: { userId } }),
         db.page.findMany({
-          where: { site: { userId } },
+          where: { site: { userId }, deletedAt: null },
           orderBy: { updatedAt: "desc" },
           take: 5,
           select: {

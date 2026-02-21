@@ -107,14 +107,13 @@ export async function POST(req: Request) {
 
     const userId = session.user.id;
 
-    let slug = slugify(name);
-
-    const existing = await db.site.findUnique({ where: { slug } });
-    if (existing) {
-      slug = `${slug}-${Date.now().toString(36)}`;
-    }
-
     const site = await db.$transaction(async (tx) => {
+      let slug = slugify(name);
+      const existing = await tx.site.findUnique({ where: { slug } });
+      if (existing) {
+        slug = `${slug}-${Date.now().toString(36)}`;
+      }
+
       const s = await tx.site.create({
         data: {
           name,

@@ -15,6 +15,14 @@ export type BlockType =
   | "toc"
   | "table";
 
+export interface BlockData {
+  id: string;
+  type: string;
+  content: Record<string, unknown>;
+  settings: Record<string, unknown>;
+  parentId?: string | null;
+}
+
 export interface HeadingContent {
   text: string;
   level: 1 | 2 | 3 | 4;

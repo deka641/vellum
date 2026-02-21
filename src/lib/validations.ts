@@ -162,8 +162,20 @@ export const createSiteSchema = z.object({
 
 export const siteFooterSchema = z.object({
   text: z.string().max(500).optional(),
+  description: z.string().max(1000).optional(),
   links: z.array(z.object({
     label: z.string().min(1).max(200),
+    url: z.string().max(2000),
+  })).max(10).optional(),
+  columns: z.array(z.object({
+    title: z.string().max(200).optional(),
+    links: z.array(z.object({
+      label: z.string().min(1).max(200),
+      url: z.string().max(2000),
+    })).max(10),
+  })).max(4).optional(),
+  socialLinks: z.array(z.object({
+    platform: z.string().min(1).max(50),
     url: z.string().max(2000),
   })).max(10).optional(),
   showBranding: z.boolean().optional(),
@@ -176,6 +188,39 @@ export const updateSiteSchema = z.object({
   favicon: z.string().max(2000).nullable().optional(),
   footer: siteFooterSchema.optional(),
   notificationEmail: z.string().email().max(254).nullable().optional(),
+});
+
+// --- Import ---
+
+const importPageSchema = z.object({
+  title: z.string().min(1).max(200),
+  slug: z.string().max(200).optional().default(""),
+  description: z.string().max(2000).nullable().optional(),
+  status: z.enum(["DRAFT", "PUBLISHED"]).optional(),
+  isHomepage: z.boolean().optional(),
+  showInNav: z.boolean().optional(),
+  sortOrder: z.number().int().optional(),
+  metaTitle: z.string().max(200).nullable().optional(),
+  ogImage: z.string().max(2000).nullable().optional(),
+  noindex: z.boolean().optional(),
+  blocks: z.array(z.object({
+    type: blockTypeEnum,
+    content: z.record(z.string(), z.unknown()),
+    settings: z.record(z.string(), z.unknown()).optional().default({}),
+    sortOrder: z.number().int().optional(),
+    parentId: z.string().nullable().optional(),
+  })).max(500).optional().default([]),
+});
+
+export const importSiteSchema = z.object({
+  version: z.number().int().min(1),
+  site: z.object({
+    name: z.string().min(1).max(200),
+    description: z.string().max(2000).nullable().optional(),
+    theme: siteThemeSchema.optional(),
+    footer: siteFooterSchema.optional(),
+  }),
+  pages: z.array(importPageSchema).max(200),
 });
 
 // --- Pages ---

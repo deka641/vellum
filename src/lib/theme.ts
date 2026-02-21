@@ -267,22 +267,31 @@ export function generateThemeVariables(
   const isLightBg = getLuminance(colors.background) > 0.5;
   const textInverse = isLightBg ? "#1C1917" : "#FAFAF9";
 
+  // For light backgrounds: secondary text = lighten (fade toward white)
+  // For dark backgrounds: secondary text = darken (fade toward black)
+  const fadeText = isLightBg ? lighten : darken;
+  const fadeBg = isLightBg ? darken : lighten;
+
   return {
     "--color-accent": colors.primary,
     "--color-accent-hover": darken(colors.primary, 10),
-    "--color-accent-light": lighten(colors.primary, 90),
-    "--color-accent-muted": lighten(colors.primary, 70),
+    "--color-accent-light": isLightBg
+      ? lighten(colors.primary, 90)
+      : darken(colors.primary, 70),
+    "--color-accent-muted": isLightBg
+      ? lighten(colors.primary, 70)
+      : darken(colors.primary, 50),
     "--color-bg-primary": colors.background,
-    "--color-bg-secondary": darken(colors.background, 3),
-    "--color-bg-tertiary": darken(colors.background, 5),
+    "--color-bg-secondary": fadeBg(colors.background, 3),
+    "--color-bg-tertiary": fadeBg(colors.background, 5),
     "--color-surface": colors.surface,
-    "--color-surface-hover": darken(colors.surface, 1),
+    "--color-surface-hover": fadeBg(colors.surface, 1),
     "--color-text-primary": colors.text,
-    "--color-text-secondary": lighten(colors.text, 40),
-    "--color-text-tertiary": lighten(colors.text, 55),
+    "--color-text-secondary": fadeText(colors.text, 30),
+    "--color-text-tertiary": fadeText(colors.text, 50),
     "--color-text-inverse": textInverse,
-    "--color-border": lighten(colors.text, 75),
-    "--color-border-light": lighten(colors.text, 85),
+    "--color-border": fadeText(colors.text, 70),
+    "--color-border-light": fadeText(colors.text, 80),
     "--color-border-focus": colors.primary,
     "--font-heading": font.heading,
     "--font-body": font.body,

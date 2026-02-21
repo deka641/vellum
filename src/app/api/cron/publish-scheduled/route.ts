@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { timingSafeEqual } from "node:crypto";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { db } from "@/lib/db";
 import { apiError } from "@/lib/api-helpers";
@@ -15,7 +16,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
     }
 
-    if (authHeader !== `Bearer ${cronSecret}`) {
+    const expected = `Bearer ${cronSecret}`;
+    const provided = authHeader || "";
+    if (
+      provided.length !== expected.length ||
+      !timingSafeEqual(Buffer.from(provided), Buffer.from(expected))
+    ) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

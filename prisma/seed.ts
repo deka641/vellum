@@ -59,7 +59,7 @@ async function main() {
         { type: "spacer", content: { height: 48 }, settings: {} },
         { type: "heading", content: { text: "Everything You Need to Build Great Websites", level: 2 }, settings: { align: "center" } },
         { type: "columns", content: { columns: [
-          { blocks: [{ id: "lp7", type: "heading", content: { text: "Visual Editor", level: 3 }, settings: { align: "center" } }, { id: "lp8", type: "text", content: { html: "<p>Drag-and-drop blocks to build pages visually. Choose from 14 block types including text, images, columns, forms, accordions, and more. No coding required.</p>" }, settings: { align: "center" } }] },
+          { blocks: [{ id: "lp7", type: "heading", content: { text: "Visual Editor", level: 3 }, settings: { align: "center" } }, { id: "lp8", type: "text", content: { html: "<p>Drag-and-drop blocks to build pages visually. Choose from 15 block types including text, images, columns, forms, accordions, and more. No coding required.</p>" }, settings: { align: "center" } }] },
           { blocks: [{ id: "lp9", type: "heading", content: { text: "Built-in SEO", level: 3 }, settings: { align: "center" } }, { id: "lp10", type: "text", content: { html: "<p>Meta titles, Open Graph images, noindex controls, auto-generated sitemaps, and structured data. Everything you need to rank well in search results.</p>" }, settings: { align: "center" } }] },
           { blocks: [{ id: "lp11", type: "heading", content: { text: "One-Click Publish", level: 3 }, settings: { align: "center" } }, { id: "lp12", type: "text", content: { html: "<p>Preview your changes, then publish instantly or schedule for later. Version history lets you roll back any time. Your content, your control.</p>" }, settings: { align: "center" } }] },
         ] }, settings: { gap: "32px" } },
@@ -341,7 +341,7 @@ async function main() {
         { type: "heading", content: { text: "Creating Your First Site", level: 2 }, settings: {} },
         { type: "text", content: { html: "<p>After logging in, you'll land on the dashboard. Click <strong>\"New Site\"</strong>, enter a name, and you'll be taken to your page manager.</p>" }, settings: {} },
         { type: "heading", content: { text: "Building Pages with Blocks", level: 2 }, settings: {} },
-        { type: "text", content: { html: "<p>Pages are built using <strong>blocks</strong> — modular content elements. The editor provides 14 block types across content, media, layout, and interactive categories.</p>" }, settings: {} },
+        { type: "text", content: { html: "<p>Pages are built using <strong>blocks</strong> — modular content elements. The editor provides 15 block types across content, media, layout, and interactive categories.</p>" }, settings: {} },
         { type: "heading", content: { text: "Keyboard Shortcuts", level: 2 }, settings: {} },
         { type: "text", content: { html: "<ul><li><strong>Ctrl/Cmd + S</strong> — Save</li><li><strong>Ctrl/Cmd + Z</strong> — Undo</li><li><strong>Ctrl/Cmd + Shift + Z</strong> — Redo</li><li><strong>Ctrl/Cmd + D</strong> — Duplicate block</li><li><strong>Alt + Arrow</strong> — Move block</li><li><strong>?</strong> — Show shortcuts</li></ul>" }, settings: {} },
         { type: "divider", content: {}, settings: { style: "solid" } },
@@ -401,7 +401,7 @@ async function main() {
   console.log("Created site:", site.name, `(/s/${site.slug})`);
 
   // ──────────────────────────────────────────────
-  // 5. PAGE 1 — Homepage (showcase of ALL 14 block types)
+  // 5. PAGE 1 — Homepage (showcase of ALL 15 block types)
   // ──────────────────────────────────────────────
   const homePage = await prisma.page.create({
     data: {
@@ -662,7 +662,7 @@ async function main() {
       settings: {},
     },
 
-    // ── IMAGE SHOWCASE ──
+    // ── PROJECT HIGHLIGHTS (Table) ──
     {
       type: "spacer",
       content: { height: 48 },
@@ -670,15 +670,41 @@ async function main() {
     },
     {
       type: "heading",
-      content: { text: "Featured Project", level: 2 },
+      content: { text: "Featured Project Highlights", level: 2 },
       settings: { align: "center" },
     },
     {
+      type: "text",
+      content: {
+        html: "<p>A snapshot of results from our most recent client engagements — because the work speaks louder than words.</p>",
+      },
+      settings: { align: "center", marginBottom: "16px" },
+    },
+    {
+      type: "table",
+      content: {
+        headers: ["Project", "Industry", "Timeline", "Key Result"],
+        rows: [
+          ["Meridian Health App", "Healthcare", "12 weeks", "+40% user engagement"],
+          ["CloudSync Dashboard", "SaaS / B2B", "10 weeks", "-35% task completion time"],
+          ["Novabank Rebrand", "Finance", "8 weeks", "+40% brand recognition"],
+          ["Terraform Academy", "Education", "14 weeks", "50K learners in month one"],
+        ],
+        striped: true,
+        caption: "Selected projects from 2024-2025",
+      },
+      settings: {},
+    },
+
+    // ── IMAGE SHOWCASE ──
+    {
       type: "image",
       content: {
-        src: "",
-        alt: "Atlas Creative — Meridian Health App redesign showcasing the clean, modern interface across mobile and desktop devices",
-        caption: "Meridian Health — Complete product redesign delivering a 40% increase in user engagement",
+        src: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&h=600&fit=crop&q=80",
+        alt: "Modern analytics dashboard showing clean data visualization with charts and metrics on a laptop screen",
+        caption: "CloudSync — Redesigned analytics dashboard delivering 35% faster task completion",
+        width: 1200,
+        height: 600,
       },
       settings: { align: "center", rounded: true, shadow: true },
     },
@@ -691,20 +717,20 @@ async function main() {
     },
     {
       type: "heading",
-      content: { text: "See Us in Action", level: 2 },
+      content: { text: "How We Think About Design", level: 2 },
       settings: { align: "center" },
     },
     {
       type: "text",
       content: {
-        html: "<p>Watch our design process in action — from initial sketches to polished product.</p>",
+        html: "<p>Great products emerge from a deep understanding of people, technology, and context. Here's a glimpse into our creative philosophy.</p>",
       },
       settings: { align: "center" },
     },
     {
       type: "video",
       content: {
-        url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        url: "https://www.youtube.com/watch?v=67LPFnBb6GA",
         provider: "youtube",
       },
       settings: { aspectRatio: "16/9" },
@@ -782,7 +808,7 @@ async function main() {
       pageId: homePage.id,
     })),
   });
-  console.log("Created homepage with", homeBlocks.length, "blocks (all 14 block types)");
+  console.log("Created homepage with", homeBlocks.length, "blocks (all 15 block types)");
 
   // ──────────────────────────────────────────────
   // 6. PAGE 2 — About

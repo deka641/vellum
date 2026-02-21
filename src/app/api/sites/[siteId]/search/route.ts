@@ -66,7 +66,7 @@ export async function GET(
     }
 
     const userId = session.user.id;
-    const rl = rateLimit(`search:${userId}`, "mutation");
+    const rl = rateLimit(`search:${userId}`, "read");
     if (!rl.success) return rateLimitResponse(rl);
 
     const { siteId } = await params;

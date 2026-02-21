@@ -1,14 +1,7 @@
 import { SafePublishedBlock } from "./SafePublishedBlock";
 import { ScrollReveal } from "./ScrollReveal";
+import type { BlockData } from "@/types/blocks";
 import styles from "./published.module.css";
-
-interface BlockData {
-  id: string;
-  type: string;
-  content: Record<string, unknown>;
-  settings: Record<string, unknown>;
-  parentId?: string | null;
-}
 
 interface PublishedPageProps {
   title: string;

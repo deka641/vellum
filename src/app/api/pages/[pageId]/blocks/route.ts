@@ -20,7 +20,7 @@ export async function GET(
     const { pageId } = await params;
 
     const page = await db.page.findFirst({
-      where: { id: pageId, site: { userId: session.user.id } },
+      where: { id: pageId, deletedAt: null, site: { userId: session.user.id } },
       include: { blocks: { orderBy: { sortOrder: "asc" } } },
     });
 
