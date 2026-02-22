@@ -45,7 +45,7 @@ const features = [
 
 export function Features() {
   return (
-    <section className={styles.features}>
+    <section className={styles.features} id="features">
       <motion.div
         className={styles.featuresHeader}
         initial={{ opacity: 0, y: 20 }}

@@ -183,6 +183,84 @@
   accent-color: var(--color-accent);
 }
 
+.customCodeSection {
+  padding: var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-secondary);
+}
+
+.customCodeSummary {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  letter-spacing: normal;
+  user-select: none;
+}
+
+.customCodeSummary:hover {
+  color: var(--color-accent);
+}
+
+.customCodeWarning {
+  margin-top: var(--space-3);
+  margin-bottom: var(--space-4);
+  padding: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--color-warning-text, #92400e);
+  background: var(--color-warning-light, #fffbeb);
+  border: 1px solid var(--color-warning-border, #fde68a);
+  border-radius: var(--radius-md);
+}
+
+.customCodeField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+}
+
+.customCodeField:last-child {
+  margin-bottom: 0;
+}
+
+.customCodeLabel {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-secondary);
+}
+
+.customCodeHint {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  margin: 0;
+}
+
+.customCodeTextarea {
+  width: 100%;
+  padding: var(--space-3);
+  font-family: monospace;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  resize: vertical;
+  tab-size: 2;
+}
+
+.customCodeTextarea:focus {
+  outline: none;
+  border-color: var(--color-border-focus);
+}
+
+.customCodeTextarea::placeholder {
+  color: var(--color-text-tertiary);
+}
+
 .dangerZone {
   margin-top: var(--space-12);
   padding: var(--space-5);

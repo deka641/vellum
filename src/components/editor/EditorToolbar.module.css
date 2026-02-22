@@ -86,7 +86,8 @@
 }
 
 .saveErrorBtn:hover {
-  background: #FECACA;
+  background: var(--color-error-light, #FEF2F2);
+  opacity: 0.85;
 }
 
 .saveConflict {

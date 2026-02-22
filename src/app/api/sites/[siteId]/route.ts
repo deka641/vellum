@@ -84,6 +84,8 @@ export async function PATCH(
         ...(parsed.data.favicon !== undefined && { favicon: parsed.data.favicon ? sanitizeUrl(parsed.data.favicon) : parsed.data.favicon }),
         ...(parsed.data.footer !== undefined && { footer: parsed.data.footer }),
         ...(parsed.data.notificationEmail !== undefined && { notificationEmail: parsed.data.notificationEmail }),
+        ...(parsed.data.customHead !== undefined && { customHead: parsed.data.customHead }),
+        ...(parsed.data.customFooter !== undefined && { customFooter: parsed.data.customFooter }),
       },
     });
 

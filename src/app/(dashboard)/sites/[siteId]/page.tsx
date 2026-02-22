@@ -385,6 +385,41 @@ export default function SiteDetailPage() {
     }
   }
 
+  async function handleBulkAction(action: "publish" | "unpublish", pageIds: string[]) {
+    try {
+      const res = await fetch("/api/pages/bulk-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pageIds, action }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const newStatus = action === "publish" ? "PUBLISHED" as const : "DRAFT" as const;
+        const updatedSet = new Set(pageIds);
+        setSite((prev) =>
+          prev
+            ? {
+                ...prev,
+                pages: prev.pages.map((p) =>
+                  updatedSet.has(p.id) && !(action === "unpublish" && p.isHomepage)
+                    ? { ...p, status: newStatus }
+                    : p
+                ),
+              }
+            : null
+        );
+        const label = action === "publish" ? "published" : "unpublished";
+        toast(`${data.updated} ${data.updated === 1 ? "page" : "pages"} ${label}`);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast(data.error || `Failed to ${action} pages`, "error");
+      }
+    } catch {
+      toast(`Network error — could not ${action} pages`, "error");
+    }
+  }
+
   if (loading) {
     return (
       <>
@@ -604,6 +639,7 @@ export default function SiteDetailPage() {
               onDuplicate={handleDuplicatePage}
               onReorder={handleReorderPages}
               onToggleNav={handleToggleNav}
+              onBulkAction={handleBulkAction}
             />
           </>
         )}

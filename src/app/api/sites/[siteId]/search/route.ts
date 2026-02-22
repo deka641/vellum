@@ -5,6 +5,7 @@ import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { apiError } from "@/lib/api-helpers";
 
 const MAX_RESULTS = 50;
+const BATCH_SIZE = 50;
 
 function extractTextFromBlocks(blocks: Array<Record<string, unknown>>): string {
   const parts: string[] = [];
@@ -55,6 +56,15 @@ function getSnippet(text: string, query: string, maxLen = 160): string {
   return snippet;
 }
 
+interface SearchResult {
+  pageId: string;
+  pageTitle: string;
+  pageSlug: string;
+  status: string;
+  matchType: "title" | "description" | "content";
+  snippet: string;
+}
+
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ siteId: string }> }
@@ -77,6 +87,10 @@ export async function GET(
       return NextResponse.json({ error: "Query must be at least 2 characters" }, { status: 400 });
     }
 
+    if (q.length > 200) {
+      return NextResponse.json({ error: "Query must be at most 200 characters" }, { status: 400 });
+    }
+
     // Verify site ownership
     const site = await db.site.findFirst({
       where: { id: siteId, userId },
@@ -87,34 +101,27 @@ export async function GET(
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    // Search pages: title, description, and block content
-    const pages = await db.page.findMany({
+    const results: SearchResult[] = [];
+
+    // Stage 1: Search titles and descriptions via database (efficient, uses indexes)
+    const titleDescMatches = await db.page.findMany({
       where: {
         siteId,
         deletedAt: null,
+        OR: [
+          { title: { contains: q, mode: "insensitive" } },
+          { description: { contains: q, mode: "insensitive" } },
+        ],
       },
-      include: {
-        blocks: {
-          orderBy: { sortOrder: "asc" },
-          select: { content: true, type: true },
-        },
-      },
+      select: { id: true, title: true, slug: true, status: true, description: true },
+      take: MAX_RESULTS,
       orderBy: { updatedAt: "desc" },
     });
 
-    const qLower = q.toLowerCase();
-    const results: Array<{
-      pageId: string;
-      pageTitle: string;
-      pageSlug: string;
-      status: string;
-      matchType: "title" | "description" | "content";
-      snippet: string;
-    }> = [];
+    for (const page of titleDescMatches) {
+      if (results.length >= MAX_RESULTS) break;
 
-    for (const page of pages) {
-      // Check title
-      if (page.title.toLowerCase().includes(qLower)) {
+      if (page.title.toLowerCase().includes(q.toLowerCase())) {
         results.push({
           pageId: page.id,
           pageTitle: page.title,
@@ -123,11 +130,7 @@ export async function GET(
           matchType: "title",
           snippet: page.title,
         });
-        continue;
-      }
-
-      // Check description
-      if (page.description && page.description.toLowerCase().includes(qLower)) {
+      } else if (page.description) {
         results.push({
           pageId: page.id,
           pageTitle: page.title,
@@ -136,25 +139,56 @@ export async function GET(
           matchType: "description",
           snippet: getSnippet(page.description, q),
         });
-        continue;
       }
+    }
 
-      // Check block content
-      const blockText = extractTextFromBlocks(
-        page.blocks.map((b) => ({ content: b.content as Record<string, unknown>, type: b.type }))
-      );
-      if (blockText.toLowerCase().includes(qLower)) {
-        results.push({
-          pageId: page.id,
-          pageTitle: page.title,
-          pageSlug: page.slug,
-          status: page.status,
-          matchType: "content",
-          snippet: getSnippet(blockText, q),
+    // Stage 2: Search block content in batches (only if we still need more results)
+    if (results.length < MAX_RESULTS) {
+      const matchedPageIds = new Set(results.map((r) => r.pageId));
+      let cursor: string | undefined;
+
+      while (results.length < MAX_RESULTS) {
+        const pages = await db.page.findMany({
+          where: {
+            siteId,
+            deletedAt: null,
+            id: { notIn: Array.from(matchedPageIds) },
+          },
+          include: {
+            blocks: {
+              orderBy: { sortOrder: "asc" },
+              select: { content: true, type: true },
+            },
+          },
+          orderBy: { updatedAt: "desc" },
+          take: BATCH_SIZE,
+          ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
         });
-      }
 
-      if (results.length >= MAX_RESULTS) break;
+        if (pages.length === 0) break;
+        cursor = pages[pages.length - 1].id;
+
+        for (const page of pages) {
+          const blockText = extractTextFromBlocks(
+            page.blocks.map((b) => ({ content: b.content as Record<string, unknown>, type: b.type }))
+          );
+          if (blockText.toLowerCase().includes(q.toLowerCase())) {
+            results.push({
+              pageId: page.id,
+              pageTitle: page.title,
+              pageSlug: page.slug,
+              status: page.status,
+              matchType: "content",
+              snippet: getSnippet(blockText, q),
+            });
+            matchedPageIds.add(page.id);
+          }
+
+          if (results.length >= MAX_RESULTS) break;
+        }
+
+        if (pages.length < BATCH_SIZE) break;
+      }
     }
 
     return NextResponse.json({ results, total: results.length });

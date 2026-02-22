@@ -188,6 +188,8 @@ export const updateSiteSchema = z.object({
   favicon: z.string().max(2000).nullable().optional(),
   footer: siteFooterSchema.optional(),
   notificationEmail: z.string().email().max(254).nullable().optional(),
+  customHead: z.string().max(10000).nullable().optional(),
+  customFooter: z.string().max(10000).nullable().optional(),
 });
 
 // --- Import ---
@@ -219,6 +221,8 @@ export const importSiteSchema = z.object({
     description: z.string().max(2000).nullable().optional(),
     theme: siteThemeSchema.optional(),
     footer: siteFooterSchema.optional(),
+    customHead: z.string().max(10000).nullable().optional(),
+    customFooter: z.string().max(10000).nullable().optional(),
   }),
   pages: z.array(importPageSchema).max(200),
 });
@@ -335,9 +339,18 @@ const safeFormKeySchema = z.string().min(1).max(100).refine(
 );
 
 export const formSubmissionSchema = z.object({
-  data: z.record(safeFormKeySchema, z.string().max(10000)).refine(
+  data: z.record(safeFormKeySchema, z.string().max(5000)).refine(
     (data) => Object.keys(data).length <= 50,
     { message: "Too many form fields (max 50)" }
+  ).refine(
+    (data) => {
+      const totalSize = Object.entries(data).reduce(
+        (sum, [key, value]) => sum + key.length + value.length,
+        0
+      );
+      return totalSize <= 100_000;
+    },
+    { message: "Total form data too large (max 100KB)" }
   ),
 });
 

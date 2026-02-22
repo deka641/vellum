@@ -1,7 +1,8 @@
 "use client";
 
+import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
-import { MoreHorizontal, Trash2, FileText, Home, ExternalLink, Pencil, Globe, GlobeLock, Copy, Clock, GripVertical, Eye, EyeOff } from "lucide-react";
+import { MoreHorizontal, Trash2, FileText, Home, ExternalLink, Pencil, Globe, GlobeLock, Copy, Clock, GripVertical, Eye, EyeOff, X } from "lucide-react";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { IconButton } from "@/components/ui/IconButton/IconButton";
 import {
@@ -11,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/Dropdown/Dropdown";
+import { Button } from "@/components/ui/Button/Button";
 import { formatRelativeDate } from "@/lib/utils";
 import {
   DndContext,
@@ -53,6 +55,7 @@ interface PageListProps {
   onDuplicate: (id: string) => void;
   onReorder?: (pages: Page[]) => void;
   onToggleNav?: (id: string) => void;
+  onBulkAction?: (action: "publish" | "unpublish", pageIds: string[]) => Promise<void>;
 }
 
 function SortablePageItem({
@@ -63,6 +66,9 @@ function SortablePageItem({
   onUnpublish,
   onDuplicate,
   onToggleNav,
+  selected,
+  hasSelection,
+  onToggleSelect,
 }: {
   page: Page;
   siteSlug: string;
@@ -71,6 +77,9 @@ function SortablePageItem({
   onUnpublish: (id: string) => void;
   onDuplicate: (id: string) => void;
   onToggleNav?: (id: string) => void;
+  selected: boolean;
+  hasSelection: boolean;
+  onToggleSelect: (id: string) => void;
 }) {
   const {
     attributes,
@@ -89,7 +98,19 @@ function SortablePageItem({
   };
 
   return (
-    <div ref={setNodeRef} style={style} className={`${styles.item} ${isDragging ? styles.itemDragging : ""}`}>
+    <div ref={setNodeRef} style={style} className={`${styles.item} ${isDragging ? styles.itemDragging : ""} ${selected ? styles.itemSelected : ""}`}>
+      <label
+        className={`${styles.checkbox} ${hasSelection ? styles.checkboxVisible : ""}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <input
+          type="checkbox"
+          checked={selected}
+          onChange={() => onToggleSelect(page.id)}
+          className={styles.checkboxInput}
+        />
+        <span className={styles.checkboxBox} />
+      </label>
       <div className={styles.dragHandle} {...attributes} {...listeners}>
         <GripVertical size={14} />
       </div>
@@ -180,7 +201,10 @@ function SortablePageItem({
   );
 }
 
-export function PageList({ pages, siteSlug, onDelete, onPublish, onUnpublish, onDuplicate, onReorder, onToggleNav }: PageListProps) {
+export function PageList({ pages, siteSlug, onDelete, onPublish, onUnpublish, onDuplicate, onReorder, onToggleNav, onBulkAction }: PageListProps) {
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkLoading, setBulkLoading] = useState(false);
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 },
@@ -189,6 +213,57 @@ export function PageList({ pages, siteSlug, onDelete, onPublish, onUnpublish, on
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+
+  // Reset selection when pages change (filters, search, etc.)
+  useEffect(() => {
+    setSelectedIds((prev) => {
+      const currentPageIds = new Set(pages.map((p) => p.id));
+      const filtered = new Set<string>();
+      for (const id of prev) {
+        if (currentPageIds.has(id)) {
+          filtered.add(id);
+        }
+      }
+      if (filtered.size !== prev.size) return filtered;
+      return prev;
+    });
+  }, [pages]);
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }, []);
+
+  const toggleSelectAll = useCallback(() => {
+    setSelectedIds((prev) => {
+      if (prev.size === pages.length) {
+        return new Set();
+      }
+      return new Set(pages.map((p) => p.id));
+    });
+  }, [pages]);
+
+  const clearSelection = useCallback(() => {
+    setSelectedIds(new Set());
+  }, []);
+
+  const handleBulkAction = useCallback(async (action: "publish" | "unpublish") => {
+    if (!onBulkAction || selectedIds.size === 0) return;
+    setBulkLoading(true);
+    try {
+      await onBulkAction(action, Array.from(selectedIds));
+      setSelectedIds(new Set());
+    } finally {
+      setBulkLoading(false);
+    }
+  }, [onBulkAction, selectedIds]);
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -201,31 +276,84 @@ export function PageList({ pages, siteSlug, onDelete, onPublish, onUnpublish, on
     }
   }
 
+  const hasSelection = selectedIds.size > 0;
+  const allSelected = pages.length > 0 && selectedIds.size === pages.length;
+
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragEnd={handleDragEnd}
-    >
-      <SortableContext
-        items={pages.map((p) => p.id)}
-        strategy={verticalListSortingStrategy}
-      >
-        <div className={styles.list}>
-          {pages.map((page) => (
-            <SortablePageItem
-              key={page.id}
-              page={page}
-              siteSlug={siteSlug}
-              onDelete={onDelete}
-              onPublish={onPublish}
-              onUnpublish={onUnpublish}
-              onDuplicate={onDuplicate}
-              onToggleNav={onToggleNav}
+    <div>
+      {hasSelection && (
+        <div className={styles.bulkBar}>
+          <label className={styles.selectAll} onClick={(e) => e.stopPropagation()}>
+            <input
+              type="checkbox"
+              checked={allSelected}
+              onChange={toggleSelectAll}
+              className={styles.checkboxInput}
             />
-          ))}
+            <span className={styles.checkboxBox} />
+          </label>
+          <span className={styles.bulkCount}>
+            {selectedIds.size} selected
+          </span>
+          <div className={styles.bulkActions}>
+            <Button
+              size="sm"
+              variant="secondary"
+              leftIcon={<Globe size={14} />}
+              onClick={() => handleBulkAction("publish")}
+              disabled={bulkLoading}
+            >
+              Publish
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              leftIcon={<GlobeLock size={14} />}
+              onClick={() => handleBulkAction("unpublish")}
+              disabled={bulkLoading}
+            >
+              Unpublish
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              leftIcon={<X size={14} />}
+              onClick={clearSelection}
+              disabled={bulkLoading}
+            >
+              Clear
+            </Button>
+          </div>
         </div>
-      </SortableContext>
-    </DndContext>
+      )}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={pages.map((p) => p.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          <div className={styles.list}>
+            {pages.map((page) => (
+              <SortablePageItem
+                key={page.id}
+                page={page}
+                siteSlug={siteSlug}
+                onDelete={onDelete}
+                onPublish={onPublish}
+                onUnpublish={onUnpublish}
+                onDuplicate={onDuplicate}
+                onToggleNav={onToggleNav}
+                selected={selectedIds.has(page.id)}
+                hasSelection={hasSelection}
+                onToggleSelect={toggleSelect}
+              />
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
+    </div>
   );
 }

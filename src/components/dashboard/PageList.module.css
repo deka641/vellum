@@ -23,6 +23,10 @@
   border-radius: var(--radius-md);
 }
 
+.itemSelected {
+  background: var(--color-accent-light);
+}
+
 .dragHandle {
   display: flex;
   align-items: center;
@@ -135,4 +139,109 @@
 
 .actions {
   padding-right: var(--space-3);
+}
+
+/* Bulk selection */
+.bulkBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-3);
+  background: var(--color-accent-light);
+  border: 1px solid var(--color-accent-muted);
+  border-radius: var(--radius-lg);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.bulkCount {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+.bulkActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+/* Checkbox */
+.checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  padding-left: var(--space-3);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.checkboxVisible {
+  opacity: 1;
+}
+
+.item:hover .checkbox {
+  opacity: 1;
+}
+
+.checkboxInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.checkboxBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  transition: all var(--duration-fast) var(--ease-out);
+  position: relative;
+}
+
+.checkboxInput:checked + .checkboxBox {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.checkboxInput:checked + .checkboxBox::after {
+  content: "";
+  display: block;
+  width: 4px;
+  height: 8px;
+  border: solid var(--color-text-inverse);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  margin-top: -2px;
+}
+
+.checkboxInput:focus-visible + .checkboxBox {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Select all in bulk bar */
+.selectAll {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
 }

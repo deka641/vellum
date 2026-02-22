@@ -28,6 +28,8 @@ model Site {
   notificationEmail String?
   theme             Json     @default("{}")
   footer            Json     @default("{}")
+  customHead        String?  @db.Text
+  customFooter      String?  @db.Text
   userId            String
   user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   pages             Page[]
@@ -127,6 +129,7 @@ model FormSubmission {
   @@index([pageId])
   @@index([blockId])
   @@index([pageId, createdAt])
+  @@index([pageId, blockId])
 }
 
 model PasswordResetToken {

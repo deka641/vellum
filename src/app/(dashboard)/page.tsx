@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { unstable_cache } from "next/cache";
-import { Globe, FileText, Send, Image as ImageIcon, Plus, Upload, LayoutTemplate, FileEdit, Inbox } from "lucide-react";
+import { Globe, FileText, Send, Image as ImageIcon, Plus, Upload, LayoutTemplate, FileEdit, Inbox, CheckCircle } from "lucide-react";
 import { requireAuth } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import { Topbar } from "@/components/dashboard/Topbar";
@@ -91,7 +91,7 @@ export default async function DashboardPage() {
             <div className={styles.statLabel}>Pages</div>
           </div>
           <div className={styles.statCard}>
-            <div className={`${styles.statIcon} ${styles.statIconGreen}`}><FileText size={20} /></div>
+            <div className={`${styles.statIcon} ${styles.statIconGreen}`}><CheckCircle size={20} /></div>
             <div className={styles.statValue}>{publishedCount}</div>
             <div className={styles.statLabel}>Published</div>
           </div>

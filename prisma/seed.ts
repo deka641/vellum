@@ -348,6 +348,131 @@ async function main() {
         { type: "button", content: { text: "Contact Support", url: "#", variant: "outline" }, settings: { align: "center" } },
       ],
     },
+    {
+      name: "Product Launch",
+      description: "Product showcase with feature highlights, social proof, pricing tiers, and call-to-action",
+      category: "landing",
+      blocks: [
+        { type: "heading", content: { text: "Ship faster with Launchpad", level: 1 }, settings: { align: "center" } },
+        { type: "text", content: { html: "<p>The modern deployment platform for teams who move fast. Push to production in seconds, roll back in one click, and sleep well at night.</p>" }, settings: { align: "center" } },
+        { type: "spacer", content: { height: 16 }, settings: {} },
+        { type: "button", content: { text: "Start Free Trial", url: "#", variant: "primary" }, settings: { align: "center" } },
+        { type: "spacer", content: { height: 48 }, settings: {} },
+        { type: "divider", content: {}, settings: { style: "solid" } },
+        { type: "heading", content: { text: "Why Teams Switch to Launchpad", level: 2 }, settings: { align: "center" } },
+        { type: "columns", content: { columns: [
+          { blocks: [
+            { id: "pl1", type: "heading", content: { text: "Zero-Downtime Deploys", level: 3 }, settings: { align: "center" } },
+            { id: "pl2", type: "text", content: { html: "<p>Blue-green deployments out of the box. Your users never see a loading screen during updates.</p>" }, settings: { align: "center" } },
+          ] },
+          { blocks: [
+            { id: "pl3", type: "heading", content: { text: "Built-in Observability", level: 3 }, settings: { align: "center" } },
+            { id: "pl4", type: "text", content: { html: "<p>Real-time logs, metrics, and traces in one dashboard. Diagnose issues in minutes, not hours.</p>" }, settings: { align: "center" } },
+          ] },
+          { blocks: [
+            { id: "pl5", type: "heading", content: { text: "Enterprise Security", level: 3 }, settings: { align: "center" } },
+            { id: "pl6", type: "text", content: { html: "<p>SOC 2 Type II certified. SSO, audit logs, role-based access, and 99.99% uptime SLA included.</p>" }, settings: { align: "center" } },
+          ] },
+        ] }, settings: { gap: "32px" } },
+        { type: "spacer", content: { height: 48 }, settings: {} },
+        { type: "heading", content: { text: "Trusted by 2,000+ Engineering Teams", level: 2 }, settings: { align: "center" } },
+        { type: "columns", content: { columns: [
+          { blocks: [
+            { id: "pl7", type: "quote", content: { text: "We cut our deployment time from 45 minutes to 90 seconds. Launchpad paid for itself in the first week.", attribution: "Sarah Chen, CTO at Streamline", style: "bordered" }, settings: {} },
+          ] },
+          { blocks: [
+            { id: "pl8", type: "quote", content: { text: "The rollback feature alone has saved us from three potential incidents this quarter.", attribution: "Marcus Rivera, Lead SRE at DataPulse", style: "bordered" }, settings: {} },
+          ] },
+        ] }, settings: { gap: "32px" } },
+        { type: "spacer", content: { height: 48 }, settings: {} },
+        { type: "divider", content: {}, settings: { style: "solid" } },
+        { type: "heading", content: { text: "Simple, Transparent Pricing", level: 2 }, settings: { align: "center" } },
+        { type: "columns", content: { columns: [
+          { blocks: [
+            { id: "pl9", type: "heading", content: { text: "Starter — Free", level: 3 }, settings: { align: "center" } },
+            { id: "pl10", type: "text", content: { html: "<ul><li>3 projects</li><li>1 team member</li><li>100 deploys/month</li><li>Community support</li></ul>" }, settings: {} },
+          ] },
+          { blocks: [
+            { id: "pl11", type: "heading", content: { text: "Pro — $29/mo", level: 3 }, settings: { align: "center" } },
+            { id: "pl12", type: "text", content: { html: "<ul><li>Unlimited projects</li><li>10 team members</li><li>Unlimited deploys</li><li>Priority support</li></ul>" }, settings: {} },
+          ] },
+          { blocks: [
+            { id: "pl13", type: "heading", content: { text: "Enterprise — Custom", level: 3 }, settings: { align: "center" } },
+            { id: "pl14", type: "text", content: { html: "<ul><li>Everything in Pro</li><li>SSO & audit logs</li><li>Dedicated SRE</li><li>99.99% SLA</li></ul>" }, settings: {} },
+          ] },
+        ] }, settings: { gap: "32px" } },
+        { type: "spacer", content: { height: 32 }, settings: {} },
+        { type: "button", content: { text: "Get Started Free", url: "#", variant: "primary" }, settings: { align: "center" } },
+      ],
+    },
+    {
+      name: "Changelog",
+      description: "Release notes and product updates with versioned entries and categorized changes",
+      category: "blog",
+      blocks: [
+        { type: "heading", content: { text: "Changelog", level: 1 }, settings: {} },
+        { type: "text", content: { html: "<p>All the latest updates, improvements, and fixes. We ship new features every two weeks.</p>" }, settings: {} },
+        { type: "divider", content: {}, settings: { style: "solid" } },
+        { type: "heading", content: { text: "v2.4.0 — February 2026", level: 2 }, settings: {} },
+        { type: "text", content: { html: "<p><strong>New</strong></p><ul><li>Dark mode support across all pages</li><li>Bulk page publish/unpublish from dashboard</li><li>RSS feed generation for published sites</li></ul><p><strong>Improved</strong></p><ul><li>Page load time reduced by 40% with optimized queries</li><li>Editor autosave now shows intermediate status</li></ul><p><strong>Fixed</strong></p><ul><li>Form submissions no longer lost on network timeout</li><li>Image lightbox closing animation on mobile</li></ul>" }, settings: {} },
+        { type: "divider", content: {}, settings: { style: "solid" } },
+        { type: "heading", content: { text: "v2.3.0 — January 2026", level: 2 }, settings: {} },
+        { type: "text", content: { html: "<p><strong>New</strong></p><ul><li>Table block with headers, rows, and striping</li><li>Custom code injection for analytics scripts</li><li>Page revision history with one-click restore</li></ul><p><strong>Improved</strong></p><ul><li>Template preview now shows all block types</li><li>Search across page content, not just titles</li></ul><p><strong>Fixed</strong></p><ul><li>Slug collision on concurrent page creation</li><li>Schedule button showing wrong variant</li></ul>" }, settings: {} },
+        { type: "divider", content: {}, settings: { style: "solid" } },
+        { type: "heading", content: { text: "v2.2.0 — December 2025", level: 2 }, settings: {} },
+        { type: "text", content: { html: "<p><strong>New</strong></p><ul><li>Accordion block with bordered and minimal styles</li><li>Social links block supporting 16 platforms</li><li>SEO audit panel with real-time scoring</li></ul><p><strong>Improved</strong></p><ul><li>Block drag-and-drop reordering is now smoother</li><li>Form validation shows inline errors</li></ul>" }, settings: {} },
+        { type: "spacer", content: { height: 32 }, settings: {} },
+        { type: "text", content: { html: "<p><em>For older releases, see our <a href=\"#\">full release archive</a>.</em></p>" }, settings: { align: "center" } },
+      ],
+    },
+    {
+      name: "Gallery",
+      description: "Image gallery with grid layout, captions, and lightbox support",
+      category: "portfolio",
+      blocks: [
+        { type: "heading", content: { text: "Gallery", level: 1 }, settings: { align: "center" } },
+        { type: "text", content: { html: "<p>A curated collection of our recent work. Click any image to view it in full size.</p>" }, settings: { align: "center" } },
+        { type: "spacer", content: { height: 24 }, settings: {} },
+        { type: "heading", content: { text: "Brand Identity", level: 2 }, settings: {} },
+        { type: "columns", content: { columns: [
+          { blocks: [
+            { id: "gl1", type: "image", content: { src: "", alt: "Brand identity project — logo design", caption: "Logo Design — Meridian Health" }, settings: { rounded: true } },
+          ] },
+          { blocks: [
+            { id: "gl2", type: "image", content: { src: "", alt: "Brand identity project — color palette", caption: "Color System — Meridian Health" }, settings: { rounded: true } },
+          ] },
+          { blocks: [
+            { id: "gl3", type: "image", content: { src: "", alt: "Brand identity project — stationery", caption: "Stationery — Meridian Health" }, settings: { rounded: true } },
+          ] },
+        ] }, settings: { gap: "16px" } },
+        { type: "spacer", content: { height: 32 }, settings: {} },
+        { type: "heading", content: { text: "Web Design", level: 2 }, settings: {} },
+        { type: "columns", content: { columns: [
+          { blocks: [
+            { id: "gl4", type: "image", content: { src: "", alt: "Web design project — homepage mockup", caption: "Homepage — NovaTech" }, settings: { rounded: true } },
+          ] },
+          { blocks: [
+            { id: "gl5", type: "image", content: { src: "", alt: "Web design project — product page", caption: "Product Page — NovaTech" }, settings: { rounded: true } },
+          ] },
+        ] }, settings: { gap: "16px" } },
+        { type: "spacer", content: { height: 32 }, settings: {} },
+        { type: "heading", content: { text: "Photography", level: 2 }, settings: {} },
+        { type: "columns", content: { columns: [
+          { blocks: [
+            { id: "gl6", type: "image", content: { src: "", alt: "Architecture photography — glass building", caption: "Urban Light — Seattle" }, settings: { rounded: true } },
+          ] },
+          { blocks: [
+            { id: "gl7", type: "image", content: { src: "", alt: "Landscape photography — mountain vista", caption: "Morning Peak — Cascades" }, settings: { rounded: true } },
+          ] },
+          { blocks: [
+            { id: "gl8", type: "image", content: { src: "", alt: "Portrait photography — studio session", caption: "Studio Portrait — Emma K." }, settings: { rounded: true } },
+          ] },
+        ] }, settings: { gap: "16px" } },
+        { type: "spacer", content: { height: 32 }, settings: {} },
+        { type: "divider", content: {}, settings: { style: "solid" } },
+        { type: "text", content: { html: "<p>Interested in working together? <a href=\"#\">Get in touch</a> to discuss your project.</p>" }, settings: { align: "center" } },
+      ],
+    },
   ];
 
   for (const template of templates) {

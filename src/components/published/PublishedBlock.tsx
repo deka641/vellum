@@ -247,6 +247,7 @@ export function PublishedBlock({ block, pageId, allBlocks }: PublishedBlockProps
       }
       return (
         <div className={styles.formBlock} style={extraStyle}>
+          <div className={styles.formPreviewBanner}>Form preview — submissions are disabled</div>
           {fields.map((field) => (
             <div key={field.id} className={styles.formField}>
               <label className={styles.formLabel}>

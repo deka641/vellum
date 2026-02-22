@@ -28,6 +28,8 @@ export default function SiteSettingsPage() {
   const [footerSocialLinks, setFooterSocialLinks] = useState<{ platform: string; url: string }[]>([]);
   const [showBranding, setShowBranding] = useState(true);
   const [notificationEmail, setNotificationEmail] = useState("");
+  const [customHead, setCustomHead] = useState("");
+  const [customFooter, setCustomFooter] = useState("");
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [uploadingFavicon, setUploadingFavicon] = useState(false);
@@ -44,6 +46,8 @@ export default function SiteSettingsPage() {
         const parsed = parseSiteTheme(site.theme);
         if (parsed) setTheme(parsed);
         setNotificationEmail(site.notificationEmail || "");
+        setCustomHead(site.customHead || "");
+        setCustomFooter(site.customFooter || "");
         if (site.footer && typeof site.footer === "object") {
           const f = site.footer as {
             text?: string; description?: string;
@@ -97,6 +101,8 @@ export default function SiteSettingsPage() {
           theme,
           favicon,
           notificationEmail: notificationEmail.trim() || null,
+          customHead: customHead.trim() || null,
+          customFooter: customFooter.trim() || null,
           footer: {
             text: footerText || undefined,
             description: footerDescription || undefined,
@@ -406,6 +412,37 @@ export default function SiteSettingsPage() {
               <span>Show &quot;Built with Vellum&quot; branding</span>
             </label>
           </div>
+
+          <details className={styles.customCodeSection}>
+            <summary className={styles.customCodeSummary}>Custom Code (Advanced)</summary>
+            <p className={styles.customCodeWarning}>
+              Only add code from trusted sources. Malicious scripts can compromise your site.
+            </p>
+            <div className={styles.customCodeField}>
+              <label className={styles.customCodeLabel}>Head Code</label>
+              <p className={styles.customCodeHint}>Scripts and meta tags injected into the &lt;head&gt; section.</p>
+              <textarea
+                className={styles.customCodeTextarea}
+                value={customHead}
+                onChange={(e) => setCustomHead(e.target.value)}
+                rows={6}
+                placeholder="<!-- e.g. analytics, custom fonts -->"
+                spellCheck={false}
+              />
+            </div>
+            <div className={styles.customCodeField}>
+              <label className={styles.customCodeLabel}>Footer Code</label>
+              <p className={styles.customCodeHint}>Scripts and widgets injected before the closing &lt;/body&gt; tag.</p>
+              <textarea
+                className={styles.customCodeTextarea}
+                value={customFooter}
+                onChange={(e) => setCustomFooter(e.target.value)}
+                rows={6}
+                placeholder="<!-- e.g. chat widgets, tracking pixels -->"
+                spellCheck={false}
+              />
+            </div>
+          </details>
 
           <div className={styles.actions}>
             <Button type="submit" disabled={saving}>

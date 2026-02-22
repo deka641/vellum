@@ -103,6 +103,16 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, schedu
   const hasConflict = conflict !== null;
   const relativeTime = useRelativeTime(lastSavedAt);
 
+  const [showAutoSaving, setShowAutoSaving] = useState(false);
+
+  useEffect(() => {
+    if (isDirty && !isSaving && !saveError && conflict === null) {
+      const timer = setTimeout(() => setShowAutoSaving(true), 800);
+      return () => { clearTimeout(timer); setShowAutoSaving(false); };
+    }
+    setShowAutoSaving(false);
+  }, [isDirty, isSaving, saveError, conflict]);
+
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [scheduleDate, setScheduleDate] = useState("");
   const [scheduleLoading, setScheduleLoading] = useState(false);
@@ -185,7 +195,16 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, schedu
           </button>
         )}
         {!hasConflict && !isSaving && !saveError && isDirty && (
-          <span className={styles.saveStatus}>Unsaved changes</span>
+          <span className={styles.saveStatus}>
+            {showAutoSaving ? (
+              <>
+                <Loader2 size={14} className={styles.spinner} />
+                Auto-saving...
+              </>
+            ) : (
+              "Unsaved changes"
+            )}
+          </span>
         )}
         {!hasConflict && !isSaving && !saveError && !isDirty && (
           <span
@@ -318,7 +337,7 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, schedu
         <div className={styles.scheduleWrap} ref={scheduleRef}>
           <Button
             size="sm"
-            variant={scheduledPublishAt ? "secondary" : "secondary"}
+            variant={scheduledPublishAt ? "primary" : "secondary"}
             onClick={() => setScheduleOpen((o) => !o)}
             disabled={hasConflict}
           >

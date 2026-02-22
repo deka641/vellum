@@ -50,6 +50,7 @@ export default async function PublishedSiteLayout({ params, children }: Props) {
       <ReadingProgress />
       <a href="#main-content" className={styles.skipLink}>Skip to content</a>
       {site.favicon && <link rel="icon" href={sanitizeUrl(site.favicon)} />}
+      <link rel="alternate" type="application/rss+xml" title={`${site.name} RSS Feed`} href={`/s/${site.slug}/feed.xml`} />
       {fontPreset?.googleFontsUrl && (
         <>
           <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -57,10 +58,16 @@ export default async function PublishedSiteLayout({ params, children }: Props) {
           <link rel="stylesheet" href={fontPreset.googleFontsUrl} />
         </>
       )}
+      {site.customHead && (
+        <div dangerouslySetInnerHTML={{ __html: site.customHead }} />
+      )}
       <WebSiteJsonLd name={site.name} description={site.description} url={siteUrl} />
       <SiteHeader siteName={site.name} homeHref={homeHref} navItems={navItems} />
       <main id="main-content" className={styles.main}>{children}</main>
       <SiteFooter siteName={site.name} footer={site.footer as Record<string, unknown> | null} />
+      {site.customFooter && (
+        <div dangerouslySetInnerHTML={{ __html: site.customFooter }} />
+      )}
     </div>
   );
 }
