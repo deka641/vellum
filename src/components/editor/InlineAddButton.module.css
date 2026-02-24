@@ -45,3 +45,15 @@
   overflow-y: auto;
   min-width: 260px;
 }
+
+/* Tablet: larger touch target for inline add button */
+@media (max-width: 1024px) {
+  .trigger {
+    width: 36px;
+    height: 36px;
+  }
+
+  .popover {
+    top: 22px;
+  }
+}

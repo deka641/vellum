@@ -92,6 +92,8 @@ export interface FormField {
 export interface CodeContent {
   code: string;
   language: "html" | "embed";
+  displayMode?: "embed" | "snippet";
+  snippetLanguage?: string;
 }
 
 export interface SocialLink {

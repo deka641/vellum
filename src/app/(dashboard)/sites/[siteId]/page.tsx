@@ -98,6 +98,7 @@ export default function SiteDetailPage() {
       .then(setTemplates)
       .catch((e) => {
         console.warn("Failed to load templates:", e);
+        toast("Templates couldn't be loaded", "error");
       });
   }, []);
 

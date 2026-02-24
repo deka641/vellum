@@ -282,8 +282,26 @@ function sanitizeBlockContent(block: BlockLike): BlockLike {
       break;
 
     case "code":
-      if (typeof content.code === "string") {
-        content.code = sanitizeEmbedHtml(content.code);
+      if (content.displayMode === "snippet") {
+        // Snippet mode: code is plain text, strip all HTML
+        if (typeof content.code === "string") {
+          content.code = sanitize(content.code, { allowedTags: [], allowedAttributes: {} });
+        }
+        // Validate snippetLanguage against known list
+        if (typeof content.snippetLanguage === "string") {
+          const KNOWN_SNIPPET_LANGUAGES = [
+            "javascript", "typescript", "python", "html", "css",
+            "json", "bash", "sql", "go", "rust", "php", "plaintext",
+          ];
+          if (!KNOWN_SNIPPET_LANGUAGES.includes(content.snippetLanguage)) {
+            content.snippetLanguage = "plaintext";
+          }
+        }
+      } else {
+        // Embed mode (default): sanitize as embed HTML
+        if (typeof content.code === "string") {
+          content.code = sanitizeEmbedHtml(content.code);
+        }
       }
       break;
 
@@ -315,13 +333,13 @@ function sanitizeBlockContent(block: BlockLike): BlockLike {
     case "table":
       if (Array.isArray(content.headers)) {
         content.headers = (content.headers as string[]).map((h) =>
-          typeof h === "string" ? sanitize(h, { allowedTags: [], allowedAttributes: {} }) : ""
+          typeof h === "string" ? sanitizeRichHtml(h) : ""
         );
       }
       if (Array.isArray(content.rows)) {
         content.rows = (content.rows as string[][]).map((row) =>
           Array.isArray(row) ? row.map((cell) =>
-            typeof cell === "string" ? sanitize(cell, { allowedTags: [], allowedAttributes: {} }) : ""
+            typeof cell === "string" ? sanitizeRichHtml(cell) : ""
           ) : []
         );
       }

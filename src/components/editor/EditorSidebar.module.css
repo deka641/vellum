@@ -42,40 +42,37 @@
   overflow-y: auto;
 }
 
+/* Toggle button hidden — sidebar toggle moved to toolbar on tablet */
 .toggleButton {
   display: none;
-  position: fixed;
-  bottom: var(--space-4);
-  right: var(--space-4);
-  z-index: var(--z-sticky);
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: var(--color-accent);
-  color: var(--color-text-inverse);
-  border: none;
-  box-shadow: var(--shadow-lg);
-  cursor: pointer;
-  align-items: center;
-  justify-content: center;
 }
 
-@media (max-width: 768px) {
+/* Tablet: sidebar becomes fixed overlay */
+@media (max-width: 1024px) {
   .sidebar {
     position: fixed;
     right: 0;
-    top: 0;
+    top: var(--topbar-height);
     bottom: 0;
     z-index: var(--z-modal);
     transform: translateX(100%);
     transition: transform var(--duration-slow) var(--ease-out);
+    box-shadow: var(--shadow-xl);
+    width: var(--editor-panel-width);
   }
 
   .sidebarOpen {
     transform: translateX(0);
   }
 
-  .toggleButton {
-    display: flex;
+  .tab {
+    min-height: 44px;
+  }
+}
+
+/* Small mobile: narrower sidebar */
+@media (max-width: 480px) {
+  .sidebar {
+    width: 280px;
   }
 }

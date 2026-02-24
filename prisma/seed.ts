@@ -436,36 +436,36 @@ async function main() {
         { type: "heading", content: { text: "Brand Identity", level: 2 }, settings: {} },
         { type: "columns", content: { columns: [
           { blocks: [
-            { id: "gl1", type: "image", content: { src: "", alt: "Brand identity project — logo design", caption: "Logo Design — Meridian Health" }, settings: { rounded: true } },
+            { id: "gl1", type: "image", content: { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect width='800' height='600' fill='%23E8E4E0'/%3E%3Ctext x='400' y='290' text-anchor='middle' fill='%23A09890' font-family='sans-serif' font-size='24'%3ELogo Design%3C/text%3E%3Ctext x='400' y='320' text-anchor='middle' fill='%23B8B0A8' font-family='sans-serif' font-size='14'%3EMeridian Health%3C/text%3E%3C/svg%3E", alt: "Brand identity project — logo design", caption: "Logo Design — Meridian Health", width: 800, height: 600 }, settings: { rounded: true } },
           ] },
           { blocks: [
-            { id: "gl2", type: "image", content: { src: "", alt: "Brand identity project — color palette", caption: "Color System — Meridian Health" }, settings: { rounded: true } },
+            { id: "gl2", type: "image", content: { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect width='800' height='600' fill='%23DED8D2'/%3E%3Ctext x='400' y='290' text-anchor='middle' fill='%23968E86' font-family='sans-serif' font-size='24'%3EColor System%3C/text%3E%3Ctext x='400' y='320' text-anchor='middle' fill='%23AEA69E' font-family='sans-serif' font-size='14'%3EMeridian Health%3C/text%3E%3C/svg%3E", alt: "Brand identity project — color palette", caption: "Color System — Meridian Health", width: 800, height: 600 }, settings: { rounded: true } },
           ] },
           { blocks: [
-            { id: "gl3", type: "image", content: { src: "", alt: "Brand identity project — stationery", caption: "Stationery — Meridian Health" }, settings: { rounded: true } },
+            { id: "gl3", type: "image", content: { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect width='800' height='600' fill='%23D4CCC4'/%3E%3Ctext x='400' y='290' text-anchor='middle' fill='%238C847C' font-family='sans-serif' font-size='24'%3EStationery%3C/text%3E%3Ctext x='400' y='320' text-anchor='middle' fill='%23A49C94' font-family='sans-serif' font-size='14'%3EMeridian Health%3C/text%3E%3C/svg%3E", alt: "Brand identity project — stationery", caption: "Stationery — Meridian Health", width: 800, height: 600 }, settings: { rounded: true } },
           ] },
         ] }, settings: { gap: "16px" } },
         { type: "spacer", content: { height: 32 }, settings: {} },
         { type: "heading", content: { text: "Web Design", level: 2 }, settings: {} },
         { type: "columns", content: { columns: [
           { blocks: [
-            { id: "gl4", type: "image", content: { src: "", alt: "Web design project — homepage mockup", caption: "Homepage — NovaTech" }, settings: { rounded: true } },
+            { id: "gl4", type: "image", content: { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect width='800' height='600' fill='%23E0E4E8'/%3E%3Ctext x='400' y='290' text-anchor='middle' fill='%23909498' font-family='sans-serif' font-size='24'%3EHomepage%3C/text%3E%3Ctext x='400' y='320' text-anchor='middle' fill='%23A8ACB0' font-family='sans-serif' font-size='14'%3ENovaTech%3C/text%3E%3C/svg%3E", alt: "Web design project — homepage mockup", caption: "Homepage — NovaTech", width: 800, height: 600 }, settings: { rounded: true } },
           ] },
           { blocks: [
-            { id: "gl5", type: "image", content: { src: "", alt: "Web design project — product page", caption: "Product Page — NovaTech" }, settings: { rounded: true } },
+            { id: "gl5", type: "image", content: { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect width='800' height='600' fill='%23D2D8DE'/%3E%3Ctext x='400' y='290' text-anchor='middle' fill='%23868C92' font-family='sans-serif' font-size='24'%3EProduct Page%3C/text%3E%3Ctext x='400' y='320' text-anchor='middle' fill='%239EA4AA' font-family='sans-serif' font-size='14'%3ENovaTech%3C/text%3E%3C/svg%3E", alt: "Web design project — product page", caption: "Product Page — NovaTech", width: 800, height: 600 }, settings: { rounded: true } },
           ] },
         ] }, settings: { gap: "16px" } },
         { type: "spacer", content: { height: 32 }, settings: {} },
         { type: "heading", content: { text: "Photography", level: 2 }, settings: {} },
         { type: "columns", content: { columns: [
           { blocks: [
-            { id: "gl6", type: "image", content: { src: "", alt: "Architecture photography — glass building", caption: "Urban Light — Seattle" }, settings: { rounded: true } },
+            { id: "gl6", type: "image", content: { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect width='800' height='600' fill='%23E4E8E0'/%3E%3Ctext x='400' y='290' text-anchor='middle' fill='%23949890' font-family='sans-serif' font-size='24'%3EUrban Light%3C/text%3E%3Ctext x='400' y='320' text-anchor='middle' fill='%23ACB0A8' font-family='sans-serif' font-size='14'%3ESeattle%3C/text%3E%3C/svg%3E", alt: "Architecture photography — glass building", caption: "Urban Light — Seattle", width: 800, height: 600 }, settings: { rounded: true } },
           ] },
           { blocks: [
-            { id: "gl7", type: "image", content: { src: "", alt: "Landscape photography — mountain vista", caption: "Morning Peak — Cascades" }, settings: { rounded: true } },
+            { id: "gl7", type: "image", content: { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect width='800' height='600' fill='%23D8DED2'/%3E%3Ctext x='400' y='290' text-anchor='middle' fill='%238A9084' font-family='sans-serif' font-size='24'%3EMorning Peak%3C/text%3E%3Ctext x='400' y='320' text-anchor='middle' fill='%23A2A89C' font-family='sans-serif' font-size='14'%3ECascades%3C/text%3E%3C/svg%3E", alt: "Landscape photography — mountain vista", caption: "Morning Peak — Cascades", width: 800, height: 600 }, settings: { rounded: true } },
           ] },
           { blocks: [
-            { id: "gl8", type: "image", content: { src: "", alt: "Portrait photography — studio session", caption: "Studio Portrait — Emma K." }, settings: { rounded: true } },
+            { id: "gl8", type: "image", content: { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect width='800' height='600' fill='%23E8E0E4'/%3E%3Ctext x='400' y='290' text-anchor='middle' fill='%23989094' font-family='sans-serif' font-size='24'%3EStudio Portrait%3C/text%3E%3Ctext x='400' y='320' text-anchor='middle' fill='%23B0A8AC' font-family='sans-serif' font-size='14'%3EEmma K.%3C/text%3E%3C/svg%3E", alt: "Portrait photography — studio session", caption: "Studio Portrait — Emma K.", width: 800, height: 600 }, settings: { rounded: true } },
           ] },
         ] }, settings: { gap: "16px" } },
         { type: "spacer", content: { height: 32 }, settings: {} },

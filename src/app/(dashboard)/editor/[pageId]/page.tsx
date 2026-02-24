@@ -35,8 +35,19 @@ export default function EditorPage() {
   const [isHomepage, setIsHomepage] = useState(false);
   const [pageStatus, setPageStatus] = useState<"DRAFT" | "PUBLISHED">("DRAFT");
   const [scheduledPublishAt, setScheduledPublishAt] = useState<string | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [publishDialogOpen, setPublishDialogOpen] = useState(false);
+
+  // Track tablet breakpoint and auto-close sidebar on tablet
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 1024px)");
+    const handler = (e: MediaQueryListEvent | MediaQueryList) => {
+      setSidebarOpen(!e.matches);
+    };
+    handler(mq);
+    mq.addEventListener("change", handler as (e: MediaQueryListEvent) => void);
+    return () => mq.removeEventListener("change", handler as (e: MediaQueryListEvent) => void);
+  }, []);
   const { setPage, addBlock, isDirty, pageSlug } = useEditorStore();
   const { save, forceSave } = useAutosave();
 
@@ -330,6 +341,8 @@ export default function EditorPage() {
         onPublish={handlePublish}
         onSchedule={handleSchedule}
         onCancelSchedule={handleCancelSchedule}
+        sidebarOpen={sidebarOpen}
+        onSidebarToggle={() => setSidebarOpen((o) => !o)}
       />
       <ConflictBanner onForceSave={forceSave} />
       <div className={styles.body}>
@@ -338,6 +351,12 @@ export default function EditorPage() {
           mobileOpen={sidebarOpen}
           onMobileToggle={() => setSidebarOpen((o) => !o)}
         />
+        {sidebarOpen && (
+          <div
+            className={styles.sidebarBackdrop}
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
       </div>
       <PublishSuccessDialog
         open={publishDialogOpen}

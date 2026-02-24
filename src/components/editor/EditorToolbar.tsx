@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Eye, ExternalLink, Save, Undo2, Redo2, Loader2, AlertCircle, AlertTriangle, Monitor, Tablet, Smartphone, Check, MoreHorizontal, Clock, CalendarClock, X } from "lucide-react";
+import { ArrowLeft, Eye, ExternalLink, Save, Undo2, Redo2, Loader2, AlertCircle, AlertTriangle, Monitor, Tablet, Smartphone, Check, MoreHorizontal, Clock, CalendarClock, X, PanelRight } from "lucide-react";
 import { Button } from "@/components/ui/Button/Button";
 import { IconButton } from "@/components/ui/IconButton/IconButton";
 import { Badge } from "@/components/ui/Badge/Badge";
@@ -93,9 +93,11 @@ interface EditorToolbarProps {
   onPublish: () => void;
   onSchedule: (scheduledAt: string) => void;
   onCancelSchedule: () => void;
+  sidebarOpen?: boolean;
+  onSidebarToggle?: () => void;
 }
 
-export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, scheduledPublishAt, onPublish, onSchedule, onCancelSchedule }: EditorToolbarProps) {
+export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, scheduledPublishAt, onPublish, onSchedule, onCancelSchedule, sidebarOpen, onSidebarToggle }: EditorToolbarProps) {
   const router = useRouter();
   const { pageTitle, pageSlug, setPageTitle, isDirty, isSaving, saveError, conflict, undo, redo, previewMode, setPreviewMode, lastSavedAt } =
     useEditorStore();
@@ -332,6 +334,18 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, schedu
         <Button size="sm" onClick={onPublish} disabled={hasConflict}>
           {pageStatus === "PUBLISHED" ? "Update" : "Publish"}
         </Button>
+
+        {/* Sidebar toggle — tablet only */}
+        {onSidebarToggle && (
+          <button
+            className={`${styles.sidebarToggle} ${sidebarOpen ? styles.sidebarToggleActive : ""}`}
+            onClick={onSidebarToggle}
+            aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
+            title={sidebarOpen ? "Close sidebar" : "Open sidebar"}
+          >
+            <PanelRight size={18} />
+          </button>
+        )}
 
         {/* Schedule dropdown */}
         <div className={styles.scheduleWrap} ref={scheduleRef}>

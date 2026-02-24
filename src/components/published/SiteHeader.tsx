@@ -3,8 +3,14 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import dynamic from "next/dynamic";
+import { Menu, X, Search } from "lucide-react";
 import styles from "./site-layout.module.css";
+
+const SearchOverlay = dynamic(
+  () => import("./SearchOverlay").then((m) => m.SearchOverlay),
+  { ssr: false }
+);
 
 interface NavItem {
   title: string;
@@ -15,10 +21,12 @@ interface SiteHeaderProps {
   siteName: string;
   homeHref: string;
   navItems: NavItem[];
+  siteSlug: string;
 }
 
-export function SiteHeader({ siteName, homeHref, navItems }: SiteHeaderProps) {
+export function SiteHeader({ siteName, homeHref, navItems, siteSlug }: SiteHeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const pathname = usePathname();
   const mobileNavRef = useRef<HTMLElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
@@ -53,55 +61,86 @@ export function SiteHeader({ siteName, homeHref, navItems }: SiteHeaderProps) {
     }
   }, [mobileOpen, handleKeyDown]);
 
-  return (
-    <header className={styles.header} role="banner">
-      <div className={styles.headerInner}>
-        <Link href={homeHref} className={styles.siteName}>
-          {siteName}
-        </Link>
+  // Ctrl+K / Cmd+K to open search
+  useEffect(() => {
+    function handleGlobalKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen((prev) => !prev);
+      }
+    }
+    document.addEventListener("keydown", handleGlobalKeyDown);
+    return () => document.removeEventListener("keydown", handleGlobalKeyDown);
+  }, []);
 
-        {navItems.length > 0 && (
-          <>
-            <nav className={styles.desktopNav} aria-label="Site navigation">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`${styles.navLink} ${isActive(item.href) ? styles.navLinkActive : ""}`}
-                >
-                  {item.title}
-                </Link>
-              ))}
-            </nav>
+  const handleCloseSearch = useCallback(() => {
+    setSearchOpen(false);
+  }, []);
+
+  return (
+    <>
+      <header className={styles.header} role="banner">
+        <div className={styles.headerInner}>
+          <Link href={homeHref} className={styles.siteName}>
+            {siteName}
+          </Link>
+
+          <div className={styles.headerActions}>
+            {navItems.length > 0 && (
+              <nav className={styles.desktopNav} aria-label="Site navigation">
+                {navItems.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`${styles.navLink} ${isActive(item.href) ? styles.navLinkActive : ""}`}
+                  >
+                    {item.title}
+                  </Link>
+                ))}
+              </nav>
+            )}
 
             <button
-              ref={menuButtonRef}
-              className={styles.menuButton}
-              onClick={() => setMobileOpen(!mobileOpen)}
-              aria-label={mobileOpen ? "Close navigation" : "Open navigation"}
-              aria-expanded={mobileOpen}
-              aria-controls="mobile-nav"
+              className={styles.searchButton}
+              onClick={() => setSearchOpen(true)}
+              aria-label="Search site"
+              title="Search (Ctrl+K)"
             >
-              {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+              <Search size={18} />
             </button>
-          </>
-        )}
-      </div>
 
-      {navItems.length > 0 && (
-        <nav ref={mobileNavRef} id="mobile-nav" className={`${styles.mobileNav} ${mobileOpen ? styles.mobileNavOpen : ""}`} aria-label="Site navigation">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`${styles.navLink} ${isActive(item.href) ? styles.navLinkActive : ""}`}
-              onClick={() => setMobileOpen(false)}
-            >
-              {item.title}
-            </Link>
-          ))}
-        </nav>
-      )}
-    </header>
+            {navItems.length > 0 && (
+              <button
+                ref={menuButtonRef}
+                className={styles.menuButton}
+                onClick={() => setMobileOpen(!mobileOpen)}
+                aria-label={mobileOpen ? "Close navigation" : "Open navigation"}
+                aria-expanded={mobileOpen}
+                aria-controls="mobile-nav"
+              >
+                {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {navItems.length > 0 && (
+          <nav ref={mobileNavRef} id="mobile-nav" className={`${styles.mobileNav} ${mobileOpen ? styles.mobileNavOpen : ""}`} aria-label="Site navigation">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`${styles.navLink} ${isActive(item.href) ? styles.navLinkActive : ""}`}
+                onClick={() => setMobileOpen(false)}
+              >
+                {item.title}
+              </Link>
+            ))}
+          </nav>
+        )}
+      </header>
+
+      <SearchOverlay siteSlug={siteSlug} isOpen={searchOpen} onClose={handleCloseSearch} />
+    </>
   );
 }

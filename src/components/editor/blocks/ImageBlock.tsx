@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type CSSProperties } from "react";
-import { Image as ImageIcon, FolderOpen } from "lucide-react";
+import { Image as ImageIcon } from "lucide-react";
 import { useEditorStore } from "@/stores/editor-store";
 import { MediaPickerModal } from "@/components/editor/MediaPickerModal";
 import type { ImageContent, BlockSettings } from "@/types/blocks";
@@ -19,33 +19,38 @@ export function ImageBlock({ id, content, settings }: ImageBlockProps) {
 
   if (!content.src) {
     return (
-      <div className={styles.imagePlaceholder}>
-        <ImageIcon size={24} />
-        <span>Click to add an image</span>
-        <div className={styles.imagePlaceholderActions}>
-          <button
-            className={styles.browseMediaBtn}
-            onClick={(e) => {
-              e.stopPropagation();
-              setPickerOpen(true);
-            }}
-          >
-            <FolderOpen size={14} />
-            Browse media
-          </button>
-          <input
-            type="text"
-            className={styles.imageUrlInput}
-            placeholder="Or paste image URL..."
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                const url = e.currentTarget.value.trim();
-                if (url) updateBlockContent(id, { src: url });
-              }
-            }}
-            onClick={(e) => e.stopPropagation()}
-          />
+      <div
+        className={styles.imageEmptyState}
+        onClick={(e) => {
+          e.stopPropagation();
+          setPickerOpen(true);
+        }}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setPickerOpen(true);
+          }
+        }}
+      >
+        <div className={styles.imageEmptyIcon}>
+          <ImageIcon size={32} />
         </div>
+        <span className={styles.imageEmptyTitle}>Click to add image</span>
+        <span className={styles.imageEmptySubtitle}>or drag and drop</span>
+        <input
+          type="text"
+          className={styles.imageUrlInput}
+          placeholder="Or paste image URL and press Enter..."
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              const url = e.currentTarget.value.trim();
+              if (url) updateBlockContent(id, { src: url });
+            }
+          }}
+          onClick={(e) => e.stopPropagation()}
+        />
         <MediaPickerModal
           open={pickerOpen}
           onOpenChange={setPickerOpen}

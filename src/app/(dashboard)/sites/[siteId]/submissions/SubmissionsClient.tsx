@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Download, ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { Download, ChevronLeft, ChevronRight, Search, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button/Button";
 import { formatDate } from "@/lib/utils";
 import styles from "./submissions.module.css";
@@ -27,6 +27,7 @@ interface SubmissionsClientProps {
 export function SubmissionsClient({ siteId, pages }: SubmissionsClientProps) {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
@@ -35,6 +36,7 @@ export function SubmissionsClient({ siteId, pages }: SubmissionsClientProps) {
 
   const fetchSubmissions = useCallback(async () => {
     setLoading(true);
+    setFetchError(false);
     try {
       const params = new URLSearchParams({
         page: String(page),
@@ -48,9 +50,13 @@ export function SubmissionsClient({ siteId, pages }: SubmissionsClientProps) {
         setSubmissions(data.submissions);
         setTotalPages(data.totalPages);
         setTotal(data.total);
+      } else {
+        setFetchError(true);
+        console.error("Failed to fetch submissions:", res.status);
       }
-    } catch {
-      // silently fail
+    } catch (error) {
+      setFetchError(true);
+      console.error("Failed to fetch submissions:", error);
     } finally {
       setLoading(false);
     }
@@ -114,6 +120,14 @@ export function SubmissionsClient({ siteId, pages }: SubmissionsClientProps) {
           Export CSV
         </Button>
       </div>
+
+      {fetchError && (
+        <div className={styles.errorBanner}>
+          <AlertCircle size={18} />
+          <span>Failed to load submissions. Please try again.</span>
+          <button onClick={fetchSubmissions} className={styles.retryBtn}>Retry</button>
+        </div>
+      )}
 
       {loading ? (
         <div className={styles.empty}>

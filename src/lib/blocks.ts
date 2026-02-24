@@ -109,7 +109,7 @@ export const blockDefinitions: Record<BlockType, BlockDefinition> = {
     label: "Code / Embed",
     icon: "Code",
     category: "media",
-    defaultContent: { code: "", language: "html" },
+    defaultContent: { code: "", language: "html", displayMode: "embed" },
     defaultSettings: {},
   },
   social: {

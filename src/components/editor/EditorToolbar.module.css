@@ -205,11 +205,78 @@
   box-shadow: 0 0 0 3px var(--color-accent-light);
 }
 
+/* Sidebar toggle button — hidden on desktop, visible on tablet */
+.sidebarToggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+  flex-shrink: 0;
+}
+
+.sidebarToggle:hover {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+  background: var(--color-accent-light);
+}
+
+.sidebarToggleActive {
+  color: var(--color-accent);
+  background: var(--color-accent-light);
+  border-color: var(--color-accent);
+}
+
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
 
+/* Tablet breakpoint: 768px - 1024px */
+@media (max-width: 1024px) {
+  .toolbar {
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .left {
+    gap: var(--space-2);
+    flex: 1;
+    min-width: 0;
+  }
+
+  .right {
+    gap: var(--space-1);
+  }
+
+  .titleInput {
+    max-width: 180px;
+    min-width: 100px;
+  }
+
+  .desktopOnly {
+    display: none;
+  }
+
+  .mobileOnly {
+    display: flex;
+  }
+
+  .sidebarToggle {
+    display: flex;
+    min-width: 44px;
+    min-height: 44px;
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* Small mobile breakpoint */
 @media (max-width: 768px) {
   .toolbar {
     padding: var(--space-2);
@@ -231,13 +298,5 @@
     max-width: 120px;
     font-size: var(--text-sm);
     min-width: unset;
-  }
-
-  .desktopOnly {
-    display: none;
-  }
-
-  .mobileOnly {
-    display: flex;
   }
 }

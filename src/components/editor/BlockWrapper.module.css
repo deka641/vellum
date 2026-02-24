@@ -179,3 +179,53 @@
     animation-duration: 0ms;
   }
 }
+
+/* Tablet: larger touch targets and repositioned toolbar */
+@media (max-width: 1024px) {
+  .toolbar {
+    left: auto;
+    right: -4px;
+    top: -44px;
+    flex-direction: row;
+    gap: var(--space-1);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-1);
+    box-shadow: var(--shadow-md);
+  }
+
+  .dragHandle,
+  .duplicateButton,
+  .copyButton,
+  .deleteButton,
+  .visibilityButton {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+  }
+
+  .wrapper:hover .toolbar,
+  .selected .toolbar {
+    opacity: 1;
+  }
+
+  .content {
+    padding: var(--space-2);
+  }
+}
+
+/* Small mobile: even more compact */
+@media (max-width: 768px) {
+  .dragHandle,
+  .duplicateButton,
+  .copyButton,
+  .deleteButton,
+  .visibilityButton {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+}

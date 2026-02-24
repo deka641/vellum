@@ -4,6 +4,7 @@ import { slugify } from "@/lib/utils";
 import { PublishedForm } from "./PublishedForm";
 import { ImageLightbox } from "./ImageLightbox";
 import { SocialIcon } from "./SocialIcon";
+import { CodeHighlight } from "./CodeHighlight";
 import type { BlockData } from "@/types/blocks";
 import styles from "./published.module.css";
 
@@ -286,6 +287,17 @@ export function PublishedBlock({ block, pageId, allBlocks }: PublishedBlockProps
     case "code": {
       const code = content.code as string;
       if (!code) return null;
+      const displayMode = (content.displayMode as string) || "embed";
+      if (displayMode === "snippet") {
+        return (
+          <div className={styles.codeBlock} style={extraStyle}>
+            <CodeHighlight
+              code={code}
+              language={content.snippetLanguage as string | undefined}
+            />
+          </div>
+        );
+      }
       return (
         <div
           className={styles.codeBlock}
@@ -335,10 +347,12 @@ export function PublishedBlock({ block, pageId, allBlocks }: PublishedBlockProps
               <summary className={styles.accordionSummary}>
                 {item.title}
               </summary>
-              <div
-                className={styles.accordionBody}
-                dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(item.content) }}
-              />
+              <div className={styles.accordionBody}>
+                <div
+                  className={styles.accordionBodyInner}
+                  dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(item.content) }}
+                />
+              </div>
             </details>
           ))}
         </div>
@@ -358,7 +372,12 @@ export function PublishedBlock({ block, pageId, allBlocks }: PublishedBlockProps
               <thead>
                 <tr>
                   {headers.map((h, i) => (
-                    <th key={i} className={styles.tableHeader} scope="col">{h}</th>
+                    <th
+                      key={i}
+                      className={styles.tableHeader}
+                      scope="col"
+                      dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(h) }}
+                    />
                   ))}
                 </tr>
               </thead>
@@ -367,7 +386,11 @@ export function PublishedBlock({ block, pageId, allBlocks }: PublishedBlockProps
               {tableRows.map((row, ri) => (
                 <tr key={ri}>
                   {row.map((cell, ci) => (
-                    <td key={ci} className={styles.tableCell}>{cell}</td>
+                    <td
+                      key={ci}
+                      className={styles.tableCell}
+                      dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(cell) }}
+                    />
                   ))}
                 </tr>
               ))}

@@ -243,11 +243,21 @@ export interface ContrastResult {
 }
 
 export function validateThemeContrast(theme: SiteTheme): ContrastResult[] {
+  // Compute textInverse the same way as generateThemeVariables
+  const darkText = "#1C1917";
+  const lightText = "#FAFAF9";
+  const textInverse =
+    getContrastRatio(darkText, theme.colors.primary) >
+    getContrastRatio(lightText, theme.colors.primary)
+      ? darkText
+      : lightText;
+
   const checks = [
     { pair: "Text on Background", fg: theme.colors.text, bg: theme.colors.background },
     { pair: "Text on Surface", fg: theme.colors.text, bg: theme.colors.surface },
     { pair: "Primary on Background", fg: theme.colors.primary, bg: theme.colors.background },
     { pair: "Primary on Surface", fg: theme.colors.primary, bg: theme.colors.surface },
+    { pair: "Button on Accent", fg: textInverse, bg: theme.colors.primary },
   ];
 
   return checks.map(({ pair, fg, bg }) => {
@@ -265,7 +275,16 @@ export function generateThemeVariables(
   const font = FONT_PRESETS[fontPreset];
 
   const isLightBg = getLuminance(colors.background) > 0.5;
-  const textInverse = isLightBg ? "#1C1917" : "#FAFAF9";
+
+  // textInverse is used on accent-colored buttons, so pick whichever
+  // (dark or light) has better contrast against the primary/accent color.
+  const darkText = "#1C1917";
+  const lightText = "#FAFAF9";
+  const textInverse =
+    getContrastRatio(darkText, colors.primary) >
+    getContrastRatio(lightText, colors.primary)
+      ? darkText
+      : lightText;
 
   // For light backgrounds: secondary text = lighten (fade toward white)
   // For dark backgrounds: secondary text = darken (fade toward black)
@@ -293,6 +312,7 @@ export function generateThemeVariables(
     "--color-border": fadeText(colors.text, 70),
     "--color-border-light": fadeText(colors.text, 80),
     "--color-border-focus": colors.primary,
+    "--shadow-color": isLightBg ? "28, 25, 23" : "0, 0, 0",
     "--font-heading": font.heading,
     "--font-body": font.body,
   };

@@ -216,3 +216,34 @@
   border-radius: var(--radius-md);
   border: 1px solid #fde68a;
 }
+
+/* Tablet: canvas full width when sidebar is hidden */
+@media (max-width: 1024px) {
+  .canvas {
+    padding: var(--space-4);
+  }
+
+  .page {
+    padding: var(--space-6) var(--space-6);
+  }
+
+  .quickBlocks {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 320px;
+  }
+
+  .addBlockBottom {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 768px) {
+  .canvas {
+    padding: var(--space-3);
+  }
+
+  .page {
+    padding: var(--space-4);
+    min-height: 400px;
+  }
+}
