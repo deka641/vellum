@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { type EditorBlock, type BlockContent, type BlockSettings, type ColumnsContent } from "@/types/blocks";
 import { createBlock } from "@/lib/blocks";
 import { generateId } from "@/lib/utils";
-import { DISALLOWED_NESTED_TYPES } from "@/lib/validations";
+import { DISALLOWED_NESTED_TYPES, blockTypeEnum } from "@/lib/validations";
 import type { BlockType } from "@/types/blocks";
 
 interface HistoryEntry {
@@ -419,6 +419,11 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         return state;
       }
       if (!parsed || !parsed.type || !parsed.id) return state;
+
+      // Validate block type against known types
+      const typeResult = blockTypeEnum.safeParse(parsed.type);
+      if (!typeResult.success) return state;
+      if (typeof parsed.content !== "object" || parsed.content === null) return state;
 
       const newBlock = cloneBlock(parsed);
 

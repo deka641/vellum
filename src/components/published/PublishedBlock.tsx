@@ -5,6 +5,7 @@ import { PublishedForm } from "./PublishedForm";
 import { ImageLightbox } from "./ImageLightbox";
 import { SocialIcon } from "./SocialIcon";
 import { CodeHighlight } from "./CodeHighlight";
+import { PublishedTableWrapper } from "./PublishedTableWrapper";
 import type { BlockData } from "@/types/blocks";
 import styles from "./published.module.css";
 
@@ -366,38 +367,40 @@ export function PublishedBlock({ block, pageId, allBlocks }: PublishedBlockProps
       const striped = content.striped !== false;
       if (headers.length === 0 && tableRows.length === 0) return null;
       return (
-        <figure className={styles.tableContainer} style={extraStyle}>
-          <table className={`${styles.table} ${striped ? styles.tableStriped : ""}`}>
-            {headers.length > 0 && (
-              <thead>
-                <tr>
-                  {headers.map((h, i) => (
-                    <th
-                      key={i}
-                      className={styles.tableHeader}
-                      scope="col"
-                      dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(h) }}
-                    />
-                  ))}
-                </tr>
-              </thead>
-            )}
-            <tbody>
-              {tableRows.map((row, ri) => (
-                <tr key={ri}>
-                  {row.map((cell, ci) => (
-                    <td
-                      key={ci}
-                      className={styles.tableCell}
-                      dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(cell) }}
-                    />
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {caption && <figcaption className={styles.tableCaption}>{caption}</figcaption>}
-        </figure>
+        <PublishedTableWrapper>
+          <figure style={extraStyle}>
+            <table className={`${styles.table} ${striped ? styles.tableStriped : ""}`}>
+              {headers.length > 0 && (
+                <thead>
+                  <tr>
+                    {headers.map((h, i) => (
+                      <th
+                        key={i}
+                        className={styles.tableHeader}
+                        scope="col"
+                        dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(h) }}
+                      />
+                    ))}
+                  </tr>
+                </thead>
+              )}
+              <tbody>
+                {tableRows.map((row, ri) => (
+                  <tr key={ri}>
+                    {row.map((cell, ci) => (
+                      <td
+                        key={ci}
+                        className={styles.tableCell}
+                        dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(cell) }}
+                      />
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {caption && <figcaption className={styles.tableCaption}>{caption}</figcaption>}
+          </figure>
+        </PublishedTableWrapper>
       );
     }
 

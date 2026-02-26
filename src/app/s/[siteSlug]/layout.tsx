@@ -8,6 +8,7 @@ import { SiteFooter } from "@/components/published/SiteFooter";
 import { ReadingProgress } from "@/components/published/ReadingProgress";
 import { WebSiteJsonLd } from "@/components/published/JsonLd";
 import styles from "@/components/published/site-layout.module.css";
+import { ScrollToTop } from "@/components/published/ScrollToTop";
 
 interface Props {
   params: Promise<{ siteSlug: string }>;
@@ -68,6 +69,7 @@ export default async function PublishedSiteLayout({ params, children }: Props) {
       {site.customFooter && (
         <div dangerouslySetInnerHTML={{ __html: site.customFooter }} />
       )}
+      <ScrollToTop />
     </div>
   );
 }

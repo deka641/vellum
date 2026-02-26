@@ -18,13 +18,14 @@ interface BlockWrapperProps {
 
 export const BlockWrapper = memo(function BlockWrapper({ id, children }: BlockWrapperProps) {
   const isSelected = useEditorStore((s) => s.selectedBlockId === id);
-  const { isHidden, marginTop, marginBottom } = useEditorStore(
+  const { isHidden, marginTop, marginBottom, blockType } = useEditorStore(
     useShallow((s) => {
       const block = s.blocks.find((b) => b.id === id);
       return {
         isHidden: block?.settings.hidden === true,
         marginTop: block?.settings.marginTop as string | undefined,
         marginBottom: block?.settings.marginBottom as string | undefined,
+        blockType: block?.type as string | undefined,
       };
     })
   );
@@ -37,6 +38,10 @@ export const BlockWrapper = memo(function BlockWrapper({ id, children }: BlockWr
   const updateBlockSettings = useEditorStore((s) => s.updateBlockSettings);
   const undo = useEditorStore((s) => s.undo);
   const { toast } = useToast();
+
+  const blockLabel = blockType
+    ? `${blockType.charAt(0).toUpperCase() + blockType.slice(1)} block`
+    : "Block";
 
   // Enter animation: start with isEntering true, clear after a frame to trigger CSS animation
   const [isEntering, setIsEntering] = useState(true);
@@ -111,6 +116,8 @@ export const BlockWrapper = memo(function BlockWrapper({ id, children }: BlockWr
         isSettled && styles.settled
       )}
       onClick={handleClick}
+      role="region"
+      aria-label={blockLabel}
     >
       <div className={styles.toolbar}>
         <button

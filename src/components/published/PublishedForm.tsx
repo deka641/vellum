@@ -80,9 +80,14 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
 
       if (field.pattern) {
         try {
-          const regex = new RegExp(field.pattern);
-          if (!regex.test(value)) {
-            errors[field.id] = field.patternMessage || "Invalid format";
+          // ReDoS guard: reject patterns with nested quantifiers
+          if (/(\+|\*|\{)\s*\).*(\+|\*|\{)/.test(field.pattern) || field.pattern.length > 200) {
+            // Skip potentially dangerous patterns
+          } else {
+            const regex = new RegExp(field.pattern);
+            if (!regex.test(value)) {
+              errors[field.id] = field.patternMessage || "Invalid format";
+            }
           }
         } catch {
           // Invalid regex — skip validation

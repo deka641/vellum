@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { Blocks, FileText, Palette, Quote } from "lucide-react";
+import { Blocks, FileText, Globe, Palette, Quote } from "lucide-react";
 import styles from "./landing.module.css";
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -11,23 +11,24 @@ const stats = [
   { icon: <Blocks size={20} />, value: 15, display: "15", label: "Block Types" },
   { icon: <FileText size={20} />, value: null, display: "Unlimited", label: "Pages & Sites" },
   { icon: <Palette size={20} />, value: 6, display: "6", label: "Theme Presets" },
+  { icon: <Globe size={20} />, value: 50, display: "50", label: "SEO Checks & Features" },
 ];
 
 const testimonials = [
   {
-    quote: "Vellum made it incredibly easy to build a professional website for my portfolio. The drag-and-drop editor is intuitive and the results look stunning.",
+    quote: "I replaced three different tools with Vellum. The visual editor handles our landing pages, the form builder captures leads, and scheduled publishing keeps our content calendar on track. Setup took about 20 minutes.",
     name: "Sarah Chen",
-    role: "Freelance Designer",
+    role: "Marketing Lead at Brightpath Studio",
   },
   {
-    quote: "I was able to set up a complete business site with forms, navigation, and custom themes in under an hour. No coding required whatsoever.",
+    quote: "We needed a site for our bakery with online ordering forms, a photo gallery, and easy updates for daily specials. Vellum\'s block editor made it simple \u2014 my staff can update the menu without calling me.",
     name: "Marcus Rivera",
-    role: "Small Business Owner",
+    role: "Owner, Rivera\'s Artisan Bakery",
   },
   {
-    quote: "The block-based approach gives me the flexibility I need while keeping everything consistent. Publishing changes is instant and the sites load fast.",
+    quote: "As a developer, I appreciate that Vellum generates clean semantic HTML with proper heading hierarchy, structured data, and automatic sitemaps. The SEO audit catches issues before they go live. My clients\' sites consistently score 95+ on Lighthouse.",
     name: "Emma Larsson",
-    role: "Content Creator",
+    role: "Web Developer & Consultant",
   },
 ];
 

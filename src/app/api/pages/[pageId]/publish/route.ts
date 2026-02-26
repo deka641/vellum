@@ -73,31 +73,19 @@ export async function POST(
       });
     }
 
-    // Immediate publish
-    const updated = await db.page.update({
-      where: { id: pageId },
-      data: {
-        status: "PUBLISHED",
-        publishedAt: new Date(),
-        scheduledPublishAt: null, // Clear any existing schedule
-      },
-    });
+    // Immediate publish — page update + revision snapshot in one transaction
+    const updated = await db.$transaction(async (tx) => {
+      const page_updated = await tx.page.update({
+        where: { id: pageId },
+        data: {
+          status: "PUBLISHED",
+          publishedAt: new Date(),
+          scheduledPublishAt: null, // Clear any existing schedule
+        },
+      });
 
-    try {
-      const siteSlug = page.site.slug;
-      if (page.isHomepage) {
-        revalidatePath(`/s/${siteSlug}`);
-      } else {
-        revalidatePath(`/s/${siteSlug}/${page.slug}`);
-      }
-      revalidatePath(`/s/${siteSlug}`, "layout");
-    } catch (err) { logger.warn("revalidation", "Publish revalidation failed:", err); }
-
-    revalidateTag("dashboard", { expire: 0 });
-
-    // Create a revision snapshot on publish
-    try {
-      const blocks = await db.block.findMany({
+      // Create a revision snapshot on publish
+      const blocks = await tx.block.findMany({
         where: { pageId },
         orderBy: { sortOrder: "asc" },
       });
@@ -110,31 +98,44 @@ export async function POST(
         parentId: b.parentId,
       }));
 
-      await db.pageRevision.create({
+      await tx.pageRevision.create({
         data: {
           pageId,
-          title: updated.title,
+          title: page_updated.title,
           blocks: blockData as unknown as Prisma.InputJsonValue,
           note: "Published",
         },
       });
 
       // Limit to 20 revisions per page — delete oldest if over limit
-      const revisionCount = await db.pageRevision.count({ where: { pageId } });
+      const revisionCount = await tx.pageRevision.count({ where: { pageId } });
       if (revisionCount > 20) {
-        const oldest = await db.pageRevision.findMany({
+        const oldest = await tx.pageRevision.findMany({
           where: { pageId },
           orderBy: { createdAt: "asc" },
           take: revisionCount - 20,
           select: { id: true },
         });
-        await db.pageRevision.deleteMany({
+        await tx.pageRevision.deleteMany({
           where: { id: { in: oldest.map((r) => r.id) } },
         });
       }
-    } catch (err) {
-      logger.warn("revisions", "Failed to create publish revision:", err);
-    }
+
+      return page_updated;
+    });
+
+    // Revalidation happens outside the transaction (side effects)
+    try {
+      const siteSlug = page.site.slug;
+      if (page.isHomepage) {
+        revalidatePath(`/s/${siteSlug}`);
+      } else {
+        revalidatePath(`/s/${siteSlug}/${page.slug}`);
+      }
+      revalidatePath(`/s/${siteSlug}`, "layout");
+    } catch (err) { logger.warn("revalidation", "Publish revalidation failed:", err); }
+
+    revalidateTag("dashboard", { expire: 0 });
 
     return NextResponse.json(updated);
   } catch (error) {

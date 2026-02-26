@@ -1,0 +1,68 @@
+.scrollToTop {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border, #e5e5e5);
+  background: var(--color-surface, #fff);
+  color: var(--color-text-secondary, #6b7280);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+  pointer-events: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  z-index: 50;
+}
+
+.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+@media (hover: hover) {
+  .scrollToTop:hover {
+    color: var(--color-text-primary, #1c1917);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    transform: translateY(-1px);
+  }
+
+  .visible:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.scrollToTop:focus-visible {
+  outline: 2px solid var(--color-accent, #6366f1);
+  outline-offset: 2px;
+}
+
+.scrollToTop:active {
+  transform: scale(0.95);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scrollToTop {
+    transition: opacity 0.2s ease;
+    transform: none;
+  }
+
+  .visible {
+    transform: none;
+  }
+
+  .scrollToTop:hover,
+  .visible:hover {
+    transform: none;
+  }
+
+  .scrollToTop:active {
+    transform: none;
+  }
+}

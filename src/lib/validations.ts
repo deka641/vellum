@@ -17,7 +17,7 @@ export function parseBody<T>(
 
 // --- Blocks (shared) ---
 
-const blockTypeEnum = z.enum([
+export const blockTypeEnum = z.enum([
   "heading",
   "text",
   "image",
@@ -151,7 +151,7 @@ export const createSiteSchema = z.object({
   name: z.string().min(1).max(200),
   description: z.string().max(2000).nullable().optional(),
   theme: siteThemeSchema.optional(),
-  starterPages: z.array(z.enum(["homepage", "about", "contact"])).optional(),
+  starterPages: z.array(z.enum(["homepage", "about", "contact", "blog", "services", "faq", "pricing"])).optional(),
 }).refine(
   (data) => {
     const slug = data.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");

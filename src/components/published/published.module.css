@@ -1036,6 +1036,41 @@ details[open] > .accordionBody > .accordionBodyInner {
 
 /* --- Table --- */
 
+.tableScrollContainer {
+  position: relative;
+}
+
+.tableScrollContainer::before,
+.tableScrollContainer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 24px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 1;
+}
+
+.tableScrollContainer::before {
+  left: 0;
+  background: linear-gradient(to right, var(--color-surface, #fff), transparent);
+}
+
+.tableScrollContainer::after {
+  right: 0;
+  background: linear-gradient(to left, var(--color-surface, #fff), transparent);
+}
+
+.tableScrollLeft::before {
+  opacity: 1;
+}
+
+.tableScrollRight::after {
+  opacity: 1;
+}
+
 .tableContainer {
   margin: 0;
   overflow-x: auto;
@@ -1055,12 +1090,14 @@ details[open] > .accordionBody > .accordionBodyInner {
   color: var(--color-text-primary);
   background: var(--color-bg-secondary);
   border-bottom: 2px solid var(--color-border);
+  min-width: 100px;
 }
 
 .tableCell {
   padding: var(--space-3) var(--space-4);
   color: var(--color-text-primary);
   border-bottom: 1px solid var(--color-border-light);
+  min-width: 100px;
 }
 
 .tableCell strong {

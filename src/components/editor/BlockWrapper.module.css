@@ -10,6 +10,12 @@
   border-color: var(--color-border);
 }
 
+.wrapper:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-md);
+}
+
 .wrapper:hover .toolbar {
   opacity: 1;
 }

@@ -44,10 +44,14 @@ export function EditorSidebar({ mobileOpen, onMobileToggle }: EditorSidebarProps
         {mobileOpen ? <X size={20} /> : <Settings2 size={20} />}
       </button>
       <aside className={`${styles.sidebar} ${mobileOpen ? styles.sidebarOpen : ""}`}>
-        <div className={styles.tabs}>
+        <div className={styles.tabs} role="tablist" aria-label="Editor sidebar tabs">
           <button
             className={`${styles.tab} ${activeTab === "add" ? styles.active : ""}`}
             onClick={() => setActiveTab("add")}
+            role="tab"
+            aria-selected={activeTab === "add"}
+            id="tab-add"
+            aria-controls="tabpanel-add"
           >
             <Plus size={16} />
             Add Block
@@ -55,6 +59,10 @@ export function EditorSidebar({ mobileOpen, onMobileToggle }: EditorSidebarProps
           <button
             className={`${styles.tab} ${activeTab === "settings" ? styles.active : ""}`}
             onClick={() => setActiveTab("settings")}
+            role="tab"
+            aria-selected={activeTab === "settings"}
+            id="tab-settings"
+            aria-controls="tabpanel-settings"
           >
             <Settings2 size={16} />
             Settings
@@ -62,12 +70,16 @@ export function EditorSidebar({ mobileOpen, onMobileToggle }: EditorSidebarProps
           <button
             className={`${styles.tab} ${activeTab === "history" ? styles.active : ""}`}
             onClick={() => setActiveTab("history")}
+            role="tab"
+            aria-selected={activeTab === "history"}
+            id="tab-history"
+            aria-controls="tabpanel-history"
           >
             <History size={16} />
             History
           </button>
         </div>
-        <div className={styles.content}>
+        <div className={styles.content} role="tabpanel" id={`tabpanel-${activeTab}`} aria-labelledby={`tab-${activeTab}`}>
           {activeTab === "add" && (
             <AddBlockMenu onAdd={handleAddBlock} />
           )}

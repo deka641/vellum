@@ -23,6 +23,10 @@ const STARTER_PAGES: StarterPageOption[] = [
   { key: "homepage", label: "Homepage", description: "A welcoming landing page with hero, features, and CTA" },
   { key: "about", label: "About", description: "Tell your story with text, images, and a team section" },
   { key: "contact", label: "Contact", description: "A contact form so visitors can reach you" },
+  { key: "blog", label: "Blog", description: "A blog index page with featured post and article previews" },
+  { key: "services", label: "Services", description: "Service offerings with descriptions, process overview, and FAQ" },
+  { key: "faq", label: "FAQ", description: "Frequently asked questions organized by category" },
+  { key: "pricing", label: "Pricing", description: "Three pricing tiers with feature comparison" },
 ];
 
 export default function NewSitePage() {

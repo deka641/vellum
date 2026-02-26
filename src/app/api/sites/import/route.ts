@@ -63,12 +63,12 @@ export async function POST(req: Request) {
       for (let i = 0; i < importData.pages.length; i++) {
         const pageData = importData.pages[i];
 
-        // Validate blocks
+        // Validate block hierarchy — reject invalid structures
         const hierarchy = validateBlockHierarchy(
           pageData.blocks as Array<{ type: string; content: Record<string, unknown> }>
         );
         if (!hierarchy.valid) {
-          logger.warn("POST /api/sites/import", `Skipping invalid blocks for page "${pageData.title}": ${hierarchy.error}`);
+          throw new Error(`Invalid block hierarchy in page "${pageData.title}": ${hierarchy.error}`);
         }
 
         const sanitized = sanitizeBlocks(pageData.blocks);
@@ -122,6 +122,9 @@ export async function POST(req: Request) {
   } catch (error) {
     if (error instanceof Error && error.message === "Could not generate unique slug") {
       return NextResponse.json({ error: "Could not generate unique slug" }, { status: 409 });
+    }
+    if (error instanceof Error && error.message.startsWith("Invalid block hierarchy")) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
     return apiError("POST /api/sites/import", error);
   }

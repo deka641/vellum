@@ -159,6 +159,7 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, schedu
           value={pageTitle}
           onChange={(e) => setPageTitle(e.target.value)}
           placeholder="Page title"
+          aria-label="Page title"
         />
         <Badge
           variant={pageStatus === "PUBLISHED" ? "success" : "default"}
@@ -191,6 +192,7 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, schedu
             className={`${styles.saveStatus} ${styles.saveError} ${styles.saveErrorBtn}`}
             onClick={() => save()}
             title="Click to retry saving"
+            aria-label="Save failed, click to retry"
           >
             <AlertCircle size={14} />
             Save failed — click to retry
@@ -229,6 +231,8 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, schedu
               className={`${styles.previewBtn} ${previewMode === "desktop" ? styles.previewBtnActive : ""}`}
               onClick={() => setPreviewMode("desktop")}
               title="Desktop view"
+              aria-label="Desktop view"
+              aria-pressed={previewMode === "desktop"}
             >
               <Monitor size={16} />
             </button>
@@ -236,6 +240,8 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, schedu
               className={`${styles.previewBtn} ${previewMode === "tablet" ? styles.previewBtnActive : ""}`}
               onClick={() => setPreviewMode("tablet")}
               title="Tablet view"
+              aria-label="Tablet view"
+              aria-pressed={previewMode === "tablet"}
             >
               <Tablet size={16} />
             </button>
@@ -243,6 +249,8 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, schedu
               className={`${styles.previewBtn} ${previewMode === "mobile" ? styles.previewBtnActive : ""}`}
               onClick={() => setPreviewMode("mobile")}
               title="Mobile view"
+              aria-label="Mobile view"
+              aria-pressed={previewMode === "mobile"}
             >
               <Smartphone size={16} />
             </button>

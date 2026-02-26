@@ -9,37 +9,37 @@ const features = [
     icon: <Layout size={24} />,
     title: "Visual Page Builder",
     description:
-      "Drag and drop blocks to build pages. No coding required.",
+      "Drag and drop from 15 block types to build pages visually. Columns, forms, accordions, tables, code snippets, and more \u2014 no coding required.",
   },
   {
     icon: <Layers size={24} />,
     title: "Block-Based Editing",
     description:
-      "Headings, text, images, buttons, columns, videos and more.",
+      "Every piece of content is a block you can move, duplicate, and style independently. Undo and redo with full history, and reorder with keyboard shortcuts.",
   },
   {
     icon: <Palette size={24} />,
-    title: "Elegant Design",
+    title: "Theme & Branding",
     description:
-      "Beautiful, minimal aesthetic that makes your content shine.",
+      "Customize colors, fonts, and layouts site-wide with a theme system that generates WCAG-compliant contrast ratios automatically.",
   },
   {
     icon: <Zap size={24} />,
     title: "Instant Preview",
     description:
-      "See your changes in real-time as you build your pages.",
+      "See your changes in real-time as you edit. Preview on desktop, tablet, and mobile viewports before publishing. Autosave protects every change.",
   },
   {
     icon: <Image size={24} />,
     title: "Media Library",
     description:
-      "Upload, organize, and insert images with a built-in media manager.",
+      "Upload images, videos, and documents with automatic optimization. Drag files directly into the editor for instant image blocks.",
   },
   {
     icon: <Globe size={24} />,
-    title: "One-Click Publish",
+    title: "SEO & Publishing",
     description:
-      "Publish your pages instantly. Share your site with the world.",
+      "Publish instantly or schedule for later. Built-in SEO audit, Open Graph images, sitemaps, RSS feeds, and structured data for every page.",
   },
 ];
 
