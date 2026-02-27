@@ -21,6 +21,7 @@ export default function SiteSettingsPage() {
   const [description, setDescription] = useState("");
   const [theme, setTheme] = useState<SiteTheme>(DEFAULT_THEME);
   const [favicon, setFavicon] = useState<string | null>(null);
+  const [logo, setLogo] = useState<string | null>(null);
   const [footerText, setFooterText] = useState("");
   const [footerDescription, setFooterDescription] = useState("");
   const [footerLinks, setFooterLinks] = useState<{ label: string; url: string }[]>([]);
@@ -33,8 +34,10 @@ export default function SiteSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [uploadingFavicon, setUploadingFavicon] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const faviconInputRef = useRef<HTMLInputElement>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetch(`/api/sites/${params.siteId}`)
@@ -43,6 +46,7 @@ export default function SiteSettingsPage() {
         setName(site.name);
         setDescription(site.description || "");
         setFavicon(site.favicon || null);
+        setLogo(site.logo || null);
         const parsed = parseSiteTheme(site.theme);
         if (parsed) setTheme(parsed);
         setNotificationEmail(site.notificationEmail || "");
@@ -87,6 +91,26 @@ export default function SiteSettingsPage() {
     }
   }
 
+  async function handleLogoUpload(file: File) {
+    setUploadingLogo(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await fetch("/api/media", { method: "POST", body: formData });
+      if (res.ok) {
+        const media = await res.json();
+        setLogo(media.url);
+        toast("Logo uploaded");
+      } else {
+        toast("Failed to upload logo", "error");
+      }
+    } catch {
+      toast("Upload failed", "error");
+    } finally {
+      setUploadingLogo(false);
+    }
+  }
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -100,6 +124,7 @@ export default function SiteSettingsPage() {
           description,
           theme,
           favicon,
+          logo,
           notificationEmail: notificationEmail.trim() || null,
           customHead: customHead.trim() || null,
           customFooter: customFooter.trim() || null,
@@ -209,6 +234,47 @@ export default function SiteSettingsPage() {
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) handleFaviconUpload(file);
+                  e.target.value = "";
+                }}
+              />
+            </div>
+          </div>
+
+          <div className={styles.faviconSection}>
+            <label className={styles.faviconLabel}>Site Logo</label>
+            <div className={styles.faviconRow}>
+              {logo ? (
+                <div className={styles.logoPreview}>
+                  <img src={logo} alt="Site logo" />
+                  <button
+                    type="button"
+                    className={styles.faviconRemove}
+                    onClick={() => setLogo(null)}
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                <div className={styles.faviconPlaceholder}>No logo</div>
+              )}
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                leftIcon={<Upload size={14} />}
+                disabled={uploadingLogo}
+                onClick={() => logoInputRef.current?.click()}
+              >
+                {uploadingLogo ? "Uploading..." : "Upload"}
+              </Button>
+              <input
+                ref={logoInputRef}
+                type="file"
+                accept=".png,.jpg,.jpeg,.webp,.svg"
+                style={{ display: "none" }}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleLogoUpload(file);
                   e.target.value = "";
                 }}
               />

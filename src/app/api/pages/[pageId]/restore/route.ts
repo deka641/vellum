@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
@@ -38,6 +39,8 @@ export async function POST(
       where: { id: pageId },
       data: { deletedAt: null },
     });
+
+    revalidateTag("dashboard", { expire: 0 });
 
     return NextResponse.json(restored);
   } catch (error) {

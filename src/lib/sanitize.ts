@@ -37,6 +37,15 @@ export function sanitizeRichHtml(html: string): string {
 }
 
 /**
+ * Sanitize plain text by stripping all HTML tags.
+ * Use for fields that should never contain markup (titles, descriptions, etc.)
+ */
+export function sanitizePlainText(text: string): string {
+  if (!text || typeof text !== "string") return "";
+  return sanitize(text, { allowedTags: [], allowedAttributes: {} }).trim();
+}
+
+/**
  * Sanitize a URL value. Allows http:, https:, mailto:, relative paths, and anchors.
  * Returns "#" for unsafe URLs (javascript:, data:, vbscript:, etc.)
  */

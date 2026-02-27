@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { parseBody, bulkDeleteMediaSchema } from "@/lib/validations";
@@ -63,6 +64,8 @@ export async function POST(req: Request) {
         }
       }
     }
+
+    revalidateTag("dashboard", { expire: 0 });
 
     return NextResponse.json({ deleted: media.length });
   } catch (error) {

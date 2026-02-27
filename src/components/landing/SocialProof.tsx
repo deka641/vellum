@@ -11,7 +11,7 @@ const stats = [
   { icon: <Blocks size={20} />, value: 15, display: "15", label: "Block Types" },
   { icon: <FileText size={20} />, value: null, display: "Unlimited", label: "Pages & Sites" },
   { icon: <Palette size={20} />, value: 6, display: "6", label: "Theme Presets" },
-  { icon: <Globe size={20} />, value: 50, display: "50", label: "SEO Checks & Features" },
+  { icon: <Globe size={20} />, value: 20, display: "20+", label: "SEO & Publishing Tools" },
 ];
 
 const testimonials = [

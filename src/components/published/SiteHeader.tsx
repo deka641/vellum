@@ -19,12 +19,13 @@ interface NavItem {
 
 interface SiteHeaderProps {
   siteName: string;
+  siteLogo?: string | null;
   homeHref: string;
   navItems: NavItem[];
   siteSlug: string;
 }
 
-export function SiteHeader({ siteName, homeHref, navItems, siteSlug }: SiteHeaderProps) {
+export function SiteHeader({ siteName, siteLogo, homeHref, navItems, siteSlug }: SiteHeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const pathname = usePathname();
@@ -82,7 +83,11 @@ export function SiteHeader({ siteName, homeHref, navItems, siteSlug }: SiteHeade
       <header className={styles.header} role="banner">
         <div className={styles.headerInner}>
           <Link href={homeHref} className={styles.siteName}>
-            {siteName}
+            {siteLogo ? (
+              <img src={siteLogo} alt={siteName} className={styles.siteLogo} />
+            ) : (
+              siteName
+            )}
           </Link>
 
           <div className={styles.headerActions}>
@@ -93,6 +98,7 @@ export function SiteHeader({ siteName, homeHref, navItems, siteSlug }: SiteHeade
                     key={item.href}
                     href={item.href}
                     className={`${styles.navLink} ${isActive(item.href) ? styles.navLinkActive : ""}`}
+                    aria-current={isActive(item.href) ? "page" : undefined}
                   >
                     {item.title}
                   </Link>
@@ -131,6 +137,7 @@ export function SiteHeader({ siteName, homeHref, navItems, siteSlug }: SiteHeade
                 key={item.href}
                 href={item.href}
                 className={`${styles.navLink} ${isActive(item.href) ? styles.navLinkActive : ""}`}
+                aria-current={isActive(item.href) ? "page" : undefined}
                 onClick={() => setMobileOpen(false)}
               >
                 {item.title}

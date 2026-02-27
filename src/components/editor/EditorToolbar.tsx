@@ -26,6 +26,10 @@ const SaveAsTemplateDialog = dynamic(
   () => import("./SaveAsTemplateDialog").then((m) => m.SaveAsTemplateDialog),
   { ssr: false }
 );
+const PrePublishDialog = dynamic(
+  () => import("./PrePublishDialog").then((m) => m.PrePublishDialog),
+  { ssr: false }
+);
 
 function getRelativeTime(dateStr: string): string {
   const now = Date.now();
@@ -115,6 +119,7 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, schedu
     setShowAutoSaving(false);
   }, [isDirty, isSaving, saveError, conflict]);
 
+  const [prePublishOpen, setPrePublishOpen] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [scheduleDate, setScheduleDate] = useState("");
   const [scheduleLoading, setScheduleLoading] = useState(false);
@@ -339,9 +344,14 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, schedu
           <Save size={14} />
           Save
         </Button>
-        <Button size="sm" onClick={onPublish} disabled={hasConflict}>
+        <Button size="sm" onClick={() => setPrePublishOpen(true)} disabled={hasConflict}>
           {pageStatus === "PUBLISHED" ? "Update" : "Publish"}
         </Button>
+        <PrePublishDialog
+          open={prePublishOpen}
+          onOpenChange={setPrePublishOpen}
+          onConfirmPublish={onPublish}
+        />
 
         {/* Sidebar toggle — tablet only */}
         {onSidebarToggle && (

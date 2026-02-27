@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { apiError } from "@/lib/api-helpers";
 import { parseBody, updateSiteSchema } from "@/lib/validations";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
-import { sanitizeUrl } from "@/lib/sanitize";
+import { sanitizeUrl, sanitizeImageSrc } from "@/lib/sanitize";
 import { logger } from "@/lib/logger";
 
 export async function GET(
@@ -82,6 +82,7 @@ export async function PATCH(
         description: parsed.data.description ?? site.description,
         ...(parsed.data.theme !== undefined && { theme: parsed.data.theme }),
         ...(parsed.data.favicon !== undefined && { favicon: parsed.data.favicon ? sanitizeUrl(parsed.data.favicon) : parsed.data.favicon }),
+        ...(parsed.data.logo !== undefined && { logo: parsed.data.logo ? sanitizeImageSrc(parsed.data.logo) : parsed.data.logo }),
         ...(parsed.data.footer !== undefined && { footer: parsed.data.footer }),
         ...(parsed.data.notificationEmail !== undefined && { notificationEmail: parsed.data.notificationEmail }),
         ...(parsed.data.customHead !== undefined && { customHead: parsed.data.customHead }),
@@ -92,6 +93,8 @@ export async function PATCH(
     try {
       revalidatePath(`/s/${site.slug}`, "layout");
     } catch (err) { logger.warn("revalidation", "Site update revalidation failed:", err); }
+
+    revalidateTag("dashboard", { expire: 0 });
 
     return NextResponse.json(updated);
   } catch (error) {

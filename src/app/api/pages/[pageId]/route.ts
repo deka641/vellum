@@ -6,7 +6,7 @@ import { parseBody, updatePageSchema } from "@/lib/validations";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { apiError } from "@/lib/api-helpers";
 import { logger } from "@/lib/logger";
-import { sanitizeImageSrc } from "@/lib/sanitize";
+import { sanitizeImageSrc, sanitizePlainText } from "@/lib/sanitize";
 
 export async function GET(
   _req: Request,
@@ -85,11 +85,13 @@ export async function PATCH(
 
     // Handle slug changes
     const updateData: Record<string, unknown> = {
-      title: parsed.data.title ?? page.title,
-      description: parsed.data.description ?? page.description,
+      title: parsed.data.title ? sanitizePlainText(parsed.data.title) : page.title,
+      description: parsed.data.description !== undefined
+        ? (parsed.data.description ? sanitizePlainText(parsed.data.description) : parsed.data.description)
+        : page.description,
     };
 
-    if (parsed.data.metaTitle !== undefined) updateData.metaTitle = parsed.data.metaTitle;
+    if (parsed.data.metaTitle !== undefined) updateData.metaTitle = parsed.data.metaTitle ? sanitizePlainText(parsed.data.metaTitle) : parsed.data.metaTitle;
     if (parsed.data.ogImage !== undefined) updateData.ogImage = parsed.data.ogImage ? sanitizeImageSrc(parsed.data.ogImage) : parsed.data.ogImage;
     if (parsed.data.noindex !== undefined) updateData.noindex = parsed.data.noindex;
 

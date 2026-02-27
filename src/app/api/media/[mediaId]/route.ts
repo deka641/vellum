@@ -97,6 +97,8 @@ export async function DELETE(
       }
     }
 
+    revalidateTag("dashboard", { expire: 0 });
+
     return NextResponse.json({ success: true });
   } catch (error) {
     return apiError("DELETE /api/media/[mediaId]", error);

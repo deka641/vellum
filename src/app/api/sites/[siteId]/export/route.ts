@@ -43,6 +43,7 @@ export async function GET(
         name: site.name,
         description: site.description,
         theme: site.theme,
+        logo: site.logo,
         footer: site.footer,
       },
       pages: site.pages.map((page) => ({

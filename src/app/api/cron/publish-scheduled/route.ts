@@ -56,7 +56,7 @@ export async function POST(req: Request) {
     // 3. Create PageRevisions
     // 4. Prune old revisions
     await db.$transaction(async (tx) => {
-      // Batch update all pages at once
+      // 1. Batch update all pages at once
       await tx.page.updateMany({
         where: { id: { in: pageIds } },
         data: {
@@ -66,39 +66,58 @@ export async function POST(req: Request) {
         },
       });
 
-      // Create revision snapshots for each page
-      for (const page of pagesToPublish) {
-        const blocks = await tx.block.findMany({
-          where: { pageId: page.id },
-          orderBy: { sortOrder: "asc" },
-        });
+      // 2. Batch load ALL blocks for all pages (1 query instead of N)
+      const allBlocks = await tx.block.findMany({
+        where: { pageId: { in: pageIds } },
+        orderBy: { sortOrder: "asc" },
+      });
 
-        const blockData = blocks.map((b) => ({
-          id: b.id,
-          type: b.type,
-          content: b.content,
-          settings: b.settings,
-          parentId: b.parentId,
-        }));
+      // Group blocks by pageId in memory
+      const blocksByPageId = new Map<string, typeof allBlocks>();
+      for (const block of allBlocks) {
+        const existing = blocksByPageId.get(block.pageId) || [];
+        existing.push(block);
+        blocksByPageId.set(block.pageId, existing);
+      }
 
-        await tx.pageRevision.create({
-          data: {
+      // 3. Batch create all revisions (1 createMany instead of N creates)
+      await tx.pageRevision.createMany({
+        data: pagesToPublish.map((page) => {
+          const blocks = blocksByPageId.get(page.id) || [];
+          const blockData = blocks.map((b) => ({
+            id: b.id,
+            type: b.type,
+            content: b.content,
+            settings: b.settings,
+            parentId: b.parentId,
+          }));
+          return {
             pageId: page.id,
             title: page.title,
             blocks: blockData as unknown as Prisma.InputJsonValue,
             note: "Published (scheduled)",
-          },
-        });
+          };
+        }),
+      });
 
-        // Prune old revisions — keep max 20 per page
-        const revisionCount = await tx.pageRevision.count({ where: { pageId: page.id } });
-        if (revisionCount > 20) {
-          const oldest = await tx.pageRevision.findMany({
-            where: { pageId: page.id },
-            orderBy: { createdAt: "asc" },
-            take: revisionCount - 20,
-            select: { id: true },
-          });
+      // 4. Batch get revision counts (1 groupBy instead of N counts)
+      const revisionCounts = await tx.pageRevision.groupBy({
+        by: ["pageId"],
+        where: { pageId: { in: pageIds } },
+        _count: true,
+      });
+
+      // 5. Prune only pages exceeding 20 revisions
+      const pagesToPrune = revisionCounts.filter((rc) => rc._count > 20);
+      for (const rc of pagesToPrune) {
+        const excessCount = rc._count - 20;
+        const oldest = await tx.pageRevision.findMany({
+          where: { pageId: rc.pageId },
+          orderBy: { createdAt: "asc" },
+          take: excessCount,
+          select: { id: true },
+        });
+        if (oldest.length > 0) {
           await tx.pageRevision.deleteMany({
             where: { id: { in: oldest.map((r) => r.id) } },
           });

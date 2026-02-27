@@ -144,12 +144,29 @@
 
 .figure {
   width: 100%;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
 }
 
 .image {
   width: 100%;
   height: auto;
   display: block;
+  transition: transform 400ms var(--ease-out),
+              box-shadow 400ms var(--ease-out);
+}
+
+@media (hover: hover) {
+  .figure:hover .image {
+    transform: scale(1.015);
+    box-shadow: 0 8px 30px rgba(var(--shadow-color), 0.12);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .image {
+    transition: none;
+  }
 }
 
 .caption {
@@ -296,19 +313,39 @@
 
 .quote-default {
   border-left: 4px solid var(--color-accent);
+  border-left-color: transparent;
   padding-left: var(--space-6);
+  animation: quoteBorderReveal 600ms var(--ease-out) 200ms forwards;
 }
 
 .quote-bordered {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   border-left: 4px solid var(--color-accent);
+  border-left-color: transparent;
+  animation: quoteBorderReveal 600ms var(--ease-out) 200ms forwards;
 }
 
 .quote-filled {
   background: var(--color-bg-secondary);
   border-left: 4px solid var(--color-accent);
+  border-left-color: transparent;
   border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+  animation: quoteBorderReveal 600ms var(--ease-out) 200ms forwards;
+}
+
+@keyframes quoteBorderReveal {
+  from { border-left-color: transparent; }
+  to { border-left-color: var(--color-accent); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quote-default,
+  .quote-bordered,
+  .quote-filled {
+    border-left-color: var(--color-accent);
+    animation: none;
+  }
 }
 
 .quoteText {

@@ -44,7 +44,7 @@ const getDashboardData = unstable_cache(
           select: {
             id: true,
             createdAt: true,
-            page: { select: { title: true } },
+            page: { select: { title: true, siteId: true } },
           },
         }),
         db.site.findFirst({
@@ -160,16 +160,23 @@ export default async function DashboardPage() {
                 <p className={styles.emptyHint}>Add a form block to your pages to collect submissions</p>
               </div>
             ) : (
-              <ul className={styles.list}>
-                {recentSubmissions.map((sub) => (
-                  <li key={sub.id} className={styles.listItem}>
-                    <div className={styles.listLink}>
-                      <span className={styles.listTitle}>{sub.page.title}</span>
-                      <span className={styles.listDate}>{formatDate(sub.createdAt)}</span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              <>
+                <ul className={styles.list}>
+                  {recentSubmissions.map((sub) => (
+                    <li key={sub.id} className={styles.listItem}>
+                      <Link href={`/sites/${sub.page.siteId}/submissions`} className={styles.listLink}>
+                        <span className={styles.listTitle}>{sub.page.title}</span>
+                        <span className={styles.listDate}>{formatDate(sub.createdAt)}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+                <div className={styles.cardFooter}>
+                  <Link href={`/sites/${recentSubmissions[0].page.siteId}/submissions`} className={styles.viewAllLink}>
+                    View all submissions
+                  </Link>
+                </div>
+              </>
             )}
           </div>
         </div>

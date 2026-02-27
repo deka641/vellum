@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { apiError } from "@/lib/api-helpers";
 import { generateId, slugify } from "@/lib/utils";
-import { sanitizeBlocks } from "@/lib/sanitize";
+import { sanitizeBlocks, sanitizePlainText, sanitizeImageSrc } from "@/lib/sanitize";
 import { parseBody, importSiteSchema, validateBlockHierarchy } from "@/lib/validations";
 import { logger } from "@/lib/logger";
 
@@ -51,10 +51,11 @@ export async function POST(req: Request) {
 
       const newSite = await tx.site.create({
         data: {
-          name: importData.site.name,
+          name: sanitizePlainText(importData.site.name) || importData.site.name,
           slug,
-          description: importData.site.description || null,
+          description: importData.site.description ? sanitizePlainText(importData.site.description) : null,
           theme: (importData.site.theme as object) || {},
+          logo: importData.site.logo ? sanitizeImageSrc(importData.site.logo) || null : null,
           footer: (importData.site.footer as object) || {},
           userId,
         },
@@ -79,14 +80,14 @@ export async function POST(req: Request) {
 
         const page = await tx.page.create({
           data: {
-            title: pageData.title || `Page ${i + 1}`,
+            title: sanitizePlainText(pageData.title) || `Page ${i + 1}`,
             slug: pageSlug,
-            description: pageData.description || null,
+            description: pageData.description ? sanitizePlainText(pageData.description) : null,
             status: "DRAFT",
             isHomepage: pageData.isHomepage === true && i === importData.pages.findIndex((p) => p.isHomepage),
             showInNav: pageData.showInNav !== false,
             sortOrder: pageData.sortOrder ?? i,
-            metaTitle: pageData.metaTitle || null,
+            metaTitle: pageData.metaTitle ? sanitizePlainText(pageData.metaTitle) : null,
             ogImage: null,
             noindex: pageData.noindex === true,
             siteId: newSite.id,

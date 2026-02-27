@@ -473,6 +473,133 @@ async function main() {
         { type: "text", content: { html: "<p>Interested in working together? <a href=\"#\">Get in touch</a> to discuss your project.</p>" }, settings: { align: "center" } },
       ],
     },
+    {
+      name: "Restaurant",
+      description: "Restaurant page with menu, opening hours, reservation form, and location",
+      category: "business",
+      blocks: [
+        { type: "heading", content: { text: "The Olive Branch", level: 1 }, settings: { align: "center" } },
+        { type: "text", content: { html: "<p>Mediterranean cuisine crafted from locally sourced ingredients. Family-owned since 2008.</p>" }, settings: { align: "center" } },
+        { type: "button", content: { text: "Reserve a Table", url: "#reservation", variant: "primary" }, settings: { align: "center" } },
+        { type: "spacer", content: { height: 48 }, settings: {} },
+        { type: "heading", content: { text: "Our Menu", level: 2 }, settings: { align: "center" } },
+        { type: "heading", content: { text: "Starters", level: 3 }, settings: {} },
+        { type: "table", content: { headers: ["Dish", "Description", "Price"], rows: [
+          ["Bruschetta", "Grilled sourdough, heirloom tomatoes, basil, aged balsamic", "$12"],
+          ["Calamari Fritti", "Lightly fried squid, lemon aioli, fresh herbs", "$14"],
+          ["Burrata", "Creamy burrata, roasted peppers, olive tapenade", "$16"],
+          ["Soup of the Day", "Ask your server for today's seasonal selection", "$10"],
+        ], caption: "", striped: true }, settings: {} },
+        { type: "heading", content: { text: "Mains", level: 3 }, settings: {} },
+        { type: "table", content: { headers: ["Dish", "Description", "Price"], rows: [
+          ["Grilled Sea Bass", "Pan-seared with capers, cherry tomatoes, and olive oil", "$28"],
+          ["Lamb Tagine", "Slow-braised lamb, apricots, almonds, couscous", "$26"],
+          ["Wild Mushroom Risotto", "Arborio rice, porcini, truffle oil, parmesan", "$22"],
+          ["Ribeye Steak", "12oz grass-fed, roasted garlic butter, seasonal vegetables", "$34"],
+        ], caption: "", striped: true }, settings: {} },
+        { type: "heading", content: { text: "Desserts", level: 3 }, settings: {} },
+        { type: "table", content: { headers: ["Dish", "Description", "Price"], rows: [
+          ["Tiramisu", "Classic espresso-soaked ladyfingers, mascarpone", "$12"],
+          ["Panna Cotta", "Vanilla bean, seasonal berry compote", "$10"],
+          ["Gelato Selection", "Three scoops of house-made gelato", "$9"],
+        ], caption: "", striped: true }, settings: {} },
+        { type: "spacer", content: { height: 32 }, settings: {} },
+        { type: "divider", content: {}, settings: { style: "solid" } },
+        { type: "heading", content: { text: "Opening Hours", level: 2 }, settings: { align: "center" } },
+        { type: "columns", content: { columns: [
+          { blocks: [
+            { id: "rs1", type: "heading", content: { text: "Lunch", level: 3 }, settings: { align: "center" } },
+            { id: "rs2", type: "text", content: { html: "<p>Tuesday \u2013 Sunday<br><strong>11:30 AM \u2013 2:30 PM</strong></p><p>Closed Mondays</p>" }, settings: { align: "center" } },
+          ] },
+          { blocks: [
+            { id: "rs3", type: "heading", content: { text: "Dinner", level: 3 }, settings: { align: "center" } },
+            { id: "rs4", type: "text", content: { html: "<p>Tuesday \u2013 Thursday<br><strong>5:30 PM \u2013 9:30 PM</strong></p><p>Friday \u2013 Saturday<br><strong>5:30 PM \u2013 10:30 PM</strong></p>" }, settings: { align: "center" } },
+          ] },
+          { blocks: [
+            { id: "rs5", type: "heading", content: { text: "Sunday Brunch", level: 3 }, settings: { align: "center" } },
+            { id: "rs6", type: "text", content: { html: "<p>Every Sunday<br><strong>10:00 AM \u2013 3:00 PM</strong></p><p>Reservations recommended</p>" }, settings: { align: "center" } },
+          ] },
+        ] }, settings: { gap: "32px" } },
+        { type: "spacer", content: { height: 32 }, settings: {} },
+        { type: "quote", content: { text: "The best meal I've had in years. The lamb tagine alone is worth the visit.", attribution: "City Dining Magazine", style: "bordered" }, settings: {} },
+        { type: "spacer", content: { height: 32 }, settings: {} },
+        { type: "heading", content: { text: "Reserve a Table", level: 2 }, settings: {} },
+        { type: "form", content: { fields: [
+          { id: "name", type: "text", label: "Name", required: true, placeholder: "Your name" },
+          { id: "email", type: "email", label: "Email", required: true, placeholder: "your@email.com" },
+          { id: "date", type: "text", label: "Preferred Date", required: true, placeholder: "e.g. Friday, March 20" },
+          { id: "guests", type: "select", label: "Party Size", required: true, placeholder: "Select", options: ["1-2 guests", "3-4 guests", "5-6 guests", "7+ guests (please call)"] },
+          { id: "notes", type: "textarea", label: "Special Requests", required: false, placeholder: "Dietary requirements, celebrations, seating preferences..." },
+        ], submitText: "Request Reservation", successMessage: "Thank you! We'll confirm your reservation within 2 hours." }, settings: {} },
+        { type: "spacer", content: { height: 32 }, settings: {} },
+        { type: "divider", content: {}, settings: { style: "solid" } },
+        { type: "text", content: { html: "<p><strong>The Olive Branch</strong><br>456 Harbor Street, Seaside District<br>Phone: (555) 234-5678</p>" }, settings: { align: "center" } },
+        { type: "social", content: { links: [{ platform: "instagram", url: "https://instagram.com" }, { platform: "facebook", url: "https://facebook.com" }] }, settings: { align: "center" } },
+      ],
+    },
+    {
+      name: "Resume",
+      description: "Professional resume with about section, skills table, experience, and contact form",
+      category: "portfolio",
+      blocks: [
+        { type: "heading", content: { text: "Morgan Blake", level: 1 }, settings: { align: "center" } },
+        { type: "text", content: { html: "<p><strong>Full-Stack Developer</strong> &bull; San Francisco, CA</p><p>I build fast, accessible web applications with modern tooling. 6 years of experience across startups and scale-ups, with a focus on React, TypeScript, and Node.js.</p>" }, settings: { align: "center" } },
+        { type: "social", content: { links: [
+          { platform: "github", url: "https://github.com" },
+          { platform: "linkedin", url: "https://linkedin.com" },
+          { platform: "twitter", url: "https://twitter.com" },
+          { platform: "email", url: "mailto:hello@example.com" },
+        ] }, settings: { align: "center" } },
+        { type: "spacer", content: { height: 32 }, settings: {} },
+        { type: "divider", content: {}, settings: { style: "solid" } },
+        { type: "heading", content: { text: "Skills", level: 2 }, settings: {} },
+        { type: "table", content: { headers: ["Category", "Technologies", "Level"], rows: [
+          ["Frontend", "React, Next.js, TypeScript, Tailwind CSS, Framer Motion", "Expert"],
+          ["Backend", "Node.js, Express, PostgreSQL, Prisma, Redis", "Expert"],
+          ["DevOps", "Docker, AWS, CI/CD, Terraform, GitHub Actions", "Advanced"],
+          ["Testing", "Playwright, Jest, React Testing Library, Cypress", "Advanced"],
+          ["Design", "Figma, CSS Modules, Design Systems, Accessibility (WCAG)", "Intermediate"],
+        ], caption: "", striped: true }, settings: {} },
+        { type: "spacer", content: { height: 32 }, settings: {} },
+        { type: "heading", content: { text: "Experience", level: 2 }, settings: {} },
+        { type: "columns", content: { columns: [
+          { blocks: [
+            { id: "re1", type: "heading", content: { text: "Senior Developer", level: 3 }, settings: {} },
+            { id: "re2", type: "text", content: { html: "<p><strong>Streamline Inc.</strong> &bull; 2023 \u2013 Present</p><p>Lead developer on the core product team. Rebuilt the frontend with Next.js App Router, reducing page load times by 55%. Designed and implemented a real-time collaboration system using WebSockets. Mentored 3 junior developers.</p>" }, settings: {} },
+          ] },
+          { blocks: [
+            { id: "re3", type: "heading", content: { text: "Full-Stack Developer", level: 3 }, settings: {} },
+            { id: "re4", type: "text", content: { html: "<p><strong>DataPulse</strong> &bull; 2021 \u2013 2023</p><p>Built customer-facing dashboards processing 2M+ events daily. Implemented a query optimization layer that reduced database costs by 40%. Led the migration from REST to GraphQL for the analytics API.</p>" }, settings: {} },
+          ] },
+        ] }, settings: { gap: "32px" } },
+        { type: "columns", content: { columns: [
+          { blocks: [
+            { id: "re5", type: "heading", content: { text: "Frontend Developer", level: 3 }, settings: {} },
+            { id: "re6", type: "text", content: { html: "<p><strong>PixelCraft Agency</strong> &bull; 2019 \u2013 2021</p><p>Developed responsive websites and web apps for 20+ clients across e-commerce, SaaS, and media. Introduced component-driven development and design system practices to the team.</p>" }, settings: {} },
+          ] },
+          { blocks: [
+            { id: "re7", type: "heading", content: { text: "Education", level: 3 }, settings: {} },
+            { id: "re8", type: "text", content: { html: "<p><strong>B.S. Computer Science</strong><br>UC Berkeley &bull; 2015 \u2013 2019</p><p>Dean's List. Capstone project: accessible web framework for visually impaired users (awarded Best in Class).</p>" }, settings: {} },
+          ] },
+        ] }, settings: { gap: "32px" } },
+        { type: "spacer", content: { height: 32 }, settings: {} },
+        { type: "heading", content: { text: "Selected Projects", level: 2 }, settings: {} },
+        { type: "accordion", content: { items: [
+          { id: "rp1", title: "Open-Source Design System", content: "<p>A comprehensive React component library with 40+ components, full accessibility support, and CSS Module theming. 1,200+ GitHub stars.</p>" },
+          { id: "rp2", title: "Real-Time Analytics Dashboard", content: "<p>Built a WebSocket-powered dashboard visualizing 500K+ events per hour. Used D3.js for custom charts and Redis Streams for event processing.</p>" },
+          { id: "rp3", title: "E-Commerce Platform Migration", content: "<p>Led the migration of a $5M ARR e-commerce platform from a monolith to a Next.js frontend with headless CMS. Improved Core Web Vitals scores from 45 to 92.</p>" },
+        ], style: "bordered", iconPosition: "right" }, settings: {} },
+        { type: "spacer", content: { height: 32 }, settings: {} },
+        { type: "divider", content: {}, settings: { style: "solid" } },
+        { type: "heading", content: { text: "Get in Touch", level: 2 }, settings: { align: "center" } },
+        { type: "text", content: { html: "<p>Interested in working together? I'm open to full-time roles and select freelance projects.</p>" }, settings: { align: "center" } },
+        { type: "form", content: { fields: [
+          { id: "name", type: "text", label: "Your Name", required: true, placeholder: "Full name" },
+          { id: "email", type: "email", label: "Email", required: true, placeholder: "you@example.com" },
+          { id: "message", type: "textarea", label: "Message", required: true, placeholder: "Tell me about the opportunity..." },
+        ], submitText: "Send Message", successMessage: "Thanks! I'll get back to you within 24 hours." }, settings: {} },
+      ],
+    },
   ];
 
   for (const template of templates) {

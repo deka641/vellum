@@ -25,6 +25,7 @@ model Site {
   slug              String   @unique
   description       String?
   favicon           String?
+  logo              String?
   notificationEmail String?
   theme             Json     @default("{}")
   footer            Json     @default("{}")

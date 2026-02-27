@@ -3,7 +3,7 @@ import { revalidateTag } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { slugify, generateId } from "@/lib/utils";
-import { sanitizeBlocks } from "@/lib/sanitize";
+import { sanitizeBlocks, sanitizePlainText } from "@/lib/sanitize";
 import { Prisma } from "@prisma/client";
 import { parseBody, createPageSchema, validateBlockHierarchy } from "@/lib/validations";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
@@ -67,7 +67,8 @@ export async function POST(req: Request) {
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
-    const { title, siteId, templateBlocks, sourcePageId } = parsed.data;
+    const { title: rawTitle, siteId, templateBlocks, sourcePageId } = parsed.data;
+    const title = sanitizePlainText(rawTitle) || rawTitle;
 
     if (templateBlocks) {
       const hierarchy = validateBlockHierarchy(templateBlocks as Array<{ type: string; content: Record<string, unknown> }>);

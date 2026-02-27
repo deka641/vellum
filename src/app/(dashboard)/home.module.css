@@ -247,6 +247,24 @@ a.listLink:hover {
   background: var(--color-success);
 }
 
+.cardFooter {
+  padding-top: var(--space-3);
+  margin-top: var(--space-2);
+  border-top: 1px solid var(--color-border-light);
+  text-align: center;
+}
+
+.viewAllLink {
+  font-size: var(--text-sm);
+  color: var(--color-accent);
+  text-decoration: none;
+  font-weight: var(--weight-medium);
+}
+
+.viewAllLink:hover {
+  text-decoration: underline;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .statCard:hover {
     transform: none;
