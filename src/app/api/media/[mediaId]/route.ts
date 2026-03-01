@@ -8,6 +8,7 @@ import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { safeMediaFilePath } from "@/lib/upload";
 import { apiError } from "@/lib/api-helpers";
 import { logger } from "@/lib/logger";
+import { logActivity } from "@/lib/activity";
 
 export async function PATCH(
   req: Request,
@@ -98,6 +99,9 @@ export async function DELETE(
     }
 
     revalidateTag("dashboard", { expire: 0 });
+
+    const userId = session.user.id;
+    logActivity({ userId, action: "media.deleted", details: { filename: media.filename } });
 
     return NextResponse.json({ success: true });
   } catch (error) {

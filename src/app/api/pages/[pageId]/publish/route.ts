@@ -6,6 +6,7 @@ import { apiError } from "@/lib/api-helpers";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import type { Prisma } from "@prisma/client";
+import { logActivity } from "@/lib/activity";
 
 export async function POST(
   req: Request,
@@ -137,6 +138,9 @@ export async function POST(
 
     revalidateTag("dashboard", { expire: 0 });
 
+    const userId = session.user.id;
+    logActivity({ userId, siteId: page.siteId, pageId, action: "page.published", details: { title: page.title } });
+
     return NextResponse.json(updated);
   } catch (error) {
     return apiError("POST /api/pages/[pageId]/publish", error);
@@ -209,6 +213,9 @@ export async function DELETE(
     } catch (err) { logger.warn("revalidation", "Publish revalidation failed:", err); }
 
     revalidateTag("dashboard", { expire: 0 });
+
+    const userId = session.user.id;
+    logActivity({ userId, siteId: page.siteId, pageId, action: "page.unpublished", details: { title: page.title } });
 
     return NextResponse.json(updated);
   } catch (error) {

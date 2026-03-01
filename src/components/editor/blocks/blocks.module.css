@@ -21,6 +21,20 @@
   font-size: var(--text-xl);
 }
 
+.headingWarning {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  margin-top: 4px;
+  border-radius: var(--radius-sm, 4px);
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #b45309;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
 /* Text / TipTap */
 .textBlock {
   width: 100%;

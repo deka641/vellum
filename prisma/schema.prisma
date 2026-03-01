@@ -20,22 +20,24 @@ model User {
 }
 
 model Site {
-  id                String   @id @default(cuid())
+  id                String     @id @default(cuid())
   name              String
-  slug              String   @unique
+  slug              String     @unique
   description       String?
   favicon           String?
   logo              String?
   notificationEmail String?
-  theme             Json     @default("{}")
-  footer            Json     @default("{}")
-  customHead        String?  @db.Text
-  customFooter      String?  @db.Text
+  theme             Json       @default("{}")
+  footer            Json       @default("{}")
+  customHead        String?    @db.Text
+  customFooter      String?    @db.Text
   userId            String
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   pages             Page[]
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  redirects         Redirect[]
+  tags              Tag[]
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
 
   @@index([userId])
 }
@@ -58,6 +60,7 @@ model Page {
   blocks             Block[]
   formSubmissions    FormSubmission[]
   revisions          PageRevision[]
+  pageTags           PageTag[]
   deletedAt          DateTime?
   publishedAt        DateTime?
   createdAt          DateTime         @default(now())
@@ -160,4 +163,55 @@ model Media {
 
   @@index([userId])
   @@index([userId, createdAt])
+}
+
+model Redirect {
+  id        String   @id @default(cuid())
+  siteId    String
+  site      Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  fromPath  String
+  toPath    String
+  permanent Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@unique([siteId, fromPath])
+  @@index([siteId])
+}
+
+model Tag {
+  id        String    @id @default(cuid())
+  name      String
+  slug      String
+  siteId    String
+  site      Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  pageTags  PageTag[]
+  createdAt DateTime  @default(now())
+
+  @@unique([siteId, slug])
+  @@index([siteId])
+}
+
+model PageTag {
+  id     String @id @default(cuid())
+  pageId String
+  tagId  String
+  page   Page   @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([pageId, tagId])
+  @@index([pageId])
+  @@index([tagId])
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String
+  siteId    String?
+  pageId    String?
+  action    String
+  details   Json     @default("{}")
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([siteId, createdAt])
 }

@@ -2,58 +2,10 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { rateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 import { apiError } from "@/lib/api-helpers";
+import { extractTextFromBlocks, getSnippet } from "@/lib/search";
 
 const MAX_RESULTS = 50;
-const BATCH_SIZE = 50;
-
-function extractTextFromBlocks(blocks: Array<Record<string, unknown>>): string {
-  const parts: string[] = [];
-  for (const block of blocks) {
-    const content = block.content as Record<string, unknown> | undefined;
-    if (!content) continue;
-
-    if (typeof content.text === "string") parts.push(content.text);
-    if (typeof content.html === "string") {
-      parts.push(content.html.replace(/<[^>]*>/g, " "));
-    }
-    if (typeof content.attribution === "string") parts.push(content.attribution);
-
-    // Accordion items
-    if (Array.isArray(content.items)) {
-      for (const item of content.items) {
-        if (typeof item === "object" && item !== null) {
-          const i = item as Record<string, unknown>;
-          if (typeof i.title === "string") parts.push(i.title);
-          if (typeof i.content === "string") parts.push(i.content.replace(/<[^>]*>/g, " "));
-        }
-      }
-    }
-
-    // Column children
-    if (Array.isArray(content.columns)) {
-      for (const col of content.columns) {
-        if (typeof col === "object" && col !== null && Array.isArray((col as Record<string, unknown>).blocks)) {
-          parts.push(extractTextFromBlocks((col as Record<string, unknown>).blocks as Array<Record<string, unknown>>));
-        }
-      }
-    }
-  }
-  return parts.join(" ").replace(/\s+/g, " ").trim();
-}
-
-function getSnippet(text: string, query: string, maxLen = 160): string {
-  const lower = text.toLowerCase();
-  const qLower = query.toLowerCase();
-  const idx = lower.indexOf(qLower);
-  if (idx === -1) return text.slice(0, maxLen);
-
-  const start = Math.max(0, idx - 60);
-  const end = Math.min(text.length, idx + query.length + 100);
-  let snippet = text.slice(start, end).trim();
-  if (start > 0) snippet = "..." + snippet;
-  if (end < text.length) snippet = snippet + "...";
-  return snippet;
-}
+const BATCH_SIZE = 25;
 
 interface SearchResult {
   pageTitle: string;

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { MoreHorizontal, Trash2, Settings, Globe, ExternalLink } from "lucide-react";
+import { MoreHorizontal, Trash2, Settings, Globe, ExternalLink, Copy } from "lucide-react";
 import { Card } from "@/components/ui/Card/Card";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { IconButton } from "@/components/ui/IconButton/IconButton";
@@ -25,9 +25,10 @@ interface SiteCardProps {
     _count: { pages: number };
   };
   onDelete: (id: string) => void;
+  onDuplicate: (id: string) => void;
 }
 
-export function SiteCard({ site, onDelete }: SiteCardProps) {
+export function SiteCard({ site, onDelete, onDuplicate }: SiteCardProps) {
   return (
     <Card hover className={styles.card}>
       <Link href={`/sites/${site.id}`} className={styles.link}>
@@ -64,6 +65,10 @@ export function SiteCard({ site, onDelete }: SiteCardProps) {
                 <Settings size={16} />
                 Settings
               </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onDuplicate(site.id)}>
+              <Copy size={16} />
+              Duplicate site
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem danger onClick={() => onDelete(site.id)}>

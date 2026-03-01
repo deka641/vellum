@@ -10,6 +10,14 @@ import { Button } from "@/components/ui/Button/Button";
 import { Skeleton } from "@/components/ui/Skeleton/Skeleton";
 import { useToast } from "@/components/ui/Toast/Toast";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog/ConfirmDialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/Dialog/Dialog";
+import { Input } from "@/components/ui/Input/Input";
 import styles from "./sites.module.css";
 
 interface Site {
@@ -25,6 +33,9 @@ export default function SitesPage() {
   const [sites, setSites] = useState<Site[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteSiteId, setDeleteSiteId] = useState<string | null>(null);
+  const [duplicateSiteId, setDuplicateSiteId] = useState<string | null>(null);
+  const [duplicateName, setDuplicateName] = useState("");
+  const [duplicating, setDuplicating] = useState(false);
   const [importing, setImporting] = useState(false);
   const importInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -81,6 +92,38 @@ export default function SitesPage() {
     setDeleteSiteId(null);
   }
 
+  function handleDuplicate(id: string) {
+    const site = sites.find((s) => s.id === id);
+    setDuplicateSiteId(id);
+    setDuplicateName(site ? `${site.name} (Copy)` : "");
+  }
+
+  async function confirmDuplicateSite() {
+    if (!duplicateSiteId || !duplicateName.trim()) return;
+    setDuplicating(true);
+    try {
+      const res = await fetch(`/api/sites/${duplicateSiteId}/duplicate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: duplicateName.trim() }),
+      });
+      if (res.ok) {
+        const newSite = await res.json();
+        toast(`Site duplicated as "${newSite.name}"`);
+        setDuplicateSiteId(null);
+        setDuplicateName("");
+        router.push(`/sites/${newSite.id}`);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast(data.error || "Failed to duplicate site", "error");
+      }
+    } catch {
+      toast("Network error — could not duplicate site", "error");
+    } finally {
+      setDuplicating(false);
+    }
+  }
+
   return (
     <>
       <Topbar
@@ -130,7 +173,7 @@ export default function SitesPage() {
         ) : (
           <div className={styles.grid}>
             {sites.map((site) => (
-              <SiteCard key={site.id} site={site} onDelete={handleDelete} />
+              <SiteCard key={site.id} site={site} onDelete={handleDelete} onDuplicate={handleDuplicate} />
             ))}
           </div>
         )}
@@ -144,6 +187,46 @@ export default function SitesPage() {
         variant="danger"
         onConfirm={confirmDeleteSite}
       />
+      <Dialog
+        open={duplicateSiteId !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDuplicateSiteId(null);
+            setDuplicateName("");
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Duplicate site</DialogTitle>
+          </DialogHeader>
+          <Input
+            label="New site name"
+            placeholder="My Site (Copy)"
+            value={duplicateName}
+            onChange={(e) => setDuplicateName(e.target.value)}
+            autoFocus
+            onKeyDown={(e) => e.key === "Enter" && confirmDuplicateSite()}
+          />
+          <DialogFooter>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setDuplicateSiteId(null);
+                setDuplicateName("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmDuplicateSite}
+              disabled={duplicating || !duplicateName.trim()}
+            >
+              {duplicating ? "Duplicating..." : "Duplicate"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

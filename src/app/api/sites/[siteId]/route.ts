@@ -7,6 +7,7 @@ import { parseBody, updateSiteSchema } from "@/lib/validations";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { sanitizeUrl, sanitizeImageSrc } from "@/lib/sanitize";
 import { logger } from "@/lib/logger";
+import { logActivity } from "@/lib/activity";
 
 export async function GET(
   _req: Request,
@@ -96,6 +97,9 @@ export async function PATCH(
 
     revalidateTag("dashboard", { expire: 0 });
 
+    const userId = session.user.id;
+    logActivity({ userId, siteId, action: "site.updated", details: { name: parsed.data.name } });
+
     return NextResponse.json(updated);
   } catch (error) {
     return apiError("PATCH /api/sites/[siteId]", error);
@@ -128,6 +132,8 @@ export async function DELETE(
     await db.site.delete({ where: { id: siteId } });
 
     revalidateTag("dashboard", { expire: 0 });
+    const userId = session.user.id;
+    logActivity({ userId, siteId, action: "site.deleted" });
     return NextResponse.json({ success: true });
   } catch (error) {
     return apiError("DELETE /api/sites/[siteId]", error);

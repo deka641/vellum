@@ -7,6 +7,7 @@ import { slugify, generateId } from "@/lib/utils";
 import { parseBody, createSiteSchema } from "@/lib/validations";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { Prisma } from "@prisma/client";
+import { logActivity } from "@/lib/activity";
 
 export async function GET() {
   try {
@@ -465,6 +466,7 @@ export async function POST(req: Request) {
     }
 
     revalidateTag("dashboard", { expire: 0 });
+    logActivity({ userId, siteId: site!.id, action: "site.created", details: { name: site!.name } });
     return NextResponse.json(site, { status: 201 });
   } catch (error) {
     return apiError("POST /api/sites", error);

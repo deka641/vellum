@@ -31,6 +31,7 @@ export function SiteHeader({ siteName, siteLogo, homeHref, navItems, siteSlug }:
   const pathname = usePathname();
   const mobileNavRef = useRef<HTMLElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
   function isActive(href: string) {
     if (href === homeHref) {
@@ -77,6 +78,25 @@ export function SiteHeader({ siteName, siteLogo, homeHref, navItems, siteSlug }:
   const handleCloseSearch = useCallback(() => {
     setSearchOpen(false);
   }, []);
+
+  function handleTouchStart(e: React.TouchEvent) {
+    touchStartRef.current = {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY,
+    };
+  }
+
+  function handleTouchEnd(e: React.TouchEvent) {
+    if (!touchStartRef.current) return;
+    const dx = e.changedTouches[0].clientX - touchStartRef.current.x;
+    const dy = e.changedTouches[0].clientY - touchStartRef.current.y;
+    // Swipe right to close: >80px horizontal, <40px vertical
+    if (dx > 80 && Math.abs(dy) < 40) {
+      setMobileOpen(false);
+      menuButtonRef.current?.focus();
+    }
+    touchStartRef.current = null;
+  }
 
   return (
     <>
@@ -131,7 +151,14 @@ export function SiteHeader({ siteName, siteLogo, homeHref, navItems, siteSlug }:
         </div>
 
         {navItems.length > 0 && (
-          <nav ref={mobileNavRef} id="mobile-nav" className={`${styles.mobileNav} ${mobileOpen ? styles.mobileNavOpen : ""}`} aria-label="Site navigation">
+          <nav
+            ref={mobileNavRef}
+            id="mobile-nav"
+            className={`${styles.mobileNav} ${mobileOpen ? styles.mobileNavOpen : ""}`}
+            aria-label="Site navigation"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
             {navItems.map((item) => (
               <Link
                 key={item.href}
@@ -144,6 +171,17 @@ export function SiteHeader({ siteName, siteLogo, homeHref, navItems, siteSlug }:
               </Link>
             ))}
           </nav>
+        )}
+
+        {mobileOpen && (
+          <div
+            className={styles.mobileBackdrop}
+            onClick={() => {
+              setMobileOpen(false);
+              menuButtonRef.current?.focus();
+            }}
+            aria-hidden="true"
+          />
         )}
       </header>
 

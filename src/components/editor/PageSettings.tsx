@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button/Button";
 import { useToast } from "@/components/ui/Toast/Toast";
 import { MediaPickerModal } from "./MediaPickerModal";
 import { slugify } from "@/lib/utils";
+import { TagPicker } from "./TagPicker";
 import { Save, Globe, Image as ImageIcon, X } from "lucide-react";
 import styles from "./PageSettings.module.css";
 
@@ -34,6 +35,7 @@ export function PageSettings() {
   const [slugError, setSlugError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [isHomepage, setIsHomepage] = useState(false);
+  const [siteId, setSiteId] = useState("");
   const [siteSlug, setSiteSlug] = useState("");
   const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
 
@@ -67,6 +69,7 @@ export function PageSettings() {
         if (res.ok) {
           const data = await res.json();
           setIsHomepage(data.isHomepage);
+          setSiteId(data.site?.id ?? "");
           setSiteSlug(data.site?.slug ?? "");
         }
       } catch {
@@ -183,6 +186,10 @@ export function PageSettings() {
           maxLength={2000}
           hint={`${description.length}/160 recommended for SEO`}
         />
+
+        {siteId && pageId && (
+          <TagPicker siteId={siteId} pageId={pageId} />
+        )}
 
         <div className={styles.field}>
           <label className={styles.fieldLabel}>OG Image</label>

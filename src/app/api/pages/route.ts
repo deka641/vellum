@@ -8,6 +8,7 @@ import { Prisma } from "@prisma/client";
 import { parseBody, createPageSchema, validateBlockHierarchy } from "@/lib/validations";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { apiError } from "@/lib/api-helpers";
+import { logActivity } from "@/lib/activity";
 
 export async function GET(req: Request) {
   try {
@@ -170,6 +171,8 @@ export async function POST(req: Request) {
     }
 
     revalidateTag("dashboard", { expire: 0 });
+    const userId = session.user.id;
+    logActivity({ userId, siteId, pageId: page!.id, action: "page.created", details: { title } });
     return NextResponse.json(page, { status: 201 });
   } catch (error) {
     return apiError("POST /api/pages", error);

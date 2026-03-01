@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { notFound } from "next/navigation";
+import { notFound, redirect, permanentRedirect } from "next/navigation";
 import { type Metadata } from "next";
 import { db } from "@/lib/db";
 import { getBaseUrl, buildPageUrl } from "@/lib/url";
@@ -15,7 +15,10 @@ const getSite = cache((slug: string) =>
 const getPage = cache((siteId: string, pageSlug: string) =>
   db.page.findFirst({
     where: { siteId, slug: pageSlug, status: "PUBLISHED", deletedAt: null },
-    include: { blocks: { orderBy: { sortOrder: "asc" } } },
+    include: {
+      blocks: { orderBy: { sortOrder: "asc" } },
+      pageTags: { include: { tag: true } },
+    },
   })
 );
 
@@ -144,7 +147,30 @@ export default async function PublicSitePage({ params }: Props) {
 
   const page = await getPage(site.id, pageSlug);
 
-  if (!page) notFound();
+  if (!page) {
+    // Check for redirects before returning 404
+    const redirectRecord = await db.redirect.findUnique({
+      where: {
+        siteId_fromPath: {
+          siteId: site.id,
+          fromPath: pageSlug,
+        },
+      },
+    });
+
+    if (redirectRecord) {
+      const targetPath = redirectRecord.toPath === "home"
+        ? `/s/${siteSlug}`
+        : `/s/${siteSlug}/${redirectRecord.toPath}`;
+      if (redirectRecord.permanent) {
+        permanentRedirect(targetPath);
+      } else {
+        redirect(targetPath);
+      }
+    }
+
+    notFound();
+  }
 
   const baseUrl = await getBaseUrl();
   const canonical = buildPageUrl(baseUrl, siteSlug, page.isHomepage, page.slug);
@@ -208,7 +234,13 @@ export default async function PublicSitePage({ params }: Props) {
         siteHref={homeHref}
         pageTitle={page.isHomepage ? undefined : page.title}
       />
-      <PublishedPage title={page.title} blocks={blocks} pageId={page.id} />
+      <PublishedPage
+        title={page.title}
+        blocks={blocks}
+        pageId={page.id}
+        tags={page.pageTags.map((pt) => ({ id: pt.tag.id, name: pt.tag.name, slug: pt.tag.slug }))}
+        siteSlug={siteSlug}
+      />
       <PageNavigation prevPage={prevPage} nextPage={nextPage} />
     </>
   );

@@ -7,6 +7,7 @@ import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { apiError } from "@/lib/api-helpers";
 import { logger } from "@/lib/logger";
 import { sanitizeImageSrc, sanitizePlainText } from "@/lib/sanitize";
+import { logActivity } from "@/lib/activity";
 
 export async function GET(
   _req: Request,
@@ -29,6 +30,7 @@ export async function GET(
       include: {
         blocks: { orderBy: { sortOrder: "asc" } },
         site: { select: { id: true, name: true, slug: true } },
+        pageTags: { select: { tagId: true } },
       },
     });
 
@@ -117,6 +119,30 @@ export async function PATCH(
             { status: 409 }
           );
         }
+
+        // Auto-redirect: create redirect from old slug to new slug for published pages
+        if (page.status === "PUBLISHED") {
+          try {
+            await db.redirect.upsert({
+              where: {
+                siteId_fromPath: {
+                  siteId: page.siteId,
+                  fromPath: page.slug,
+                },
+              },
+              update: { toPath: parsed.data.slug },
+              create: {
+                siteId: page.siteId,
+                fromPath: page.slug,
+                toPath: parsed.data.slug,
+                permanent: true,
+              },
+            });
+          } catch (err) {
+            logger.warn("PATCH /api/pages/[pageId]", "Failed to create redirect", err);
+          }
+        }
+
         updateData.slug = parsed.data.slug;
       }
     }
@@ -125,6 +151,21 @@ export async function PATCH(
       where: { id: pageId },
       data: updateData,
     });
+
+    // Handle tag assignment
+    if (parsed.data.tagIds !== undefined) {
+      await db.$transaction([
+        db.pageTag.deleteMany({ where: { pageId } }),
+        ...(parsed.data.tagIds.length > 0
+          ? [db.pageTag.createMany({
+              data: parsed.data.tagIds.map((tagId) => ({
+                pageId,
+                tagId,
+              })),
+            })]
+          : []),
+      ]);
+    }
 
     revalidateTag("dashboard", { expire: 0 });
 
@@ -201,6 +242,7 @@ export async function DELETE(
     }
 
     revalidateTag("dashboard", { expire: 0 });
+    logActivity({ userId: session.user.id, siteId: page.siteId, pageId, action: "page.deleted", details: { title: page.title } });
     return NextResponse.json({ success: true });
   } catch (error) {
     return apiError("DELETE /api/pages/[pageId]", error);

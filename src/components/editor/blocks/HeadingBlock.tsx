@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, type CSSProperties } from "react";
 import { useEditorStore } from "@/stores/editor-store";
+import { AlertTriangle } from "lucide-react";
 import type { HeadingContent, BlockSettings } from "@/types/blocks";
 import styles from "./blocks.module.css";
 
@@ -20,6 +21,21 @@ const headingElements = {
 
 export function HeadingBlock({ id, content, settings }: HeadingBlockProps) {
   const updateBlockContent = useEditorStore((s) => s.updateBlockContent);
+
+  // Check for skipped heading levels
+  const headingWarning = useEditorStore((s) => {
+    const blocks = s.blocks;
+    const headingBlocks = blocks.filter((b) => b.type === "heading");
+    const myIndex = headingBlocks.findIndex((b) => b.id === id);
+    if (myIndex <= 0) return null;
+    const prevLevel = (headingBlocks[myIndex - 1].content as HeadingContent).level;
+    const myLevel = content.level;
+    if (myLevel > prevLevel + 1) {
+      return `Skipped heading level (H${prevLevel} \u2192 H${myLevel})`;
+    }
+    return null;
+  });
+
   const Tag = headingElements[content.level] || "h2";
   const elRef = useRef<HTMLHeadingElement>(null);
   const isLocalEdit = useRef(false);
@@ -45,22 +61,30 @@ export function HeadingBlock({ id, content, settings }: HeadingBlockProps) {
   };
 
   return (
-    <Tag
-      ref={elRef as React.Ref<HTMLHeadingElement>}
-      className={styles.heading}
-      contentEditable
-      suppressContentEditableWarning
-      onInput={(e: React.FormEvent<HTMLHeadingElement>) => {
-        isLocalEdit.current = true;
-        updateBlockContent(id, { text: e.currentTarget.textContent || "" });
-      }}
-      onBlur={(e: React.FocusEvent<HTMLHeadingElement>) =>
-        updateBlockContent(id, { text: e.currentTarget.textContent || "" })
-      }
-      data-level={content.level}
-      style={inlineStyle}
-    >
-      {content.text}
-    </Tag>
+    <>
+      <Tag
+        ref={elRef as React.Ref<HTMLHeadingElement>}
+        className={styles.heading}
+        contentEditable
+        suppressContentEditableWarning
+        onInput={(e: React.FormEvent<HTMLHeadingElement>) => {
+          isLocalEdit.current = true;
+          updateBlockContent(id, { text: e.currentTarget.textContent || "" });
+        }}
+        onBlur={(e: React.FocusEvent<HTMLHeadingElement>) =>
+          updateBlockContent(id, { text: e.currentTarget.textContent || "" })
+        }
+        data-level={content.level}
+        style={inlineStyle}
+      >
+        {content.text}
+      </Tag>
+      {headingWarning && (
+        <div className={styles.headingWarning}>
+          <AlertTriangle size={14} />
+          <span>{headingWarning}</span>
+        </div>
+      )}
+    </>
   );
 }

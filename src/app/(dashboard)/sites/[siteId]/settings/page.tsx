@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Upload, X, Plus, Trash2, Download } from "lucide-react";
+import { ArrowLeft, Upload, X, Plus, Trash2, Download, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { Input, Textarea } from "@/components/ui/Input/Input";
@@ -12,6 +12,14 @@ import { ThemeConfigurator } from "@/components/dashboard/ThemeConfigurator";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog/ConfirmDialog";
 import { DEFAULT_THEME, parseSiteTheme, type SiteTheme } from "@/lib/theme";
 import styles from "./settings.module.css";
+
+interface RedirectRecord {
+  id: string;
+  fromPath: string;
+  toPath: string;
+  permanent: boolean;
+  createdAt: string;
+}
 
 export default function SiteSettingsPage() {
   const params = useParams();
@@ -36,6 +44,11 @@ export default function SiteSettingsPage() {
   const [uploadingFavicon, setUploadingFavicon] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [redirects, setRedirects] = useState<RedirectRecord[]>([]);
+  const [redirectFromPath, setRedirectFromPath] = useState("");
+  const [redirectToPath, setRedirectToPath] = useState("");
+  const [redirectPermanent, setRedirectPermanent] = useState(true);
+  const [addingRedirect, setAddingRedirect] = useState(false);
   const faviconInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
@@ -69,7 +82,68 @@ export default function SiteSettingsPage() {
         }
       })
       .finally(() => setLoading(false));
+
+    fetch(`/api/sites/${params.siteId}/redirects`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setRedirects(data);
+      })
+      .catch(() => {});
   }, [params.siteId]);
+
+  async function handleAddRedirect() {
+    if (!redirectFromPath.trim() || !redirectToPath.trim()) {
+      toast("Both paths are required", "error");
+      return;
+    }
+    setAddingRedirect(true);
+    try {
+      const res = await fetch(`/api/sites/${params.siteId}/redirects`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fromPath: redirectFromPath.trim(),
+          toPath: redirectToPath.trim(),
+          permanent: redirectPermanent,
+        }),
+      });
+      if (res.ok) {
+        const newRedirect = await res.json();
+        setRedirects((prev) => {
+          // Replace if same fromPath exists (upsert behavior)
+          const filtered = prev.filter((r) => r.fromPath !== newRedirect.fromPath);
+          return [newRedirect, ...filtered];
+        });
+        setRedirectFromPath("");
+        setRedirectToPath("");
+        setRedirectPermanent(true);
+        toast("Redirect added");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast(data.error || "Failed to add redirect", "error");
+      }
+    } catch {
+      toast("Something went wrong", "error");
+    } finally {
+      setAddingRedirect(false);
+    }
+  }
+
+  async function handleDeleteRedirect(id: string) {
+    try {
+      const res = await fetch(`/api/sites/${params.siteId}/redirects?id=${id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setRedirects((prev) => prev.filter((r) => r.id !== id));
+        toast("Redirect removed");
+      } else {
+        toast("Failed to remove redirect", "error");
+      }
+    } catch {
+      toast("Something went wrong", "error");
+    }
+  }
 
   async function handleFaviconUpload(file: File) {
     setUploadingFavicon(true);
@@ -529,6 +603,91 @@ export default function SiteSettingsPage() {
           >
             Export site
           </Button>
+        </div>
+
+        <div className={styles.redirectsSection}>
+          <h3 className={styles.redirectsSectionTitle}>Redirects</h3>
+          <p className={styles.redirectsSectionDesc}>
+            Redirects are created automatically when you change a published page&apos;s slug. You can also add manual redirects.
+          </p>
+
+          {redirects.length > 0 ? (
+            <table className={styles.redirectsTable}>
+              <thead>
+                <tr>
+                  <th>From</th>
+                  <th></th>
+                  <th>To</th>
+                  <th>Type</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {redirects.map((r) => (
+                  <tr key={r.id}>
+                    <td>/{r.fromPath}</td>
+                    <td><ArrowRight size={14} style={{ color: "var(--color-text-tertiary)" }} /></td>
+                    <td>/{r.toPath}</td>
+                    <td>
+                      <span className={styles.redirectsBadge}>
+                        {r.permanent ? "301" : "302"}
+                      </span>
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className={styles.footerLinkRemove}
+                        onClick={() => handleDeleteRedirect(r.id)}
+                        title="Remove redirect"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <div className={styles.redirectsEmpty}>No redirects configured</div>
+          )}
+
+          <div className={styles.redirectsAddForm}>
+            <div className={styles.redirectsAddField}>
+              <label>From path</label>
+              <input
+                type="text"
+                value={redirectFromPath}
+                onChange={(e) => setRedirectFromPath(e.target.value)}
+                placeholder="old-slug"
+              />
+            </div>
+            <div className={styles.redirectsAddField}>
+              <label>To path</label>
+              <input
+                type="text"
+                value={redirectToPath}
+                onChange={(e) => setRedirectToPath(e.target.value)}
+                placeholder="new-slug"
+              />
+            </div>
+            <label className={styles.redirectsCheckboxField}>
+              <input
+                type="checkbox"
+                checked={redirectPermanent}
+                onChange={(e) => setRedirectPermanent(e.target.checked)}
+              />
+              Permanent
+            </label>
+            <Button
+              type="button"
+              size="sm"
+              disabled={addingRedirect}
+              onClick={handleAddRedirect}
+              leftIcon={<Plus size={14} />}
+            >
+              {addingRedirect ? "Adding..." : "Add"}
+            </Button>
+          </div>
         </div>
 
         <div className={styles.dangerZone}>

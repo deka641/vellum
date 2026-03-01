@@ -8,6 +8,7 @@ import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { apiError } from "@/lib/api-helpers";
 import { logger } from "@/lib/logger";
 import type { Prisma } from "@prisma/client";
+import { logActivity } from "@/lib/activity";
 
 export async function GET(req: Request) {
   try {
@@ -117,6 +118,8 @@ export async function POST(req: Request) {
       });
 
       revalidateTag("dashboard", { expire: 0 });
+      const userId = session.user.id;
+      logActivity({ userId, action: "media.uploaded", details: { filename: media.filename } });
       return NextResponse.json(media, { status: 201 });
     } catch (error) {
       if (error instanceof UnsafeFileTypeError) {

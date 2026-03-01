@@ -7,6 +7,7 @@ export interface SeoCheck {
   label: string;
   status: SeoStatus;
   message: string;
+  details?: { blockIds?: string[] };
 }
 
 export interface SeoAuditResult {
@@ -62,9 +63,8 @@ export function runSeoAudit(
   }
 
   // 3. Heading hierarchy
-  const headings = allBlocks
-    .filter((b) => b.type === "heading")
-    .map((b) => (b.content as HeadingContent).level);
+  const headingBlocks = allBlocks.filter((b) => b.type === "heading");
+  const headings = headingBlocks.map((b) => (b.content as HeadingContent).level);
 
   if (headings.length === 0) {
     checks.push({ id: "headings", label: "Headings", status: "warning", message: "No headings found — add at least one H1" });
@@ -76,15 +76,20 @@ export function runSeoAudit(
       checks.push({ id: "headings", label: "Headings", status: "warning", message: `${h1Count} H1 headings — use exactly one` });
     } else {
       // Check for skipped levels (e.g. H1 → H3 without H2)
-      let skipped = false;
+      const skippedBlockIds: string[] = [];
       for (let i = 1; i < headings.length; i++) {
         if (headings[i] > headings[i - 1] + 1) {
-          skipped = true;
-          break;
+          skippedBlockIds.push(headingBlocks[i].id);
         }
       }
-      if (skipped) {
-        checks.push({ id: "headings", label: "Headings", status: "warning", message: "Skipped heading levels — use sequential order" });
+      if (skippedBlockIds.length > 0) {
+        checks.push({
+          id: "headings",
+          label: "Headings",
+          status: "warning",
+          message: "Skipped heading levels — use sequential order",
+          details: { blockIds: skippedBlockIds },
+        });
       } else {
         checks.push({ id: "headings", label: "Headings", status: "good", message: `${headings.length} heading${headings.length === 1 ? "" : "s"}, proper hierarchy` });
       }

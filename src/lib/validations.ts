@@ -181,6 +181,10 @@ export const siteFooterSchema = z.object({
   showBranding: z.boolean().optional(),
 });
 
+export const duplicateSiteSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+});
+
 export const updateSiteSchema = z.object({
   name: z.string().min(1).max(200).optional(),
   description: z.string().max(2000).nullable().optional(),
@@ -256,6 +260,7 @@ export const updatePageSchema = z.object({
   metaTitle: z.string().max(200).nullable().optional(),
   ogImage: z.string().max(2000).nullable().optional(),
   noindex: z.boolean().optional(),
+  tagIds: z.array(z.string().min(1)).max(10).optional(),
   scheduledAt: z.string().optional().refine(
     (val) => {
       if (!val) return true;
@@ -297,6 +302,16 @@ export const createTemplateSchema = z.object({
   description: z.string().max(2000).nullable().optional(),
   category: z.string().max(100).optional().default("general"),
   blocks: z.array(blockSchema).optional(),
+});
+
+// --- Tags ---
+
+export const createTagSchema = z.object({
+  name: z.string().min(1).max(100),
+});
+
+export const updateTagSchema = z.object({
+  name: z.string().min(1).max(100),
 });
 
 // --- Navigation ---
@@ -354,6 +369,14 @@ export const formSubmissionSchema = z.object({
     },
     { message: "Total form data too large (max 100KB)" }
   ),
+});
+
+// --- Redirects ---
+
+export const createRedirectSchema = z.object({
+  fromPath: z.string().min(1).max(500).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Path must be lowercase letters, numbers, and hyphens"),
+  toPath: z.string().min(1).max(500).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Path must be lowercase letters, numbers, and hyphens"),
+  permanent: z.boolean().optional().default(true),
 });
 
 // --- Password Reset ---

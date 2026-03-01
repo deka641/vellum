@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { GettingStarted } from "@/components/dashboard/GettingStarted";
 import { formatDate } from "@/lib/utils";
+import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
 import styles from "./home.module.css";
 
 const getDashboardData = unstable_cache(
@@ -180,6 +181,8 @@ export default async function DashboardPage() {
             )}
           </div>
         </div>
+
+        <ActivityFeed />
       </div>
     </>
   );

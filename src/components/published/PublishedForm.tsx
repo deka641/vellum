@@ -111,7 +111,7 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
       // Scroll to first error
       const firstErrorId = Object.keys(errors)[0];
       const el = document.getElementById(firstErrorId);
-      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+      if (el) el.focus();
       return;
     }
 
@@ -168,7 +168,7 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
   if (submitted) {
     return (
       <div className={styles.formBlock}>
-        <p className={styles.formSuccess}>{successMessage || "Thank you! Your submission has been received."}</p>
+        <p className={`${styles.formSuccess} ${styles.formSuccessAnimated}`}>{successMessage || "Thank you! Your submission has been received."}</p>
         <button
           type="button"
           className={styles.formResetBtn}
@@ -299,6 +299,32 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
         <label htmlFor={`${blockId}_hp`}>Do not fill this field</label>
         <input type="text" id={`${blockId}_hp`} name="website_url" tabIndex={-1} autoComplete="off" />
       </div>
+      {Object.keys(fieldErrors).length > 0 && (
+        <div className={styles.formErrorSummary} role="alert" aria-live="assertive">
+          <strong>Please fix the following errors:</strong>
+          <ul>
+            {fields
+              .filter((f) => fieldErrors[f.id])
+              .map((f) => (
+                <li key={f.id}>
+                  <button
+                    type="button"
+                    className={styles.formErrorSummaryLink}
+                    onClick={() => {
+                      const el = document.getElementById(f.id);
+                      if (el) el.focus();
+                    }}
+                  >
+                    {f.label}: {fieldErrors[f.id]}
+                  </button>
+                </li>
+              ))}
+          </ul>
+        </div>
+      )}
+      {fields.some((f) => f.required) && (
+        <p className={styles.formRequiredLegend}>Fields marked with * are required</p>
+      )}
       {fields.map((field) => (
         <div key={field.id} className={styles.formField}>
           <label className={styles.formLabel} htmlFor={field.id} id={field.id + "-label"}>

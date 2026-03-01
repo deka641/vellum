@@ -18,6 +18,9 @@ const PRESETS = {
   read: { limit: 60, windowMs: 60 * 1000 },             // 60 req / 1 min
 } as const;
 
+const MAX_WINDOW_MS = Math.max(...Object.values(PRESETS).map((p) => p.windowMs));
+const MAX_STORE_SIZE = 10_000;
+
 export type RateLimitPreset = keyof typeof PRESETS;
 
 interface RateLimitSuccess {
@@ -44,6 +47,12 @@ export function rateLimit(key: string, preset: RateLimitPreset): RateLimitResult
   if (!entry) {
     entry = { current: 0, previous: 0, windowStart: now };
     store.set(key, entry);
+
+    // Evict oldest entry if store exceeds size limit
+    if (store.size > MAX_STORE_SIZE) {
+      const oldest = store.keys().next().value;
+      if (oldest !== undefined) store.delete(oldest);
+    }
   }
 
   // Rotate windows if current window has elapsed
@@ -111,10 +120,13 @@ if (typeof globalThis !== "undefined") {
     const now = Date.now();
     for (const [key, entry] of store) {
       // Both windows have fully expired
-      const maxWindowMs = Math.max(...Object.values(PRESETS).map((p) => p.windowMs));
-      if (now > entry.windowStart + 2 * maxWindowMs) {
+      if (now > entry.windowStart + 2 * MAX_WINDOW_MS) {
         store.delete(key);
       }
     }
   }, CLEANUP_INTERVAL).unref?.();
+}
+
+export function getRateLimitStoreSize(): number {
+  return store.size;
 }

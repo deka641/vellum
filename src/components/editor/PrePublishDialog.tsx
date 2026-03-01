@@ -120,6 +120,15 @@ export function PrePublishDialog({
                 <span>{w}</span>
               </div>
             ))}
+
+            {audit.checks.some((c) => c.id === "headings" && c.status !== "good" && c.details?.blockIds) && (
+              <div className={`${styles.check} ${styles.checkStructural}`}>
+                <AlertTriangle size={14} />
+                <span>
+                  <strong>Heading structure:</strong> Some heading levels are skipped. Screen readers and search engines rely on sequential heading order (H1 → H2 → H3). Consider fixing the heading levels before publishing.
+                </span>
+              </div>
+            )}
           </div>
         </div>
 

@@ -1,0 +1,104 @@
+.tagPicker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.saving {
+  font-weight: 400;
+  color: var(--color-text-tertiary);
+  font-size: var(--text-xs);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 150ms;
+}
+
+.chip:hover {
+  border-color: var(--color-border-focus);
+  color: var(--color-text-primary);
+}
+
+.chipSelected {
+  background: var(--color-accent);
+  color: var(--color-text-inverse, #fff);
+  border-color: var(--color-accent);
+}
+
+.chipSelected:hover {
+  opacity: 0.9;
+  border-color: var(--color-accent);
+  color: var(--color-text-inverse, #fff);
+}
+
+.addTag {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.input {
+  flex: 1;
+  padding: 4px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-border-focus);
+}
+
+.addBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.addBtn:hover:not(:disabled) {
+  border-color: var(--color-border-focus);
+  color: var(--color-text-primary);
+}
+
+.addBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.limit {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+}
