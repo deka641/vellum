@@ -14,21 +14,21 @@ const stats = [
   { icon: <Globe size={20} />, value: 20, display: "20+", label: "SEO & Publishing Tools" },
 ];
 
-const testimonials = [
+const useCases = [
   {
-    quote: "I replaced three different tools with Vellum. The visual editor handles our landing pages, the form builder captures leads, and scheduled publishing keeps our content calendar on track. Setup took about 20 minutes.",
-    name: "Sarah Chen",
-    role: "Marketing Lead at Brightpath Studio",
+    description: "Replace your landing page builder, form tool, and CMS with a single platform. The visual editor handles page layouts, the form builder captures leads, and scheduled publishing keeps your content calendar on track.",
+    useCase: "Marketing & Lead Generation",
+    icon: "rocket",
   },
   {
-    quote: "We needed a site for our bakery with online ordering forms, a photo gallery, and easy updates for daily specials. Vellum\'s block editor made it simple \u2014 my staff can update the menu without calling me.",
-    name: "Marcus Rivera",
-    role: "Owner, Rivera\'s Artisan Bakery",
+    description: "Build a site with online ordering forms, a photo gallery, and easy daily updates. The block editor is simple enough that your team can update content without technical help.",
+    useCase: "Small Business Websites",
+    icon: "store",
   },
   {
-    quote: "As a developer, I appreciate that Vellum generates clean semantic HTML with proper heading hierarchy, structured data, and automatic sitemaps. The SEO audit catches issues before they go live. My clients\' sites consistently score 95+ on Lighthouse.",
-    name: "Emma Larsson",
-    role: "Web Developer & Consultant",
+    description: "Clean semantic HTML with proper heading hierarchy, structured data, and automatic sitemaps. The SEO audit catches issues before they go live, and sites consistently score 95+ on Lighthouse.",
+    useCase: "Developer-Friendly Publishing",
+    icon: "code",
   },
 ];
 
@@ -117,25 +117,24 @@ export function SocialProof() {
           {...fadeUp}
           transition={{ ...fadeUp.transition, delay: 0.2 }}
         >
-          Loved by creators
+          What you can build
         </motion.h2>
         <div className={styles.testimonialsGrid}>
-          {testimonials.map((t, i) => (
+          {useCases.map((uc, i) => (
             <motion.div
-              key={t.name}
+              key={uc.useCase}
               className={styles.testimonialCard}
               {...fadeUp}
               transition={{ ...fadeUp.transition, delay: 0.3 + i * 0.1 }}
             >
               <Quote size={20} className={styles.testimonialQuoteIcon} />
-              <p className={styles.testimonialText}>{t.quote}</p>
+              <p className={styles.testimonialText}>{uc.description}</p>
               <div className={styles.testimonialAuthor}>
                 <div className={styles.testimonialAvatar}>
-                  {t.name.split(" ").map(n => n[0]).join("")}
+                  {uc.useCase.split(" ").map(n => n[0]).join("")}
                 </div>
                 <div>
-                  <div className={styles.testimonialName}>{t.name}</div>
-                  <div className={styles.testimonialRole}>{t.role}</div>
+                  <div className={styles.testimonialName}>{uc.useCase}</div>
                 </div>
               </div>
             </motion.div>

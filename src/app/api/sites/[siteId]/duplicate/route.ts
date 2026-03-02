@@ -9,6 +9,7 @@ import { logger } from "@/lib/logger";
 import { sanitizeBlocks } from "@/lib/sanitize";
 import { generateId } from "@/lib/utils";
 import { Prisma } from "@prisma/client";
+import { logActivity } from "@/lib/activity";
 
 export async function POST(
   req: Request,
@@ -167,6 +168,12 @@ export async function POST(
 
     revalidateTag("dashboard", { expire: 0 });
     logger.info("POST /api/sites/[siteId]/duplicate", `Site ${siteId} duplicated as ${newSite.id}`);
+    logActivity({
+      userId,
+      siteId: newSite.id,
+      action: "site.duplicate",
+      details: { sourceSiteId: siteId, name: newSite.name },
+    });
 
     return NextResponse.json(newSite, { status: 201 });
   } catch (error) {

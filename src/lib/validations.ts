@@ -229,6 +229,8 @@ export const importSiteSchema = z.object({
     footer: siteFooterSchema.optional(),
     customHead: z.string().max(10000).nullable().optional(),
     customFooter: z.string().max(10000).nullable().optional(),
+    notificationEmail: z.string().max(500).nullable().optional(),
+    favicon: z.string().max(2000).nullable().optional(),
   }),
   pages: z.array(importPageSchema).max(200),
 });

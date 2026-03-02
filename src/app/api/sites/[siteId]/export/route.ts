@@ -45,6 +45,10 @@ export async function GET(
         theme: site.theme,
         logo: site.logo,
         footer: site.footer,
+        customHead: site.customHead,
+        customFooter: site.customFooter,
+        notificationEmail: site.notificationEmail,
+        favicon: site.favicon,
       },
       pages: site.pages.map((page) => ({
         title: page.title,

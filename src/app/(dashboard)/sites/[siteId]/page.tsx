@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Plus, FileText, ArrowLeft, Navigation2, ExternalLink, Search, Send, Trash2, RotateCcw, Clock } from "lucide-react";
+import { Plus, FileText, ArrowLeft, Navigation2, ExternalLink, Search, Send, Trash2, RotateCcw, Clock, Tag } from "lucide-react";
 import Link from "next/link";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { PageList } from "@/components/dashboard/PageList";
@@ -490,6 +490,11 @@ export default function SiteDetailPage() {
             <Link href={`/sites/${site.id}/navigation`}>
               <Button variant="secondary" leftIcon={<Navigation2 size={16} />} size="sm">
                 Navigation
+              </Button>
+            </Link>
+            <Link href={`/sites/${site.id}/tags`}>
+              <Button variant="secondary" leftIcon={<Tag size={16} />} size="sm">
+                Tags
               </Button>
             </Link>
             <Link href={`/sites/${site.id}/submissions`}>

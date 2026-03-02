@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Plus, Globe, Upload } from "lucide-react";
+import { Plus, Globe, Upload, AlertCircle } from "lucide-react";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { SiteCard } from "@/components/dashboard/SiteCard";
 import { Button } from "@/components/ui/Button/Button";
@@ -32,6 +32,7 @@ interface Site {
 export default function SitesPage() {
   const [sites, setSites] = useState<Site[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
   const [deleteSiteId, setDeleteSiteId] = useState<string | null>(null);
   const [duplicateSiteId, setDuplicateSiteId] = useState<string | null>(null);
   const [duplicateName, setDuplicateName] = useState("");
@@ -41,11 +42,24 @@ export default function SitesPage() {
   const { toast } = useToast();
   const router = useRouter();
 
-  useEffect(() => {
+  function fetchSites() {
+    setLoading(true);
+    setFetchError(false);
     fetch("/api/sites")
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch");
+        return res.json();
+      })
       .then(setSites)
+      .catch(() => {
+        setFetchError(true);
+        console.error("Failed to fetch sites");
+      })
       .finally(() => setLoading(false));
+  }
+
+  useEffect(() => {
+    fetchSites();
   }, []);
 
   function handleDelete(id: string) {
@@ -158,6 +172,15 @@ export default function SitesPage() {
             {[1, 2, 3].map((i) => (
               <Skeleton key={i} height={240} />
             ))}
+          </div>
+        ) : fetchError ? (
+          <div className={styles.empty}>
+            <div className={styles.emptyIconCircle}>
+              <AlertCircle size={28} strokeWidth={1.5} />
+            </div>
+            <h3>Could not load sites</h3>
+            <p>Something went wrong. Please check your connection and try again.</p>
+            <Button onClick={fetchSites} variant="secondary">Retry</Button>
           </div>
         ) : sites.length === 0 ? (
           <div className={styles.empty}>

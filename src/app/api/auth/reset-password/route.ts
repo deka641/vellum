@@ -57,19 +57,29 @@ export async function POST(req: Request) {
 
     const passwordHash = await hash(password, 12);
 
-    await db.$transaction([
-      db.user.update({
+    // Atomic update-if-unused to prevent TOCTOU race condition
+    await db.$transaction(async (tx) => {
+      const updated = await tx.passwordResetToken.updateMany({
+        where: { id: resetToken.id, usedAt: null },
+        data: { usedAt: new Date() },
+      });
+      if (updated.count === 0) {
+        throw new Error("Token already used");
+      }
+      await tx.user.update({
         where: { id: resetToken.userId },
         data: { passwordHash },
-      }),
-      db.passwordResetToken.update({
-        where: { id: resetToken.id },
-        data: { usedAt: new Date() },
-      }),
-    ]);
+      });
+    });
 
     return NextResponse.json({ message: "Password has been reset successfully" });
   } catch (error) {
+    if (error instanceof Error && error.message === "Token already used") {
+      return NextResponse.json(
+        { error: "This reset link has already been used" },
+        { status: 400 }
+      );
+    }
     return apiError("POST /api/auth/reset-password", error);
   }
 }

@@ -23,9 +23,10 @@ interface SiteHeaderProps {
   homeHref: string;
   navItems: NavItem[];
   siteSlug: string;
+  hasPublishedPages?: boolean;
 }
 
-export function SiteHeader({ siteName, siteLogo, homeHref, navItems, siteSlug }: SiteHeaderProps) {
+export function SiteHeader({ siteName, siteLogo, homeHref, navItems, siteSlug, hasPublishedPages = true }: SiteHeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const pathname = usePathname();
@@ -126,14 +127,16 @@ export function SiteHeader({ siteName, siteLogo, homeHref, navItems, siteSlug }:
               </nav>
             )}
 
-            <button
-              className={styles.searchButton}
-              onClick={() => setSearchOpen(true)}
-              aria-label="Search site"
-              title="Search (Ctrl+K)"
-            >
-              <Search size={18} />
-            </button>
+            {hasPublishedPages && (
+              <button
+                className={styles.searchButton}
+                onClick={() => setSearchOpen(true)}
+                aria-label="Search site"
+                title="Search (Ctrl+K)"
+              >
+                <Search size={18} />
+              </button>
+            )}
 
             {navItems.length > 0 && (
               <button

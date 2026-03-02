@@ -399,7 +399,12 @@
 .featureCard:hover {
   border-color: var(--color-accent);
   box-shadow: 0 4px 20px rgba(196, 167, 125, 0.15), var(--shadow-md);
-  transform: translateY(-2px);
+}
+
+@media (hover: hover) {
+  .featureCard:hover {
+    transform: translateY(-2px);
+  }
 }
 
 .featureIcon {
@@ -554,6 +559,12 @@
 .testimonialRole {
   font-size: var(--text-xs);
   color: var(--color-text-tertiary);
+}
+
+@media (max-width: 1024px) {
+  .testimonialsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 768px) {
@@ -722,9 +733,14 @@
 }
 
 .ctaButton:hover {
-  transform: translateY(-1px);
   box-shadow: var(--shadow-lg);
   filter: brightness(1.05);
+}
+
+@media (hover: hover) {
+  .ctaButton:hover {
+    transform: translateY(-1px);
+  }
 }
 
 .ctaButton:active {
@@ -823,7 +839,7 @@
   color: var(--color-text-tertiary);
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .footerTop {
     flex-direction: column;
     gap: var(--space-8);

@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { apiError } from "@/lib/api-helpers";
 import { sanitizeBlocks } from "@/lib/sanitize";
 import type { Prisma } from "@prisma/client";
-import { parseBody, createTemplateSchema } from "@/lib/validations";
+import { parseBody, createTemplateSchema, validateBlockHierarchy } from "@/lib/validations";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function GET() {
@@ -56,6 +56,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
     const { name, description, category, blocks } = parsed.data;
+
+    if (blocks && blocks.length > 0) {
+      const hierarchy = validateBlockHierarchy(
+        blocks as Array<{ type: string; content: Record<string, unknown> }>
+      );
+      if (!hierarchy.valid) {
+        return NextResponse.json(
+          { error: `Invalid block hierarchy: ${hierarchy.error}` },
+          { status: 400 }
+        );
+      }
+    }
 
     const sanitizedBlocks = blocks ? sanitizeBlocks(blocks) : [];
 

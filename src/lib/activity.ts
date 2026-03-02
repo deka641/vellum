@@ -26,7 +26,8 @@ export function logActivity(entry: ActivityEntry): void {
       },
     })
     .then(async () => {
-      // Auto-cleanup: keep max 500 entries per user
+      // Probabilistic cleanup: ~1% chance per write to keep max 500 entries
+      if (Math.random() >= 0.01) return;
       try {
         const count = await db.activityLog.count({
           where: { userId: entry.userId },

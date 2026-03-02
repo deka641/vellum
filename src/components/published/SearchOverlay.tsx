@@ -25,7 +25,9 @@ export function SearchOverlay({ siteSlug, isOpen, onClose }: SearchOverlayProps)
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
+  const resultsRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -43,6 +45,7 @@ export function SearchOverlay({ siteSlug, isOpen, onClose }: SearchOverlayProps)
       setResults([]);
       setSearched(false);
       setLoading(false);
+      setActiveIndex(-1);
     }
   }, [isOpen]);
 
@@ -69,6 +72,21 @@ export function SearchOverlay({ siteSlug, isOpen, onClose }: SearchOverlayProps)
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
+
+  // Reset active index when results change
+  useEffect(() => {
+    setActiveIndex(-1);
+  }, [results]);
+
+  // Scroll active result into view
+  useEffect(() => {
+    if (activeIndex < 0 || !resultsRef.current) return;
+    const links = resultsRef.current.querySelectorAll("[data-result-link]");
+    const activeLink = links[activeIndex] as HTMLElement | undefined;
+    if (activeLink) {
+      activeLink.scrollIntoView({ block: "nearest" });
+    }
+  }, [activeIndex]);
 
   const doSearch = useCallback(
     async (searchQuery: string) => {
@@ -155,6 +173,25 @@ export function SearchOverlay({ siteSlug, isOpen, onClose }: SearchOverlayProps)
     }
   }
 
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (results.length === 0) return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIndex((prev) => (prev < results.length - 1 ? prev + 1 : 0));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIndex((prev) => (prev > 0 ? prev - 1 : results.length - 1));
+    } else if (e.key === "Enter" && activeIndex >= 0) {
+      e.preventDefault();
+      const result = results[activeIndex];
+      if (result) {
+        onClose();
+        window.location.href = getPageHref(result);
+      }
+    }
+  }
+
   return (
     <div className={styles.overlay} onClick={handleBackdropClick} role="dialog" aria-modal="true" aria-label="Search site">
       <div className={styles.card}>
@@ -167,16 +204,21 @@ export function SearchOverlay({ siteSlug, isOpen, onClose }: SearchOverlayProps)
             placeholder="Search pages..."
             value={query}
             onChange={(e) => handleInputChange(e.target.value)}
+            onKeyDown={handleKeyDown}
             aria-label="Search"
+            aria-activedescendant={activeIndex >= 0 ? `search-result-${activeIndex}` : undefined}
             autoComplete="off"
             spellCheck={false}
+            role="combobox"
+            aria-expanded={results.length > 0}
+            aria-controls="search-results"
           />
-          <button className={styles.closeButton} onClick={onClose} aria-label="Close search">
-            <span>Esc</span>
+          <button className={styles.closeButton} onClick={onClose} aria-label="Close search" title="Close (Esc)">
+            <X size={16} />
           </button>
         </div>
 
-        <div className={styles.results}>
+        <div className={styles.results} ref={resultsRef} id="search-results" role="listbox">
           {loading && (
             <div className={styles.loading}>
               <div className={styles.spinner} />
@@ -201,8 +243,12 @@ export function SearchOverlay({ siteSlug, isOpen, onClose }: SearchOverlayProps)
               <Link
                 key={`${result.pageSlug}-${i}`}
                 href={getPageHref(result)}
-                className={styles.resultLink}
+                className={`${styles.resultLink} ${i === activeIndex ? styles.resultLinkActive : ""}`}
                 onClick={onClose}
+                data-result-link
+                id={`search-result-${i}`}
+                role="option"
+                aria-selected={i === activeIndex}
               >
                 <p className={styles.resultTitle}>{result.pageTitle}</p>
                 <p className={styles.resultSnippet}>{result.snippet}</p>
@@ -217,10 +263,13 @@ export function SearchOverlay({ siteSlug, isOpen, onClose }: SearchOverlayProps)
 
         <div className={styles.footer}>
           <p className={styles.footerHint}>
-            <kbd className={styles.footerKbd}>Esc</kbd> to close
+            <kbd className={styles.footerKbd}>&uarr;&darr;</kbd> to navigate
           </p>
           <p className={styles.footerHint}>
             <kbd className={styles.footerKbd}>Enter</kbd> to select
+          </p>
+          <p className={styles.footerHint}>
+            <kbd className={styles.footerKbd}>Esc</kbd> to close
           </p>
         </div>
       </div>

@@ -221,3 +221,23 @@
 .retryBtn:hover {
   background: rgba(220, 38, 38, 0.08);
 }
+
+.deleteBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-out),
+              background var(--duration-fast) var(--ease-out);
+}
+
+.deleteBtn:hover {
+  color: var(--color-error, #DC2626);
+  background: var(--color-error-light, #FEF2F2);
+}

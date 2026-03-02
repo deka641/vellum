@@ -57,6 +57,10 @@ export async function POST(req: Request) {
           theme: (importData.site.theme as object) || {},
           logo: importData.site.logo ? sanitizeImageSrc(importData.site.logo) || null : null,
           footer: (importData.site.footer as object) || {},
+          customHead: typeof importData.site.customHead === "string" ? importData.site.customHead : null,
+          customFooter: typeof importData.site.customFooter === "string" ? importData.site.customFooter : null,
+          notificationEmail: typeof importData.site.notificationEmail === "string" ? importData.site.notificationEmail : null,
+          favicon: importData.site.favicon ? sanitizeImageSrc(importData.site.favicon) || null : null,
           userId,
         },
       });
@@ -95,14 +99,29 @@ export async function POST(req: Request) {
         });
 
         if (sanitized.length > 0) {
+          // Build block ID map for remapping parentId references
+          const idMap = new Map<string, string>();
+          const newBlockIds = sanitized.map(() => {
+            const newId = generateId();
+            return newId;
+          });
+          // Map original block indices to new IDs based on parentId from original blocks
+          const originalBlocks = pageData.blocks as Array<{ parentId?: string | null; id?: string }>;
+          for (let bi = 0; bi < originalBlocks.length; bi++) {
+            const origId = originalBlocks[bi].id;
+            if (origId) {
+              idMap.set(origId, newBlockIds[bi]);
+            }
+          }
+
           await tx.block.createMany({
             data: sanitized.map((block, bi) => ({
-              id: generateId(),
+              id: newBlockIds[bi],
               type: block.type,
               content: block.content as object,
               settings: (block.settings as object) || {},
               sortOrder: bi,
-              parentId: block.parentId || null,
+              parentId: block.parentId ? (idMap.get(block.parentId) || null) : null,
               pageId: page.id,
             })),
           });

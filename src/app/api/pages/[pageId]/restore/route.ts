@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { apiError } from "@/lib/api-helpers";
+import { logActivity } from "@/lib/activity";
 
 export async function POST(
   _req: Request,
@@ -41,6 +42,13 @@ export async function POST(
     });
 
     revalidateTag("dashboard", { expire: 0 });
+    logActivity({
+      userId: session.user.id,
+      pageId,
+      siteId: page.siteId,
+      action: "page.restore",
+      details: { title: page.title },
+    });
 
     return NextResponse.json(restored);
   } catch (error) {

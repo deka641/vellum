@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Download, ChevronLeft, ChevronRight, Search, AlertCircle } from "lucide-react";
+import { Download, ChevronLeft, ChevronRight, Search, AlertCircle, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/Button/Button";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog/ConfirmDialog";
+import { useToast } from "@/components/ui/Toast/Toast";
 import { formatDate } from "@/lib/utils";
 import styles from "./submissions.module.css";
 
@@ -33,6 +35,11 @@ export function SubmissionsClient({ siteId, pages }: SubmissionsClientProps) {
   const [total, setTotal] = useState(0);
   const [pageFilter, setPageFilter] = useState("");
   const [search, setSearch] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showBulkDelete, setShowBulkDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const { toast } = useToast();
 
   const fetchSubmissions = useCallback(async () => {
     setLoading(true);
@@ -70,6 +77,11 @@ export function SubmissionsClient({ siteId, pages }: SubmissionsClientProps) {
     setPage(1);
   }, [pageFilter]);
 
+  // Clear selection when submissions change
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [submissions]);
+
   const filtered = useMemo(() => {
     if (!search.trim()) return submissions;
     const q = search.toLowerCase();
@@ -86,6 +98,52 @@ export function SubmissionsClient({ siteId, pages }: SubmissionsClientProps) {
     const params = new URLSearchParams();
     if (pageFilter) params.set("pageId", pageFilter);
     window.open(`/api/sites/${siteId}/submissions/export?${params}`, "_blank");
+  }
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    if (selectedIds.size === filtered.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map((s) => s.id)));
+    }
+  }
+
+  async function handleDelete(ids: string[]) {
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/sites/${siteId}/submissions`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        toast(`Deleted ${data.deleted} submission${data.deleted !== 1 ? "s" : ""}`);
+        setSelectedIds(new Set());
+        fetchSubmissions();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast(err.error || "Failed to delete submissions", "error");
+      }
+    } catch {
+      toast("Something went wrong", "error");
+    } finally {
+      setDeleting(false);
+      setDeleteId(null);
+      setShowBulkDelete(false);
+    }
   }
 
   return (
@@ -111,6 +169,17 @@ export function SubmissionsClient({ siteId, pages }: SubmissionsClientProps) {
             <option key={p.id} value={p.id}>{p.title}</option>
           ))}
         </select>
+        {selectedIds.size > 0 && (
+          <Button
+            variant="danger"
+            size="sm"
+            leftIcon={<Trash2 size={14} />}
+            onClick={() => setShowBulkDelete(true)}
+            disabled={deleting}
+          >
+            Delete {selectedIds.size}
+          </Button>
+        )}
         <Button
           variant="ghost"
           size="sm"
@@ -144,14 +213,31 @@ export function SubmissionsClient({ siteId, pages }: SubmissionsClientProps) {
             <table className={styles.table}>
               <thead>
                 <tr>
+                  <th className={styles.th}>
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.size === filtered.length && filtered.length > 0}
+                      onChange={toggleSelectAll}
+                      aria-label="Select all submissions"
+                    />
+                  </th>
                   <th className={styles.th}>Page</th>
                   <th className={styles.th}>Data</th>
                   <th className={styles.th}>Date</th>
+                  <th className={styles.th}></th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((sub) => (
                   <tr key={sub.id} className={styles.tr}>
+                    <td className={styles.td}>
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(sub.id)}
+                        onChange={() => toggleSelect(sub.id)}
+                        aria-label={`Select submission from ${sub.page.title}`}
+                      />
+                    </td>
                     <td className={styles.td}>
                       <span className={styles.pageName}>{sub.page.title}</span>
                     </td>
@@ -167,6 +253,16 @@ export function SubmissionsClient({ siteId, pages }: SubmissionsClientProps) {
                     </td>
                     <td className={styles.td}>
                       <span className={styles.date}>{formatDate(new Date(sub.createdAt))}</span>
+                    </td>
+                    <td className={styles.td}>
+                      <button
+                        className={styles.deleteBtn}
+                        onClick={() => setDeleteId(sub.id)}
+                        title="Delete submission"
+                        aria-label="Delete submission"
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -200,6 +296,25 @@ export function SubmissionsClient({ siteId, pages }: SubmissionsClientProps) {
           </div>
         </>
       )}
+
+      <ConfirmDialog
+        open={deleteId !== null}
+        onOpenChange={(open) => { if (!open) setDeleteId(null); }}
+        title="Delete submission"
+        description="Are you sure you want to delete this submission? This cannot be undone."
+        confirmLabel="Delete"
+        variant="danger"
+        onConfirm={() => { if (deleteId) handleDelete([deleteId]); }}
+      />
+      <ConfirmDialog
+        open={showBulkDelete}
+        onOpenChange={(open) => { if (!open) setShowBulkDelete(false); }}
+        title="Delete submissions"
+        description={`Are you sure you want to delete ${selectedIds.size} submission${selectedIds.size !== 1 ? "s" : ""}? This cannot be undone.`}
+        confirmLabel="Delete all"
+        variant="danger"
+        onConfirm={() => handleDelete(Array.from(selectedIds))}
+      />
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Upload, X, Plus, Trash2, Download, ArrowRight } from "lucide-react";
+import { Skeleton } from "@/components/ui/Skeleton/Skeleton";
 import Link from "next/link";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { Input, Textarea } from "@/components/ui/Input/Input";
@@ -237,7 +238,31 @@ export default function SiteSettingsPage() {
     }
   }
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <>
+        <Topbar
+          title="Site Settings"
+          actions={
+            <Link href={`/sites/${params.siteId}`}>
+              <Button variant="ghost" leftIcon={<ArrowLeft size={16} />} size="sm">
+                Back
+              </Button>
+            </Link>
+          }
+        />
+        <div className={styles.content}>
+          <div className={styles.form} style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
+            <Skeleton height={40} />
+            <Skeleton height={80} />
+            <Skeleton height={40} />
+            <Skeleton height={120} />
+            <Skeleton height={200} />
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>

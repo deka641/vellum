@@ -8,6 +8,7 @@ import { unlink } from "fs/promises";
 import { safeMediaFilePath } from "@/lib/upload";
 import { apiError } from "@/lib/api-helpers";
 import { logger } from "@/lib/logger";
+import { logActivity } from "@/lib/activity";
 
 export async function POST(req: Request) {
   try {
@@ -66,6 +67,7 @@ export async function POST(req: Request) {
     }
 
     revalidateTag("dashboard", { expire: 0 });
+    logActivity({ userId, action: "media.bulk_delete", details: { count: media.length } });
 
     return NextResponse.json({ deleted: media.length });
   } catch (error) {
