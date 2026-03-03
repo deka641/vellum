@@ -306,6 +306,13 @@ export const createTemplateSchema = z.object({
   blocks: z.array(blockSchema).optional(),
 });
 
+export const updateTemplateSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  description: z.string().max(2000).nullable().optional(),
+  category: z.string().max(100).optional(),
+  blocks: z.array(blockSchema).optional(),
+});
+
 // --- Tags ---
 
 export const createTagSchema = z.object({

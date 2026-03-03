@@ -7,6 +7,7 @@ import { PublishedPage } from "@/components/published/PublishedPage";
 import { WebPageJsonLd, BreadcrumbJsonLd } from "@/components/published/JsonLd";
 import { Breadcrumbs } from "@/components/published/Breadcrumbs";
 import { PageNavigation } from "@/components/published/PageNavigation";
+import { SocialShareBar } from "@/components/published/SocialShareBar";
 
 const getSite = cache((slug: string) =>
   db.site.findUnique({ where: { slug } })
@@ -240,6 +241,12 @@ export default async function PublicSitePage({ params }: Props) {
         pageId={page.id}
         tags={page.pageTags.map((pt) => ({ id: pt.tag.id, name: pt.tag.name, slug: pt.tag.slug }))}
         siteSlug={siteSlug}
+      />
+      <SocialShareBar
+        title={page.title}
+        siteSlug={siteSlug}
+        pageSlug={page.slug}
+        isHomepage={page.isHomepage}
       />
       <PageNavigation prevPage={prevPage} nextPage={nextPage} />
     </>

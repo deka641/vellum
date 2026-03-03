@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidateTag } from "next/cache";
 import { db } from "@/lib/db";
 import { apiError } from "@/lib/api-helpers";
 import { logger } from "@/lib/logger";
 import type { Prisma } from "@prisma/client";
+import { prunePageRevisionsBatch, revalidatePublishedPages } from "@/lib/revisions";
 
 export async function POST(req: Request) {
   try {
@@ -32,6 +33,7 @@ export async function POST(req: Request) {
     const pagesToPublish = await db.page.findMany({
       where: {
         status: "DRAFT",
+        deletedAt: null,
         scheduledPublishAt: {
           not: null,
           lte: now,
@@ -100,45 +102,12 @@ export async function POST(req: Request) {
         }),
       });
 
-      // 4. Batch get revision counts (1 groupBy instead of N counts)
-      const revisionCounts = await tx.pageRevision.groupBy({
-        by: ["pageId"],
-        where: { pageId: { in: pageIds } },
-        _count: true,
-      });
-
-      // 5. Prune only pages exceeding 20 revisions
-      const pagesToPrune = revisionCounts.filter((rc) => rc._count > 20);
-      for (const rc of pagesToPrune) {
-        const excessCount = rc._count - 20;
-        const oldest = await tx.pageRevision.findMany({
-          where: { pageId: rc.pageId },
-          orderBy: { createdAt: "asc" },
-          take: excessCount,
-          select: { id: true },
-        });
-        if (oldest.length > 0) {
-          await tx.pageRevision.deleteMany({
-            where: { id: { in: oldest.map((r) => r.id) } },
-          });
-        }
-      }
+      // 4. Prune revisions exceeding 20 per page
+      await prunePageRevisionsBatch(tx, pageIds);
     });
 
-    // Revalidation happens outside the transaction
-    for (const page of pagesToPublish) {
-      try {
-        const siteSlug = page.site.slug;
-        if (page.isHomepage) {
-          revalidatePath(`/s/${siteSlug}`);
-        } else {
-          revalidatePath(`/s/${siteSlug}/${page.slug}`);
-        }
-        revalidatePath(`/s/${siteSlug}`, "layout");
-      } catch (err) {
-        logger.warn("revalidation", `Scheduled publish revalidation failed for page ${page.id}:`, err);
-      }
-    }
+    // Revalidation happens outside the transaction (using allSettled for resilience)
+    await revalidatePublishedPages(pagesToPublish);
 
     revalidateTag("dashboard", { expire: 0 });
 

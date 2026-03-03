@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { revalidateTag, revalidatePath } from "next/cache";
+import { revalidateTag } from "next/cache";
+import { revalidatePublishedPages } from "@/lib/revisions";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
@@ -99,17 +100,8 @@ export async function POST(req: Request) {
           await db.pageRevision.createMany({ data: revisionData });
         }
 
-        // Revalidate published page paths
-        for (const p of publishedPages) {
-          try {
-            const pagePath = p.isHomepage
-              ? `/s/${p.site.slug}`
-              : `/s/${p.site.slug}/${p.slug}`;
-            revalidatePath(pagePath, "page");
-          } catch (err) {
-            logger.warn("POST /api/pages/bulk-status", "Revalidation failed for page", err);
-          }
-        }
+        // Revalidate published page paths (allSettled for resilience)
+        await revalidatePublishedPages(publishedPages);
       } catch (err) {
         logger.warn("POST /api/pages/bulk-status", "Failed to create revisions or revalidate", err);
       }
@@ -119,22 +111,13 @@ export async function POST(req: Request) {
         data: { status: "DRAFT" },
       });
 
-      // Revalidate unpublished page paths
+      // Revalidate unpublished page paths (allSettled for resilience)
       try {
         const unpublishedPages = await db.page.findMany({
           where: { id: { in: validIds } },
           include: { site: { select: { slug: true } } },
         });
-        for (const p of unpublishedPages) {
-          try {
-            const pagePath = p.isHomepage
-              ? `/s/${p.site.slug}`
-              : `/s/${p.site.slug}/${p.slug}`;
-            revalidatePath(pagePath, "page");
-          } catch (err) {
-            logger.warn("POST /api/pages/bulk-status", "Revalidation failed for page", err);
-          }
-        }
+        await revalidatePublishedPages(unpublishedPages);
       } catch (err) {
         logger.warn("POST /api/pages/bulk-status", "Failed to revalidate unpublished pages", err);
       }

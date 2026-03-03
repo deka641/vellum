@@ -77,6 +77,7 @@ export async function PATCH(
     const page = await db.page.findFirst({
       where: {
         id: pageId,
+        deletedAt: null,
         site: { userId: session.user.id },
       },
     });

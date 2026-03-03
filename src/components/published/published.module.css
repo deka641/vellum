@@ -177,26 +177,84 @@
   width: 100%;
   overflow: hidden;
   border-radius: var(--radius-lg);
+  position: relative;
 }
 
 .image {
   width: 100%;
   height: auto;
   display: block;
-  transition: transform 400ms var(--ease-out),
-              box-shadow 400ms var(--ease-out);
+  transition: transform 400ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 400ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lightboxHint {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  border-radius: var(--radius-md);
+  color: #fff;
+  opacity: 0;
+  transform: scale(0.85);
+  transition: opacity 250ms ease, transform 250ms ease;
+  pointer-events: none;
+  z-index: 1;
 }
 
 @media (hover: hover) {
   .figure:hover .image {
-    transform: scale(1.015);
+    transform: scale(1.03);
     box-shadow: 0 8px 30px rgba(var(--shadow-color), 0.12);
+  }
+
+  .figure:hover .lightboxHint {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .figure:hover .caption {
+    transform: translateY(-2px);
+    opacity: 1;
+  }
+
+  .figureLinked:hover .image {
+    transform: scale(1.03);
+  }
+
+  .figureLinked::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0);
+    transition: background 300ms ease;
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
+  .figureLinked:hover::after {
+    background: rgba(0, 0, 0, 0.04);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .image {
     transition: none;
+  }
+
+  .lightboxHint {
+    transition: opacity 0ms;
+    transform: scale(1);
+  }
+
+  .caption {
+    transition: none !important;
   }
 }
 
@@ -206,6 +264,8 @@
   text-align: center;
   margin-top: var(--space-3);
   line-height: var(--leading-normal);
+  transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 300ms ease;
 }
 
 /* --- Buttons --- */
@@ -944,6 +1004,105 @@
   .snippetPre code {
     font-size: 12.5px;
   }
+}
+
+/* Light theme code block overrides */
+:global([data-theme-mode="light"]) .snippetWrapper {
+  background: #f8f9fc;
+}
+
+:global([data-theme-mode="light"]) .snippetHeader {
+  background: rgba(0, 0, 0, 0.03);
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+
+:global([data-theme-mode="light"]) .snippetLang {
+  color: rgba(60, 60, 80, 0.55);
+}
+
+:global([data-theme-mode="light"]) .snippetCopyBtn {
+  color: rgba(60, 60, 80, 0.55);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+:global([data-theme-mode="light"]) .snippetCopyBtn:hover {
+  color: rgba(60, 60, 80, 0.85);
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+:global([data-theme-mode="light"]) .snippetPre code {
+  color: #383a42;
+}
+
+/* One Light inspired token colors */
+:global([data-theme-mode="light"]) .snippetPre :global(.hljs-keyword),
+:global([data-theme-mode="light"]) .snippetPre :global(.hljs-selector-tag),
+:global([data-theme-mode="light"]) .snippetPre :global(.hljs-built_in) {
+  color: #a626a4;
+}
+
+:global([data-theme-mode="light"]) .snippetPre :global(.hljs-string),
+:global([data-theme-mode="light"]) .snippetPre :global(.hljs-attr),
+:global([data-theme-mode="light"]) .snippetPre :global(.hljs-addition) {
+  color: #50a14f;
+}
+
+:global([data-theme-mode="light"]) .snippetPre :global(.hljs-number),
+:global([data-theme-mode="light"]) .snippetPre :global(.hljs-literal) {
+  color: #986801;
+}
+
+:global([data-theme-mode="light"]) .snippetPre :global(.hljs-comment),
+:global([data-theme-mode="light"]) .snippetPre :global(.hljs-quote) {
+  color: #a0a1a7;
+}
+
+:global([data-theme-mode="light"]) .snippetPre :global(.hljs-type),
+:global([data-theme-mode="light"]) .snippetPre :global(.hljs-class),
+:global([data-theme-mode="light"]) .snippetPre :global(.hljs-title) {
+  color: #c18401;
+}
+
+:global([data-theme-mode="light"]) .snippetPre :global(.hljs-function) {
+  color: #4078f2;
+}
+
+:global([data-theme-mode="light"]) .snippetPre :global(.hljs-variable),
+:global([data-theme-mode="light"]) .snippetPre :global(.hljs-template-variable) {
+  color: #e45649;
+}
+
+:global([data-theme-mode="light"]) .snippetPre :global(.hljs-tag),
+:global([data-theme-mode="light"]) .snippetPre :global(.hljs-name) {
+  color: #e45649;
+}
+
+:global([data-theme-mode="light"]) .snippetPre :global(.hljs-attribute) {
+  color: #986801;
+}
+
+:global([data-theme-mode="light"]) .snippetPre :global(.hljs-symbol),
+:global([data-theme-mode="light"]) .snippetPre :global(.hljs-bullet) {
+  color: #4078f2;
+}
+
+:global([data-theme-mode="light"]) .snippetPre :global(.hljs-regexp) {
+  color: #e45649;
+}
+
+:global([data-theme-mode="light"]) .snippetPre :global(.hljs-meta) {
+  color: #4078f2;
+}
+
+:global([data-theme-mode="light"]) .snippetPre :global(.hljs-deletion) {
+  color: #e45649;
+}
+
+:global([data-theme-mode="light"]) .snippetPre :global(.hljs-section),
+:global([data-theme-mode="light"]) .snippetPre :global(.hljs-selector-id),
+:global([data-theme-mode="light"]) .snippetPre :global(.hljs-selector-class) {
+  color: #4078f2;
 }
 
 /* --- Social Links --- */

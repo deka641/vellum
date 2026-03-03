@@ -72,7 +72,7 @@ export async function PATCH(
     );
 
     const updatedPages = await db.page.findMany({
-      where: { siteId },
+      where: { siteId, deletedAt: null },
       orderBy: { sortOrder: "asc" },
     });
 

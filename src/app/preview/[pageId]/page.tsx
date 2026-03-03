@@ -13,7 +13,7 @@ export default async function PreviewPage({ params }: Props) {
   const { pageId } = await params;
 
   const page = await db.page.findFirst({
-    where: { id: pageId, site: { userId: user.id } },
+    where: { id: pageId, deletedAt: null, site: { userId: user.id } },
     include: {
       blocks: { orderBy: { sortOrder: "asc" } },
       site: { select: { theme: true } },

@@ -21,7 +21,7 @@ export default async function sitemap({
     where: { slug: siteSlug },
     include: {
       pages: {
-        where: { status: "PUBLISHED" },
+        where: { status: "PUBLISHED", deletedAt: null },
         select: {
           slug: true,
           isHomepage: true,

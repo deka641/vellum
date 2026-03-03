@@ -59,6 +59,32 @@ function useRelativeTime(dateStr: string | null): string {
   return text;
 }
 
+function useCountdown(dateStr: string | null): string {
+  const [text, setText] = useState(() => dateStr ? formatRelativeCountdown(dateStr) : "");
+  const update = useCallback(() => {
+    if (dateStr) setText(formatRelativeCountdown(dateStr));
+  }, [dateStr]);
+
+  useEffect(() => {
+    update();
+    const id = setInterval(update, 30_000);
+    return () => clearInterval(id);
+  }, [update]);
+
+  return text;
+}
+
+function getUserTimezone(): string {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    // Get short timezone abbreviation
+    const abbr = new Date().toLocaleTimeString(undefined, { timeZoneName: "short" }).split(" ").pop() || tz;
+    return abbr;
+  } catch {
+    return "";
+  }
+}
+
 function formatScheduledDate(dateStr: string): string {
   const date = new Date(dateStr);
   const now = new Date();
@@ -68,10 +94,33 @@ function formatScheduledDate(dateStr: string): string {
   const isTomorrow = date.toDateString() === tomorrow.toDateString();
 
   const timeStr = date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  const tz = getUserTimezone();
+  const tzSuffix = tz ? ` ${tz}` : "";
 
-  if (isToday) return `Today at ${timeStr}`;
-  if (isTomorrow) return `Tomorrow at ${timeStr}`;
-  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" }) + ` at ${timeStr}`;
+  if (isToday) return `Today at ${timeStr}${tzSuffix}`;
+  if (isTomorrow) return `Tomorrow at ${timeStr}${tzSuffix}`;
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" }) + ` at ${timeStr}${tzSuffix}`;
+}
+
+function formatRelativeCountdown(dateStr: string): string {
+  const now = Date.now();
+  const then = new Date(dateStr).getTime();
+  const diffMs = then - now;
+  if (diffMs <= 0) return "any moment now";
+
+  const diffMin = Math.floor(diffMs / 60_000);
+  const diffHr = Math.floor(diffMin / 60);
+  const diffDays = Math.floor(diffHr / 24);
+
+  if (diffMin < 1) return "in less than a minute";
+  if (diffMin < 60) return `in ${diffMin} minute${diffMin !== 1 ? "s" : ""}`;
+  if (diffHr < 24) {
+    const remainMin = diffMin % 60;
+    return remainMin > 0
+      ? `in ${diffHr}h ${remainMin}m`
+      : `in ${diffHr} hour${diffHr !== 1 ? "s" : ""}`;
+  }
+  return `in ${diffDays} day${diffDays !== 1 ? "s" : ""}`;
 }
 
 function toLocalDatetimeValue(dateStr: string): string {
@@ -108,6 +157,7 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, schedu
   const { save } = useAutosave();
   const hasConflict = conflict !== null;
   const relativeTime = useRelativeTime(lastSavedAt);
+  const countdown = useCountdown(scheduledPublishAt);
 
   const [showAutoSaving, setShowAutoSaving] = useState(false);
 
@@ -175,7 +225,7 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, schedu
         {scheduledPublishAt && (
           <Badge variant="warning" dot>
             <Clock size={10} />
-            Scheduled {formatScheduledDate(scheduledPublishAt)}
+            Scheduled {formatScheduledDate(scheduledPublishAt)}{countdown ? ` — ${countdown}` : ""}
           </Badge>
         )}
       </div>
@@ -407,6 +457,12 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, schedu
                         onChange={(e) => setScheduleDate(e.target.value)}
                         min={getMinDatetimeLocal()}
                       />
+                      <div className={styles.scheduleTimezone}>
+                        Your timezone: {getUserTimezone() || "Unknown"}
+                        {scheduleDate && (
+                          <> — publishes {formatRelativeCountdown(scheduleDate)}</>
+                        )}
+                      </div>
                       <Button size="sm" onClick={handleScheduleSubmit} disabled={scheduleLoading || !scheduleDate}>
                         {scheduleLoading ? "Updating..." : "Update schedule"}
                       </Button>
@@ -424,6 +480,12 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, schedu
                     min={getMinDatetimeLocal()}
                     autoFocus
                   />
+                  <div className={styles.scheduleTimezone}>
+                    Your timezone: {getUserTimezone() || "Unknown"}
+                    {scheduleDate && (
+                      <> — publishes {formatRelativeCountdown(scheduleDate)}</>
+                    )}
+                  </div>
                   <Button size="sm" onClick={handleScheduleSubmit} disabled={scheduleLoading || !scheduleDate}>
                     {scheduleLoading ? "Scheduling..." : "Schedule publish"}
                   </Button>

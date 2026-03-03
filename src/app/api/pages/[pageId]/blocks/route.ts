@@ -76,7 +76,7 @@ export async function PUT(
 
     const result = await db.$transaction(async (tx) => {
       const page = await tx.page.findFirst({
-        where: { id: pageId, site: { userId } },
+        where: { id: pageId, deletedAt: null, site: { userId } },
       });
 
       if (!page) {

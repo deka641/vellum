@@ -123,12 +123,13 @@ model Template {
 }
 
 model FormSubmission {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   pageId    String
   blockId   String
   data      Json
-  createdAt DateTime @default(now())
-  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  page      Page      @relation(fields: [pageId], references: [id], onDelete: Cascade)
 
   @@index([pageId])
   @@index([blockId])

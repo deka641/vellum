@@ -52,6 +52,33 @@
   min-width: 140px;
 }
 
+.unreadToggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+  white-space: nowrap;
+}
+
+.unreadToggle:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.unreadToggleActive {
+  border-color: var(--color-accent);
+  background: var(--color-accent-light);
+  color: var(--color-accent);
+  font-weight: var(--weight-medium);
+}
+
 .empty {
   text-align: center;
   padding: var(--space-16) var(--space-4);
@@ -101,15 +128,32 @@
   border-bottom: none;
 }
 
+.trUnread {
+  background: var(--color-accent-light, rgba(var(--color-accent-rgb, 139, 92, 246), 0.04));
+}
+
 .td {
   padding: var(--space-3) var(--space-4);
   font-size: var(--text-sm);
   vertical-align: top;
 }
 
+.unreadDot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  flex-shrink: 0;
+}
+
 .pageName {
   font-weight: var(--weight-medium);
   color: var(--color-text-primary);
+}
+
+.pageNameUnread {
+  font-weight: var(--weight-bold);
 }
 
 .dataFields {
@@ -135,9 +179,39 @@
   word-break: break-word;
 }
 
+.dataValueUnread {
+  font-weight: var(--weight-medium);
+}
+
 .date {
   color: var(--color-text-tertiary);
   white-space: nowrap;
+}
+
+.rowActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.actionBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-out),
+              background var(--duration-fast) var(--ease-out);
+}
+
+.actionBtn:hover {
+  color: var(--color-accent);
+  background: var(--color-accent-light);
 }
 
 .pagination {

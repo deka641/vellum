@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { LayoutTemplate, Trash2, Plus, RefreshCw, Eye } from "lucide-react";
+import { LayoutTemplate, Trash2, Plus, RefreshCw, Eye, Pencil, Copy, Search } from "lucide-react";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { Card } from "@/components/ui/Card/Card";
 import { Badge } from "@/components/ui/Badge/Badge";
@@ -44,6 +44,10 @@ export default function TemplatesPage() {
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(false);
 
+  // Search and filter state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+
   // Delete state
   const [deleteTarget, setDeleteTarget] = useState<Template | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -58,6 +62,17 @@ export default function TemplatesPage() {
   const [pageTitle, setPageTitle] = useState("");
   const [creating, setCreating] = useState(false);
   const [useError, setUseError] = useState("");
+
+  // Edit template state
+  const [editTarget, setEditTarget] = useState<Template | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editCategory, setEditCategory] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
+  const [editError, setEditError] = useState("");
+
+  // Duplicate state
+  const [duplicating, setDuplicating] = useState<string | null>(null);
 
   const fetchTemplates = useCallback(async () => {
     setLoading(true);
@@ -78,6 +93,28 @@ export default function TemplatesPage() {
   useEffect(() => {
     fetchTemplates();
   }, [fetchTemplates]);
+
+  // Derive unique categories from loaded templates
+  const categories = useMemo(() => {
+    const cats = new Set<string>();
+    for (const t of templates) {
+      if (t.category) cats.add(t.category);
+    }
+    return Array.from(cats).sort();
+  }, [templates]);
+
+  // Filter templates by search query and active category
+  const filteredTemplates = useMemo(() => {
+    let result = templates;
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      result = result.filter((t) => t.name.toLowerCase().includes(q));
+    }
+    if (activeCategory) {
+      result = result.filter((t) => t.category === activeCategory);
+    }
+    return result;
+  }, [templates, searchQuery, activeCategory]);
 
   async function handleDelete() {
     if (!deleteTarget) return;
@@ -153,6 +190,86 @@ export default function TemplatesPage() {
     }
   }
 
+  function openEditDialog(template: Template) {
+    setEditTarget(template);
+    setEditName(template.name);
+    setEditDescription(template.description || "");
+    setEditCategory(template.category);
+    setEditError("");
+  }
+
+  async function handleEditSave() {
+    if (!editTarget) return;
+    if (!editName.trim()) {
+      setEditError("Name is required");
+      return;
+    }
+
+    setEditSaving(true);
+    setEditError("");
+
+    try {
+      const res = await fetch(`/api/templates/${editTarget.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editName.trim(),
+          description: editDescription.trim() || null,
+          category: editCategory.trim() || "general",
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        setEditError(data.error || "Failed to update template");
+        return;
+      }
+
+      const updated = await res.json();
+      setTemplates((prev) =>
+        prev.map((t) => (t.id === updated.id ? { ...t, name: updated.name, description: updated.description, category: updated.category } : t))
+      );
+      setEditTarget(null);
+      toast("Template updated", "success");
+    } catch (err) {
+      console.error("Failed to update template:", err);
+      setEditError("Something went wrong. Please try again.");
+    } finally {
+      setEditSaving(false);
+    }
+  }
+
+  async function handleDuplicate(template: Template) {
+    setDuplicating(template.id);
+    try {
+      const res = await fetch("/api/templates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: `${template.name} (copy)`,
+          description: template.description,
+          category: template.category,
+          blocks: template.blocks,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        toast(data.error || "Failed to duplicate template", "error");
+        return;
+      }
+
+      const newTemplate = await res.json();
+      setTemplates((prev) => [...prev, newTemplate]);
+      toast("Template duplicated", "success");
+    } catch (err) {
+      console.error("Failed to duplicate template:", err);
+      toast("Failed to duplicate template. Please try again.", "error");
+    } finally {
+      setDuplicating(null);
+    }
+  }
+
   return (
     <>
       <Topbar
@@ -189,57 +306,115 @@ export default function TemplatesPage() {
             </Link>
           </div>
         ) : (
-          <div className={styles.grid}>
-            {templates.map((template) => (
-              <Card key={template.id} hover padding="md">
-                <div className={styles.templatePreview}>
-                  <LayoutTemplate size={24} />
-                </div>
-                <div className={styles.templateInfo}>
-                  <h3 className={styles.templateName}>{template.name}</h3>
-                  {template.description && (
-                    <p className={styles.templateDesc}>{template.description}</p>
-                  )}
-                  <div className={styles.templateMeta}>
-                    <Badge>{template.category}</Badge>
-                    {template.isSystem && <Badge variant="accent">System</Badge>}
-                    <Badge variant="default">
-                      {Array.isArray(template.blocks) ? template.blocks.length : 0} block{Array.isArray(template.blocks) && template.blocks.length !== 1 ? "s" : ""}
-                    </Badge>
-                  </div>
-                  <div className={styles.templateActions}>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      leftIcon={<Eye size={14} />}
-                      onClick={() => setPreviewTarget(template)}
+          <>
+            <div className={styles.toolbar}>
+              <input
+                type="text"
+                className={styles.searchInput}
+                placeholder="Search templates..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                aria-label="Search templates"
+              />
+              {categories.length > 1 && (
+                <div className={styles.filterChips}>
+                  <button
+                    className={`${styles.filterChip} ${activeCategory === null ? styles.filterChipActive : ""}`}
+                    onClick={() => setActiveCategory(null)}
+                  >
+                    All
+                  </button>
+                  {categories.map((cat) => (
+                    <button
+                      key={cat}
+                      className={`${styles.filterChip} ${activeCategory === cat ? styles.filterChipActive : ""}`}
+                      onClick={() => setActiveCategory(activeCategory === cat ? null : cat)}
                     >
-                      Preview
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      leftIcon={<Plus size={14} />}
-                      onClick={() => openUseDialog(template)}
-                    >
-                      Use
-                    </Button>
-                    {!template.isSystem && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        leftIcon={<Trash2 size={14} />}
-                        onClick={() => setDeleteTarget(template)}
-                        className={styles.deleteBtn}
-                      >
-                        Delete
-                      </Button>
-                    )}
-                  </div>
+                      {cat}
+                    </button>
+                  ))}
                 </div>
-              </Card>
-            ))}
-          </div>
+              )}
+            </div>
+            {filteredTemplates.length === 0 ? (
+              <div className={styles.noResults}>
+                <Search size={28} strokeWidth={1.5} />
+                <h3>No templates found</h3>
+                <p>Try a different search term or category filter</p>
+              </div>
+            ) : (
+              <div className={styles.grid}>
+                {filteredTemplates.map((template) => (
+                  <Card key={template.id} hover padding="md">
+                    <div className={styles.templatePreview}>
+                      <LayoutTemplate size={24} />
+                    </div>
+                    <div className={styles.templateInfo}>
+                      <h3 className={styles.templateName}>{template.name}</h3>
+                      {template.description && (
+                        <p className={styles.templateDesc}>{template.description}</p>
+                      )}
+                      <div className={styles.templateMeta}>
+                        <Badge>{template.category}</Badge>
+                        {template.isSystem && <Badge variant="accent">System</Badge>}
+                        <Badge variant="default">
+                          {Array.isArray(template.blocks) ? template.blocks.length : 0} block{Array.isArray(template.blocks) && template.blocks.length !== 1 ? "s" : ""}
+                        </Badge>
+                      </div>
+                      <div className={styles.templateActions}>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          leftIcon={<Eye size={14} />}
+                          onClick={() => setPreviewTarget(template)}
+                        >
+                          Preview
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          leftIcon={<Plus size={14} />}
+                          onClick={() => openUseDialog(template)}
+                        >
+                          Use
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          leftIcon={<Copy size={14} />}
+                          onClick={() => handleDuplicate(template)}
+                          disabled={duplicating === template.id}
+                        >
+                          {duplicating === template.id ? "Duplicating..." : "Duplicate"}
+                        </Button>
+                        {!template.isSystem && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              leftIcon={<Pencil size={14} />}
+                              onClick={() => openEditDialog(template)}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              leftIcon={<Trash2 size={14} />}
+                              onClick={() => setDeleteTarget(template)}
+                              className={styles.deleteBtn}
+                            >
+                              Delete
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -313,6 +488,57 @@ export default function TemplatesPage() {
             </DialogClose>
             <Button size="sm" onClick={handleUseTemplate} disabled={creating}>
               {creating ? "Creating..." : "Create page"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit template dialog */}
+      <Dialog open={!!editTarget} onOpenChange={(open) => !open && setEditTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit template</DialogTitle>
+            <DialogDescription>
+              Update the details of &ldquo;{editTarget?.name}&rdquo;.
+            </DialogDescription>
+          </DialogHeader>
+          <div className={styles.editForm}>
+            <div className={styles.field}>
+              <label className={styles.fieldLabel}>Name</label>
+              <input
+                className={styles.fieldInput}
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="Template name"
+              />
+            </div>
+            <div className={styles.field}>
+              <label className={styles.fieldLabel}>Description</label>
+              <textarea
+                className={styles.fieldTextarea}
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                placeholder="Optional description"
+                rows={3}
+              />
+            </div>
+            <div className={styles.field}>
+              <label className={styles.fieldLabel}>Category</label>
+              <input
+                className={styles.fieldInput}
+                value={editCategory}
+                onChange={(e) => setEditCategory(e.target.value)}
+                placeholder="e.g. general, landing, blog"
+              />
+            </div>
+            {editError && <p className={styles.editError}>{editError}</p>}
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="ghost" size="sm">Cancel</Button>
+            </DialogClose>
+            <Button size="sm" onClick={handleEditSave} disabled={editSaving}>
+              {editSaving ? "Saving..." : "Save changes"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { unstable_cache } from "next/cache";
-import { Globe, FileText, Send, Image as ImageIcon, Plus, Upload, LayoutTemplate, FileEdit, Inbox, CheckCircle } from "lucide-react";
+import { Globe, FileText, Send, Image as ImageIcon, Plus, Upload, LayoutTemplate, FileEdit, Inbox, CheckCircle, Mail } from "lucide-react";
 import { requireAuth } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import { Topbar } from "@/components/dashboard/Topbar";
@@ -11,7 +11,7 @@ import styles from "./home.module.css";
 
 const getDashboardData = unstable_cache(
   async (userId: string) => {
-    const [siteCount, pageCounts, submissionCount, mediaCount, recentPages, recentSubmissions, firstSite] =
+    const [siteCount, pageCounts, submissionCount, unreadSubmissionCount, mediaCount, recentPages, recentSubmissions, firstSite] =
       await Promise.all([
         db.site.count({ where: { userId } }),
         db.page.groupBy({
@@ -23,6 +23,12 @@ const getDashboardData = unstable_cache(
           where: {
             page: { site: { userId } },
             createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
+          },
+        }),
+        db.formSubmission.count({
+          where: {
+            page: { site: { userId } },
+            readAt: null,
           },
         }),
         db.media.count({ where: { userId } }),
@@ -44,6 +50,7 @@ const getDashboardData = unstable_cache(
           take: 5,
           select: {
             id: true,
+            readAt: true,
             createdAt: true,
             page: { select: { title: true, siteId: true } },
           },
@@ -58,7 +65,7 @@ const getDashboardData = unstable_cache(
     const pageCount = pageCounts.reduce((sum, g) => sum + g._count, 0);
     const publishedCount = pageCounts.find((g) => g.status === "PUBLISHED")?._count ?? 0;
 
-    return { siteCount, pageCount, publishedCount, submissionCount, mediaCount, recentPages, recentSubmissions, firstSite };
+    return { siteCount, pageCount, publishedCount, submissionCount, unreadSubmissionCount, mediaCount, recentPages, recentSubmissions, firstSite };
   },
   ["dashboard"],
   { revalidate: 30, tags: ["dashboard"] }
@@ -67,7 +74,7 @@ const getDashboardData = unstable_cache(
 export default async function DashboardPage() {
   const user = await requireAuth();
 
-  const { siteCount, pageCount, publishedCount, submissionCount, mediaCount, recentPages, recentSubmissions, firstSite } =
+  const { siteCount, pageCount, publishedCount, submissionCount, unreadSubmissionCount, mediaCount, recentPages, recentSubmissions, firstSite } =
     await getDashboardData(user.id);
 
   return (
@@ -101,6 +108,13 @@ export default async function DashboardPage() {
             <div className={styles.statValue}>{submissionCount}</div>
             <div className={styles.statLabel}>Submissions (30d)</div>
           </div>
+          {unreadSubmissionCount > 0 && (
+            <div className={styles.statCard}>
+              <div className={`${styles.statIcon} ${styles.statIconRed}`}><Mail size={20} /></div>
+              <div className={styles.statValue}>{unreadSubmissionCount}</div>
+              <div className={styles.statLabel}>Unread</div>
+            </div>
+          )}
           <div className={styles.statCard}>
             <div className={`${styles.statIcon} ${styles.statIconPurple}`}><ImageIcon size={20} /></div>
             <div className={styles.statValue}>{mediaCount}</div>
@@ -166,7 +180,10 @@ export default async function DashboardPage() {
                   {recentSubmissions.map((sub) => (
                     <li key={sub.id} className={styles.listItem}>
                       <Link href={`/sites/${sub.page.siteId}/submissions`} className={styles.listLink}>
-                        <span className={styles.listTitle}>{sub.page.title}</span>
+                        <div className={styles.listRight}>
+                          {!sub.readAt && <span className={styles.unreadDot} title="Unread" />}
+                          <span className={`${styles.listTitle} ${!sub.readAt ? styles.listTitleBold : ""}`}>{sub.page.title}</span>
+                        </div>
                         <span className={styles.listDate}>{formatDate(sub.createdAt)}</span>
                       </Link>
                     </li>

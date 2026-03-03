@@ -208,7 +208,7 @@ function darken(hex: string, amount: number): string {
   return rgbToHex(nr, ng, nb);
 }
 
-function getLuminance(hex: string): number {
+export function getLuminance(hex: string): number {
   const [r, g, b] = hexToRgb(hex);
   const toLinear = (c: number) => {
     const s = c / 255;

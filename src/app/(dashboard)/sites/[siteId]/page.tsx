@@ -69,6 +69,7 @@ export default function SiteDetailPage() {
   const [deletePageId, setDeletePageId] = useState<string | null>(null);
   const [permDeletePageId, setPermDeletePageId] = useState<string | null>(null);
   const [fetchError, setFetchError] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [contentSearchResults, setContentSearchResults] = useState<Array<{
     pageId: string;
     pageTitle: string;
@@ -90,6 +91,12 @@ export default function SiteDetailPage() {
       .then(setSite)
       .catch(() => setFetchError(true))
       .finally(() => setLoading(false));
+
+    // Fetch unread submissions count
+    fetch(`/api/sites/${params.siteId}/submissions?pageSize=1&unreadOnly=true`)
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => { if (data) setUnreadCount(data.total); })
+      .catch(() => { /* non-critical */ });
   }, [params.siteId]);
 
   useEffect(() => {
@@ -500,6 +507,9 @@ export default function SiteDetailPage() {
             <Link href={`/sites/${site.id}/submissions`}>
               <Button variant="secondary" leftIcon={<Send size={16} />} size="sm">
                 Submissions
+                {unreadCount > 0 && (
+                  <span className={styles.unreadBadge}>{unreadCount}</span>
+                )}
               </Button>
             </Link>
             <a href={`/s/${site.slug}`} target="_blank" rel="noopener noreferrer">

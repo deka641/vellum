@@ -600,6 +600,346 @@ async function main() {
         ], submitText: "Send Message", successMessage: "Thanks! I'll get back to you within 24 hours." }, settings: {} },
       ],
     },
+    {
+      name: "Restaurant & Bar",
+      description: "Full restaurant page with hero, menu columns, hours table, reservation form, and location details",
+      category: "business",
+      blocks: [
+        { type: "heading", content: { text: "Ember & Oak Kitchen", level: 1 }, settings: { align: "center" } },
+        { type: "text", content: { html: "<p>Wood-fired cooking meets seasonal ingredients. Our chefs work directly with local farms to bring you dishes that celebrate the Pacific Northwest, one plate at a time.</p>" }, settings: { align: "center" } },
+        { type: "button", content: { text: "Make a Reservation", url: "#reserve", variant: "primary" }, settings: { align: "center" } },
+        { type: "spacer", content: { height: 48 }, settings: {} },
+        { type: "heading", content: { text: "The Menu", level: 2 }, settings: { align: "center" } },
+        { type: "columns", content: { columns: [
+          { blocks: [
+            { id: "rb1", type: "heading", content: { text: "Small Plates", level: 3 }, settings: {} },
+            { id: "rb2", type: "text", content: { html: "<p><strong>Charred Broccolini</strong> — chili crisp, toasted sesame, lime &bull; $14<br><strong>Tuna Crudo</strong> — yuzu, avocado, shallot, crispy rice &bull; $18<br><strong>Burrata Board</strong> — grilled stone fruit, honey, pistachios, sourdough &bull; $16<br><strong>Duck Confit Croquettes</strong> — fig mostarda, fris\u00e9e salad &bull; $15</p>" }, settings: {} },
+          ] },
+          { blocks: [
+            { id: "rb3", type: "heading", content: { text: "Mains", level: 3 }, settings: {} },
+            { id: "rb4", type: "text", content: { html: "<p><strong>Wood-Fired Salmon</strong> — miso glaze, baby bok choy, jasmine rice &bull; $32<br><strong>Dry-Aged Ribeye</strong> — bone marrow butter, roasted fingerlings, gremolata &bull; $48<br><strong>Handmade Pappardelle</strong> — braised short rib rag\u00f9, pecorino, fresh herbs &bull; $28<br><strong>Roasted Half Chicken</strong> — lemon, herbs, grilled vegetables, jus &bull; $26</p>" }, settings: {} },
+          ] },
+          { blocks: [
+            { id: "rb5", type: "heading", content: { text: "Desserts & Drinks", level: 3 }, settings: {} },
+            { id: "rb6", type: "text", content: { html: "<p><strong>Burnt Basque Cheesecake</strong> — seasonal compote &bull; $14<br><strong>Dark Chocolate Fondant</strong> — salted caramel, vanilla gelato &bull; $15<br><strong>Affogato</strong> — house espresso, fior di latte &bull; $10</p><p><em>Full cocktail and wine list available at the bar.</em></p>" }, settings: {} },
+          ] },
+        ] }, settings: { gap: "32px" } },
+        { type: "spacer", content: { height: 32 }, settings: {} },
+        { type: "divider", content: {}, settings: { style: "solid" } },
+        { type: "heading", content: { text: "Hours & Location", level: 2 }, settings: { align: "center" } },
+        { type: "table", content: { headers: ["Day", "Lunch", "Dinner", "Bar"], rows: [
+          ["Monday", "Closed", "Closed", "Closed"],
+          ["Tuesday \u2013 Thursday", "11:30 AM \u2013 2:30 PM", "5:00 PM \u2013 9:30 PM", "4:00 PM \u2013 11:00 PM"],
+          ["Friday \u2013 Saturday", "11:30 AM \u2013 2:30 PM", "5:00 PM \u2013 10:30 PM", "4:00 PM \u2013 12:00 AM"],
+          ["Sunday", "10:00 AM \u2013 3:00 PM (Brunch)", "5:00 PM \u2013 9:00 PM", "12:00 PM \u2013 10:00 PM"],
+        ], caption: "Kitchen closes 30 minutes before listed times", striped: true }, settings: {} },
+        { type: "spacer", content: { height: 32 }, settings: {} },
+        { type: "quote", content: { text: "One of the most exciting openings this year. The wood-fired salmon alone is worth a detour.", attribution: "Portland Food & Drink Magazine", style: "bordered" }, settings: {} },
+        { type: "spacer", content: { height: 32 }, settings: {} },
+        { type: "heading", content: { text: "Reserve Your Table", level: 2 }, settings: {} },
+        { type: "form", content: { fields: [
+          { id: "name", type: "text", label: "Name", required: true, placeholder: "Your full name" },
+          { id: "email", type: "email", label: "Email", required: true, placeholder: "your@email.com" },
+          { id: "phone", type: "tel", label: "Phone", required: true, placeholder: "(555) 000-0000" },
+          { id: "date", type: "text", label: "Date & Time", required: true, placeholder: "e.g. Saturday, March 22 at 7:00 PM" },
+          { id: "party", type: "select", label: "Party Size", required: true, placeholder: "Select", options: ["1\u20132 guests", "3\u20134 guests", "5\u20136 guests", "7\u20138 guests", "9+ (private dining)"] },
+          { id: "requests", type: "textarea", label: "Special Requests", required: false, placeholder: "Allergies, celebrations, seating preferences..." },
+        ], submitText: "Request Reservation", successMessage: "Thank you! We\u2019ll confirm your reservation by email within 2 hours." }, settings: {} },
+        { type: "spacer", content: { height: 24 }, settings: {} },
+        { type: "divider", content: {}, settings: { style: "solid" } },
+        { type: "text", content: { html: "<p><strong>Ember & Oak Kitchen</strong><br>742 Burnside Avenue, Pearl District, Portland OR 97209<br>Phone: (503) 555-0142 &bull; <a href=\"mailto:hello@emberandoak.com\">hello@emberandoak.com</a></p>" }, settings: { align: "center" } },
+        { type: "social", content: { links: [{ platform: "instagram", url: "https://instagram.com" }, { platform: "facebook", url: "https://facebook.com" }, { platform: "tiktok", url: "https://tiktok.com" }] }, settings: { align: "center" } },
+      ],
+    },
+    {
+      name: "Agency / Studio",
+      description: "Creative agency page with hero, services, portfolio, testimonials, team section, and contact form",
+      category: "business",
+      blocks: [
+        { type: "heading", content: { text: "We Build Brands That Move People", level: 1 }, settings: { align: "center" } },
+        { type: "text", content: { html: "<p>Nightfall Studio is a multidisciplinary creative agency specializing in brand strategy, digital design, and full-stack development. We partner with ambitious companies to create work that resonates.</p>" }, settings: { align: "center" } },
+        { type: "button", content: { text: "See Our Work", url: "#portfolio", variant: "primary" }, settings: { align: "center" } },
+        { type: "spacer", content: { height: 48 }, settings: {} },
+        { type: "heading", content: { text: "What We Do", level: 2 }, settings: { align: "center" } },
+        { type: "columns", content: { columns: [
+          { blocks: [
+            { id: "ag1", type: "heading", content: { text: "Brand Strategy", level: 3 }, settings: { align: "center" } },
+            { id: "ag2", type: "text", content: { html: "<p>We help you articulate who you are and why it matters. From positioning and messaging to visual identity systems, we build brands that stand out in crowded markets.</p>" }, settings: { align: "center" } },
+          ] },
+          { blocks: [
+            { id: "ag3", type: "heading", content: { text: "Digital Design", level: 3 }, settings: { align: "center" } },
+            { id: "ag4", type: "text", content: { html: "<p>Websites, applications, and digital products designed for clarity and conversion. Every pixel is intentional, every interaction is considered.</p>" }, settings: { align: "center" } },
+          ] },
+          { blocks: [
+            { id: "ag5", type: "heading", content: { text: "Development", level: 3 }, settings: { align: "center" } },
+            { id: "ag6", type: "text", content: { html: "<p>Custom web applications built with React, Next.js, and Node.js. We write clean, maintainable code that scales with your business.</p>" }, settings: { align: "center" } },
+          ] },
+        ] }, settings: { gap: "32px" } },
+        { type: "spacer", content: { height: 48 }, settings: {} },
+        { type: "divider", content: {}, settings: { style: "solid" } },
+        { type: "heading", content: { text: "Selected Work", level: 2 }, settings: { align: "center" } },
+        { type: "text", content: { html: "<p>A selection of recent projects across brand identity, web design, and product development.</p>" }, settings: { align: "center" } },
+        { type: "columns", content: { columns: [
+          { blocks: [
+            { id: "ag7", type: "image", content: { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect width='800' height='600' fill='%23E2E0EC'/%3E%3Ctext x='400' y='290' text-anchor='middle' fill='%23807EA0' font-family='sans-serif' font-size='24'%3EFinova Rebrand%3C/text%3E%3Ctext x='400' y='320' text-anchor='middle' fill='%23A09EB8' font-family='sans-serif' font-size='14'%3EBrand Identity%3C/text%3E%3C/svg%3E", alt: "Finova brand identity redesign project", caption: "Finova \u2014 Brand Identity Redesign", width: 800, height: 600 }, settings: { rounded: true } },
+          ] },
+          { blocks: [
+            { id: "ag8", type: "image", content: { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect width='800' height='600' fill='%23DCE8E4'/%3E%3Ctext x='400' y='290' text-anchor='middle' fill='%23708880' font-family='sans-serif' font-size='24'%3EVerdeGrow App%3C/text%3E%3Ctext x='400' y='320' text-anchor='middle' fill='%2390A8A0' font-family='sans-serif' font-size='14'%3EProduct Design%3C/text%3E%3C/svg%3E", alt: "VerdeGrow mobile app product design", caption: "VerdeGrow \u2014 Product Design & Development", width: 800, height: 600 }, settings: { rounded: true } },
+          ] },
+        ] }, settings: { gap: "24px" } },
+        { type: "columns", content: { columns: [
+          { blocks: [
+            { id: "ag9", type: "image", content: { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect width='800' height='600' fill='%23E8E2DC'/%3E%3Ctext x='400' y='290' text-anchor='middle' fill='%23A09080' font-family='sans-serif' font-size='24'%3ERiviera Hotels%3C/text%3E%3Ctext x='400' y='320' text-anchor='middle' fill='%23B8A898' font-family='sans-serif' font-size='14'%3EWebsite Redesign%3C/text%3E%3C/svg%3E", alt: "Riviera Hotels website redesign", caption: "Riviera Hotels \u2014 Website Redesign", width: 800, height: 600 }, settings: { rounded: true } },
+          ] },
+          { blocks: [
+            { id: "ag10", type: "image", content: { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect width='800' height='600' fill='%23E0DCE8'/%3E%3Ctext x='400' y='290' text-anchor='middle' fill='%238880A0' font-family='sans-serif' font-size='24'%3EPulseMetrics%3C/text%3E%3Ctext x='400' y='320' text-anchor='middle' fill='%23A098B8' font-family='sans-serif' font-size='14'%3EDashboard UI%3C/text%3E%3C/svg%3E", alt: "PulseMetrics analytics dashboard design", caption: "PulseMetrics \u2014 Analytics Dashboard", width: 800, height: 600 }, settings: { rounded: true } },
+          ] },
+        ] }, settings: { gap: "24px" } },
+        { type: "spacer", content: { height: 48 }, settings: {} },
+        { type: "heading", content: { text: "What Clients Say", level: 2 }, settings: { align: "center" } },
+        { type: "accordion", content: { items: [
+          { id: "agt1", title: "Finova \u2014 Series B Fintech Startup", content: "<p>\"Nightfall completely transformed our brand. Within three months of launching the new identity, our inbound leads increased by 65%. They understood our market and our audience from day one.\" \u2014 <strong>Rachel Torres, CMO</strong></p>" },
+          { id: "agt2", title: "VerdeGrow \u2014 Sustainable Agriculture Platform", content: "<p>\"Working with Nightfall felt like having an in-house design team. They delivered a product that our users genuinely love, and the codebase they handed off is the cleanest we've ever inherited.\" \u2014 <strong>James Whitfield, CTO</strong></p>" },
+          { id: "agt3", title: "Riviera Hotels \u2014 Boutique Hotel Group", content: "<p>\"Our new website increased direct bookings by 40% in the first quarter. Nightfall didn't just make it beautiful \u2014 they made it convert.\" \u2014 <strong>Maria Santos, Director of Marketing</strong></p>" },
+        ], style: "bordered", iconPosition: "right" }, settings: {} },
+        { type: "spacer", content: { height: 48 }, settings: {} },
+        { type: "divider", content: {}, settings: { style: "solid" } },
+        { type: "heading", content: { text: "The Team", level: 2 }, settings: { align: "center" } },
+        { type: "columns", content: { columns: [
+          { blocks: [
+            { id: "agt4", type: "heading", content: { text: "Elena Vasquez", level: 3 }, settings: { align: "center" } },
+            { id: "agt5", type: "text", content: { html: "<p><strong>Creative Director</strong><br>15 years in brand strategy and design. Previously at Pentagram and Collins. Leads all creative direction and client relationships.</p>" }, settings: { align: "center" } },
+          ] },
+          { blocks: [
+            { id: "agt6", type: "heading", content: { text: "David Okonkwo", level: 3 }, settings: { align: "center" } },
+            { id: "agt7", type: "text", content: { html: "<p><strong>Technical Director</strong><br>Full-stack engineer with a design eye. Built products at Stripe and Vercel. Leads architecture, development, and technical strategy.</p>" }, settings: { align: "center" } },
+          ] },
+          { blocks: [
+            { id: "agt8", type: "heading", content: { text: "Mia Chen", level: 3 }, settings: { align: "center" } },
+            { id: "agt9", type: "text", content: { html: "<p><strong>Design Lead</strong><br>Specialist in UI/UX and design systems. 8 years of experience across SaaS, e-commerce, and fintech. Obsessed with accessibility.</p>" }, settings: { align: "center" } },
+          ] },
+        ] }, settings: { gap: "32px" } },
+        { type: "spacer", content: { height: 48 }, settings: {} },
+        { type: "heading", content: { text: "Start a Project", level: 2 }, settings: { align: "center" } },
+        { type: "text", content: { html: "<p>Tell us about your project and we\u2019ll get back to you within one business day.</p>" }, settings: { align: "center" } },
+        { type: "form", content: { fields: [
+          { id: "name", type: "text", label: "Your Name", required: true, placeholder: "Full name" },
+          { id: "email", type: "email", label: "Work Email", required: true, placeholder: "you@company.com" },
+          { id: "company", type: "text", label: "Company", required: false, placeholder: "Your company name" },
+          { id: "service", type: "select", label: "What do you need?", required: true, placeholder: "Select a service", options: ["Brand Strategy & Identity", "Website Design & Development", "Product Design", "Full-Service (Brand + Web + Product)"] },
+          { id: "budget", type: "select", label: "Budget Range", required: true, placeholder: "Select range", options: ["$10K \u2013 $25K", "$25K \u2013 $50K", "$50K \u2013 $100K", "$100K+"] },
+          { id: "details", type: "textarea", label: "Project Details", required: true, placeholder: "Tell us about your goals, timeline, and any relevant context..." },
+        ], submitText: "Send Brief", successMessage: "Thank you! We\u2019ll review your brief and respond within one business day." }, settings: {} },
+        { type: "social", content: { links: [{ platform: "instagram", url: "https://instagram.com" }, { platform: "dribbble", url: "https://dribbble.com" }, { platform: "twitter", url: "https://twitter.com" }, { platform: "linkedin", url: "https://linkedin.com" }] }, settings: { align: "center" } },
+      ],
+    },
+    {
+      name: "SaaS Landing",
+      description: "Software product landing page with hero, features, pricing, FAQ, testimonials, and CTA",
+      category: "landing",
+      blocks: [
+        { type: "heading", content: { text: "Turn Customer Feedback into Product Decisions", level: 1 }, settings: { align: "center" } },
+        { type: "text", content: { html: "<p>Loopback is the feedback management platform that helps product teams collect, organize, and prioritize user insights \u2014 so you build what actually matters.</p>" }, settings: { align: "center" } },
+        { type: "columns", content: { columns: [
+          { blocks: [
+            { id: "sa1", type: "button", content: { text: "Start Free Trial", url: "#", variant: "primary" }, settings: { align: "center" } },
+          ] },
+          { blocks: [
+            { id: "sa2", type: "button", content: { text: "Watch Demo", url: "#", variant: "outline" }, settings: { align: "center" } },
+          ] },
+        ] }, settings: { gap: "16px" } },
+        { type: "text", content: { html: "<p><em>Free 14-day trial &bull; No credit card required &bull; Cancel anytime</em></p>" }, settings: { align: "center" } },
+        { type: "spacer", content: { height: 48 }, settings: {} },
+        { type: "divider", content: {}, settings: { style: "solid" } },
+        { type: "heading", content: { text: "Everything You Need to Close the Feedback Loop", level: 2 }, settings: { align: "center" } },
+        { type: "columns", content: { columns: [
+          { blocks: [
+            { id: "sa3", type: "heading", content: { text: "Centralized Inbox", level: 3 }, settings: { align: "center" } },
+            { id: "sa4", type: "text", content: { html: "<p>Aggregate feedback from support tickets, surveys, social media, and in-app widgets into a single searchable feed. No more spreadsheets.</p>" }, settings: { align: "center" } },
+          ] },
+          { blocks: [
+            { id: "sa5", type: "heading", content: { text: "Smart Categorization", level: 3 }, settings: { align: "center" } },
+            { id: "sa6", type: "text", content: { html: "<p>AI-powered tagging groups similar requests automatically. Spot trends in minutes, not weeks, and quantify demand for every feature request.</p>" }, settings: { align: "center" } },
+          ] },
+          { blocks: [
+            { id: "sa7", type: "heading", content: { text: "Impact Scoring", level: 3 }, settings: { align: "center" } },
+            { id: "sa8", type: "text", content: { html: "<p>Prioritize by revenue impact, user segment, and request frequency. Make data-driven roadmap decisions your whole team can get behind.</p>" }, settings: { align: "center" } },
+          ] },
+        ] }, settings: { gap: "32px" } },
+        { type: "spacer", content: { height: 48 }, settings: {} },
+        { type: "heading", content: { text: "Trusted by 1,200+ Product Teams", level: 2 }, settings: { align: "center" } },
+        { type: "columns", content: { columns: [
+          { blocks: [
+            { id: "sa9", type: "quote", content: { text: "Loopback cut our feature prioritization meetings from 2 hours to 20 minutes. We finally have a shared source of truth for what customers want.", attribution: "Priya Sharma, VP Product at ScaleGrid", style: "bordered" }, settings: {} },
+          ] },
+          { blocks: [
+            { id: "sa10", type: "quote", content: { text: "Within the first month, we discovered that our most-requested feature wasn\u2019t even on the roadmap. Loopback paid for itself immediately.", attribution: "Tom Eriksen, Head of Product at Relay", style: "bordered" }, settings: {} },
+          ] },
+        ] }, settings: { gap: "24px" } },
+        { type: "spacer", content: { height: 48 }, settings: {} },
+        { type: "divider", content: {}, settings: { style: "solid" } },
+        { type: "heading", content: { text: "Simple, Predictable Pricing", level: 2 }, settings: { align: "center" } },
+        { type: "text", content: { html: "<p>All plans include unlimited feedback collection. No per-seat surprises.</p>" }, settings: { align: "center" } },
+        { type: "table", content: { headers: ["Feature", "Starter \u2014 $0/mo", "Growth \u2014 $49/mo", "Scale \u2014 $149/mo"], rows: [
+          ["Team members", "Up to 3", "Up to 15", "Unlimited"],
+          ["Feedback sources", "2 integrations", "All integrations", "All + custom API"],
+          ["AI categorization", "\u2014", "Included", "Included + custom models"],
+          ["Roadmap board", "1 public board", "Unlimited boards", "Unlimited + private boards"],
+          ["Analytics & reports", "Basic", "Advanced", "Advanced + exports"],
+          ["Support", "Community", "Email (24h)", "Priority + Slack channel"],
+        ], caption: "", striped: true }, settings: {} },
+        { type: "spacer", content: { height: 32 }, settings: {} },
+        { type: "button", content: { text: "Start Your Free Trial", url: "#", variant: "primary" }, settings: { align: "center" } },
+        { type: "spacer", content: { height: 48 }, settings: {} },
+        { type: "heading", content: { text: "Frequently Asked Questions", level: 2 }, settings: { align: "center" } },
+        { type: "accordion", content: { items: [
+          { id: "saf1", title: "How does the 14-day free trial work?", content: "<p>You get full access to the Growth plan for 14 days. No credit card required. At the end of the trial, you can choose a plan or downgrade to the free Starter tier.</p>" },
+          { id: "saf2", title: "Can I import feedback from existing tools?", content: "<p>Yes. We support one-click imports from Intercom, Zendesk, Jira, Productboard, and CSV. Most teams are fully migrated in under an hour.</p>" },
+          { id: "saf3", title: "Is my data secure?", content: "<p>Absolutely. Loopback is SOC 2 Type II certified, encrypts all data at rest and in transit, and supports SSO with SAML 2.0. We never sell or share your data.</p>" },
+          { id: "saf4", title: "What happens if I exceed my plan limits?", content: "<p>We\u2019ll notify you and give you a 7-day grace period. You can upgrade at any time, and billing is prorated to the day.</p>" },
+        ], style: "bordered", iconPosition: "right" }, settings: {} },
+        { type: "spacer", content: { height: 48 }, settings: {} },
+        { type: "divider", content: {}, settings: { style: "solid" } },
+        { type: "heading", content: { text: "Ready to Build What Customers Actually Want?", level: 2 }, settings: { align: "center" } },
+        { type: "text", content: { html: "<p>Join 1,200+ product teams using Loopback to make better product decisions, faster.</p>" }, settings: { align: "center" } },
+        { type: "button", content: { text: "Get Started Free", url: "#", variant: "primary" }, settings: { align: "center" } },
+      ],
+    },
+    {
+      name: "Personal / CV",
+      description: "Personal portfolio with hero, skills columns, work samples, contact section, and social links",
+      category: "portfolio",
+      blocks: [
+        { type: "heading", content: { text: "Priya Kapoor \u2014 Product Designer", level: 1 }, settings: { align: "center" } },
+        { type: "text", content: { html: "<p>I design digital products that simplify complexity. With 7 years of experience across fintech, healthcare, and B2B SaaS, I specialize in turning ambiguous problems into clear, usable interfaces.</p>" }, settings: { align: "center" } },
+        { type: "social", content: { links: [
+          { platform: "linkedin", url: "https://linkedin.com" },
+          { platform: "dribbble", url: "https://dribbble.com" },
+          { platform: "twitter", url: "https://twitter.com" },
+          { platform: "email", url: "mailto:hello@priyakapoor.design" },
+        ] }, settings: { align: "center" } },
+        { type: "spacer", content: { height: 48 }, settings: {} },
+        { type: "heading", content: { text: "Skills & Experience", level: 2 }, settings: {} },
+        { type: "columns", content: { columns: [
+          { blocks: [
+            { id: "cv1", type: "heading", content: { text: "Design", level: 3 }, settings: {} },
+            { id: "cv2", type: "text", content: { html: "<p><strong>UI/UX Design</strong> \u2014 Figma, Sketch, Adobe XD<br><strong>Design Systems</strong> \u2014 Component libraries, tokens, documentation<br><strong>Prototyping</strong> \u2014 Framer, Principle, InVision<br><strong>User Research</strong> \u2014 Interviews, usability testing, surveys</p>" }, settings: {} },
+          ] },
+          { blocks: [
+            { id: "cv3", type: "heading", content: { text: "Technical", level: 3 }, settings: {} },
+            { id: "cv4", type: "text", content: { html: "<p><strong>Frontend</strong> \u2014 HTML, CSS, JavaScript, React basics<br><strong>Accessibility</strong> \u2014 WCAG 2.1 AA, screen reader testing<br><strong>Analytics</strong> \u2014 Mixpanel, Amplitude, Hotjar<br><strong>Collaboration</strong> \u2014 Jira, Linear, Notion, Confluence</p>" }, settings: {} },
+          ] },
+          { blocks: [
+            { id: "cv5", type: "heading", content: { text: "Career Timeline", level: 3 }, settings: {} },
+            { id: "cv6", type: "text", content: { html: "<p><strong>Senior Product Designer</strong><br>Clearpath Finance \u2022 2023 \u2013 Present</p><p><strong>Product Designer</strong><br>MedBridge Health \u2022 2021 \u2013 2023</p><p><strong>UI/UX Designer</strong><br>Forge Digital \u2022 2019 \u2013 2021</p>" }, settings: {} },
+          ] },
+        ] }, settings: { gap: "32px" } },
+        { type: "spacer", content: { height: 48 }, settings: {} },
+        { type: "divider", content: {}, settings: { style: "solid" } },
+        { type: "heading", content: { text: "Selected Work", level: 2 }, settings: {} },
+        { type: "columns", content: { columns: [
+          { blocks: [
+            { id: "cv7", type: "image", content: { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect width='800' height='600' fill='%23E0E6EC'/%3E%3Ctext x='400' y='290' text-anchor='middle' fill='%23708098' font-family='sans-serif' font-size='24'%3EClearpath Dashboard%3C/text%3E%3Ctext x='400' y='320' text-anchor='middle' fill='%2390A0B8' font-family='sans-serif' font-size='14'%3EFinancial Analytics%3C/text%3E%3C/svg%3E", alt: "Clearpath Finance analytics dashboard redesign", caption: "Clearpath Finance \u2014 Analytics Dashboard Redesign", width: 800, height: 600 }, settings: { rounded: true } },
+          ] },
+          { blocks: [
+            { id: "cv8", type: "image", content: { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect width='800' height='600' fill='%23E6ECE0'/%3E%3Ctext x='400' y='290' text-anchor='middle' fill='%23809870' font-family='sans-serif' font-size='24'%3EMedBridge App%3C/text%3E%3Ctext x='400' y='320' text-anchor='middle' fill='%23A0B890' font-family='sans-serif' font-size='14'%3EPatient Portal%3C/text%3E%3C/svg%3E", alt: "MedBridge Health patient portal mobile app", caption: "MedBridge Health \u2014 Patient Portal App", width: 800, height: 600 }, settings: { rounded: true } },
+          ] },
+        ] }, settings: { gap: "24px" } },
+        { type: "columns", content: { columns: [
+          { blocks: [
+            { id: "cv9", type: "heading", content: { text: "Clearpath Finance", level: 3 }, settings: {} },
+            { id: "cv10", type: "text", content: { html: "<p>Redesigned the core analytics dashboard for a B2B fintech platform serving 2,000+ financial advisors. Reduced time-to-insight by 40% through simplified navigation and contextual data visualization. Led end-to-end from research through developer handoff.</p>" }, settings: {} },
+          ] },
+          { blocks: [
+            { id: "cv11", type: "heading", content: { text: "MedBridge Health", level: 3 }, settings: {} },
+            { id: "cv12", type: "text", content: { html: "<p>Designed the patient-facing mobile app for a telehealth platform. Focused on accessibility for elderly users, achieving WCAG AA compliance. App reached 50K downloads in the first quarter with a 4.8-star rating.</p>" }, settings: {} },
+          ] },
+        ] }, settings: { gap: "32px" } },
+        { type: "spacer", content: { height: 48 }, settings: {} },
+        { type: "divider", content: {}, settings: { style: "solid" } },
+        { type: "heading", content: { text: "Let\u2019s Work Together", level: 2 }, settings: { align: "center" } },
+        { type: "text", content: { html: "<p>I\u2019m currently open to full-time product design roles and select freelance engagements. Based in Toronto, open to remote worldwide.</p>" }, settings: { align: "center" } },
+        { type: "form", content: { fields: [
+          { id: "name", type: "text", label: "Your Name", required: true, placeholder: "Full name" },
+          { id: "email", type: "email", label: "Email", required: true, placeholder: "you@company.com" },
+          { id: "type", type: "select", label: "Inquiry Type", required: true, placeholder: "Select", options: ["Full-time role", "Freelance project", "Speaking opportunity", "Just saying hello"] },
+          { id: "message", type: "textarea", label: "Message", required: true, placeholder: "Tell me about the opportunity..." },
+        ], submitText: "Send Message", successMessage: "Thanks for reaching out! I\u2019ll get back to you within 48 hours." }, settings: {} },
+      ],
+    },
+    {
+      name: "Conference",
+      description: "Conference page with hero, event details, speaker lineup, program schedule, venue info, and registration form",
+      category: "event",
+      blocks: [
+        { type: "heading", content: { text: "Horizon 2026 \u2014 The Future of Product Engineering", level: 1 }, settings: { align: "center" } },
+        { type: "text", content: { html: "<p><strong>September 18\u201319, 2026</strong> &bull; The Barbican Centre, London</p><p>Two days of deep-dive talks, hands-on workshops, and honest conversations about building software products that last. 600 attendees. 24 speakers. Zero filler.</p>" }, settings: { align: "center" } },
+        { type: "button", content: { text: "Get Your Ticket", url: "#register", variant: "primary" }, settings: { align: "center" } },
+        { type: "spacer", content: { height: 32 }, settings: {} },
+        { type: "columns", content: { columns: [
+          { blocks: [
+            { id: "co1", type: "heading", content: { text: "24", level: 2 }, settings: { align: "center" } },
+            { id: "co2", type: "text", content: { html: "<p>Speakers from companies like Stripe, Linear, Vercel, and Figma</p>" }, settings: { align: "center" } },
+          ] },
+          { blocks: [
+            { id: "co3", type: "heading", content: { text: "600", level: 2 }, settings: { align: "center" } },
+            { id: "co4", type: "text", content: { html: "<p>Product engineers, designers, and leaders from 30+ countries</p>" }, settings: { align: "center" } },
+          ] },
+          { blocks: [
+            { id: "co5", type: "heading", content: { text: "8", level: 2 }, settings: { align: "center" } },
+            { id: "co6", type: "text", content: { html: "<p>Hands-on workshops covering systems design, accessibility, and performance</p>" }, settings: { align: "center" } },
+          ] },
+        ] }, settings: { gap: "24px" } },
+        { type: "spacer", content: { height: 48 }, settings: {} },
+        { type: "divider", content: {}, settings: { style: "solid" } },
+        { type: "heading", content: { text: "Program", level: 2 }, settings: { align: "center" } },
+        { type: "accordion", content: { items: [
+          { id: "cop1", title: "Day 1 \u2014 September 18: Foundations", content: "<p><strong>9:00 AM</strong> \u2014 Doors Open & Registration<br><strong>10:00 AM</strong> \u2014 Opening Keynote: \"Why Most Product Roadmaps Fail\" \u2014 Anya Petrova, CPO at Linear<br><strong>11:00 AM</strong> \u2014 \"Designing for the Edge: Building Resilient UIs\" \u2014 James Park, Staff Engineer at Vercel<br><strong>12:00 PM</strong> \u2014 Lunch + Networking<br><strong>1:30 PM</strong> \u2014 Workshop Track A: \"Performance Budgets in Practice\" / Track B: \"Design Systems at Scale\"<br><strong>3:30 PM</strong> \u2014 \"Accessibility Is Not a Feature\" \u2014 Dr. Sarah Lim, A11y Lead at Figma<br><strong>4:30 PM</strong> \u2014 Lightning Talks (5 speakers, 8 minutes each)<br><strong>6:00 PM</strong> \u2014 Welcome Reception & Drinks</p>" },
+          { id: "cop2", title: "Day 2 \u2014 September 19: Scaling", content: "<p><strong>9:30 AM</strong> \u2014 \"From Monolith to Modules: A Migration Story\" \u2014 Carlos Mendez, Platform Lead at Stripe<br><strong>10:30 AM</strong> \u2014 Panel: \"The Product Engineer Role: Hype or Here to Stay?\"<br><strong>11:30 AM</strong> \u2014 Workshop Track A: \"Building with AI Responsibly\" / Track B: \"Testing Strategies That Actually Work\"<br><strong>12:30 PM</strong> \u2014 Lunch + Open Spaces<br><strong>2:00 PM</strong> \u2014 \"Observability-Driven Development\" \u2014 Nina Okoro, SRE Director at Datadog<br><strong>3:00 PM</strong> \u2014 \"What I Learned Shipping to 10M Users\" \u2014 Raj Patel, Co-Founder of Notion<br><strong>4:00 PM</strong> \u2014 Closing Keynote: \"Craft, Care, and the Long Game\" \u2014 Lara Hogan<br><strong>5:00 PM</strong> \u2014 Closing & Farewell</p>" },
+        ], style: "bordered", iconPosition: "right" }, settings: {} },
+        { type: "spacer", content: { height: 48 }, settings: {} },
+        { type: "heading", content: { text: "Featured Speakers", level: 2 }, settings: { align: "center" } },
+        { type: "columns", content: { columns: [
+          { blocks: [
+            { id: "co7", type: "heading", content: { text: "Anya Petrova", level: 3 }, settings: { align: "center" } },
+            { id: "co8", type: "text", content: { html: "<p><strong>CPO, Linear</strong><br>Former PM at Spotify and Airbnb. Anya leads product strategy at Linear and speaks globally about roadmap culture and product-led growth.</p>" }, settings: { align: "center" } },
+          ] },
+          { blocks: [
+            { id: "co9", type: "heading", content: { text: "Dr. Sarah Lim", level: 3 }, settings: { align: "center" } },
+            { id: "co10", type: "text", content: { html: "<p><strong>Accessibility Lead, Figma</strong><br>PhD in Human-Computer Interaction. Sarah has shaped accessibility standards at two of the world\u2019s most-used design tools.</p>" }, settings: { align: "center" } },
+          ] },
+          { blocks: [
+            { id: "co11", type: "heading", content: { text: "Carlos Mendez", level: 3 }, settings: { align: "center" } },
+            { id: "co12", type: "text", content: { html: "<p><strong>Platform Lead, Stripe</strong><br>10 years at Stripe, leading the migration from a monolithic Ruby app to a modular service architecture serving billions of API calls.</p>" }, settings: { align: "center" } },
+          ] },
+        ] }, settings: { gap: "32px" } },
+        { type: "spacer", content: { height: 48 }, settings: {} },
+        { type: "divider", content: {}, settings: { style: "solid" } },
+        { type: "heading", content: { text: "Venue & Travel", level: 2 }, settings: {} },
+        { type: "text", content: { html: "<p><strong>The Barbican Centre</strong><br>Silk Street, London EC2Y 8DS, United Kingdom</p><p>Located in the heart of the City of London, the Barbican is one of Europe\u2019s premier arts and conference venues. It\u2019s a 5-minute walk from Barbican and Moorgate tube stations, with excellent connections to all major London rail terminals.</p><p><strong>Hotels:</strong> We\u2019ve arranged discounted rates at the Crowne Plaza London (5 min walk) and the South Place Hotel (8 min walk). Use code <strong>HORIZON26</strong> when booking.</p>" }, settings: {} },
+        { type: "spacer", content: { height: 32 }, settings: {} },
+        { type: "heading", content: { text: "Tickets", level: 2 }, settings: {} },
+        { type: "table", content: { headers: ["Ticket Type", "Price", "What\u2019s Included"], rows: [
+          ["Early Bird", "\u00a3299", "Full conference access, lunch & refreshments, welcome reception, recordings"],
+          ["Standard", "\u00a3449", "Full conference access, lunch & refreshments, welcome reception, recordings"],
+          ["Workshop Pass", "\u00a3599", "Everything in Standard + access to all 4 hands-on workshops (limited to 30 per session)"],
+          ["Student", "\u00a3149", "Full conference access, lunch & refreshments (valid student ID required)"],
+        ], caption: "All prices exclude VAT. Group discounts available for 5+ tickets.", striped: true }, settings: {} },
+        { type: "spacer", content: { height: 32 }, settings: {} },
+        { type: "heading", content: { text: "Register", level: 2 }, settings: {} },
+        { type: "form", content: { fields: [
+          { id: "name", type: "text", label: "Full Name", required: true, placeholder: "Your name" },
+          { id: "email", type: "email", label: "Email", required: true, placeholder: "you@company.com" },
+          { id: "company", type: "text", label: "Company", required: false, placeholder: "Company name" },
+          { id: "role", type: "text", label: "Job Title", required: false, placeholder: "e.g. Senior Engineer" },
+          { id: "ticket", type: "select", label: "Ticket Type", required: true, placeholder: "Select ticket", options: ["Early Bird (\u00a3299)", "Standard (\u00a3449)", "Workshop Pass (\u00a3599)", "Student (\u00a3149)"] },
+          { id: "dietary", type: "select", label: "Dietary Requirements", required: false, placeholder: "Select if applicable", options: ["None", "Vegetarian", "Vegan", "Gluten-free", "Halal", "Kosher", "Other (specify in notes)"] },
+          { id: "notes", type: "textarea", label: "Notes", required: false, placeholder: "Accessibility needs, workshop preferences, or anything else..." },
+        ], submitText: "Complete Registration", successMessage: "You\u2019re registered for Horizon 2026! Check your email for your confirmation and ticket details." }, settings: {} },
+        { type: "spacer", content: { height: 24 }, settings: {} },
+        { type: "social", content: { links: [{ platform: "twitter", url: "https://twitter.com" }, { platform: "linkedin", url: "https://linkedin.com" }, { platform: "youtube", url: "https://youtube.com" }] }, settings: { align: "center" } },
+      ],
+    },
   ];
 
   for (const template of templates) {

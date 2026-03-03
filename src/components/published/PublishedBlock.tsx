@@ -84,6 +84,7 @@ export function PublishedBlock({ block, pageId, allBlocks }: PublishedBlockProps
     case "image": {
       if (!content.src) return null;
       const imgLink = content.link ? sanitizeUrl(content.link as string) : null;
+      const hasLink = imgLink && imgLink !== "#";
       const imgContent = (
         <>
           <img
@@ -99,6 +100,16 @@ export function PublishedBlock({ block, pageId, allBlocks }: PublishedBlockProps
               boxShadow: settings.shadow ? "var(--shadow-lg)" : undefined,
             }}
           />
+          {!hasLink && (
+            <span className={styles.lightboxHint} aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 3 21 3 21 9" />
+                <polyline points="9 21 3 21 3 15" />
+                <line x1="21" y1="3" x2="14" y2="10" />
+                <line x1="3" y1="21" x2="10" y2="14" />
+              </svg>
+            </span>
+          )}
           {typeof content.caption === "string" && content.caption && (
             <figcaption className={styles.caption}>
               {content.caption}
@@ -106,9 +117,10 @@ export function PublishedBlock({ block, pageId, allBlocks }: PublishedBlockProps
           )}
         </>
       );
+      const figureClass = hasLink ? `${styles.figure} ${styles.figureLinked}` : styles.figure;
       return (
-        <figure className={styles.figure} style={settings.backgroundColor ? { backgroundColor: settings.backgroundColor as string } : undefined}>
-          {imgLink && imgLink !== "#" ? (
+        <figure className={figureClass} style={settings.backgroundColor ? { backgroundColor: settings.backgroundColor as string } : undefined}>
+          {hasLink ? (
             <a
               href={imgLink}
               aria-label={(content.alt as string) || "Image link"}

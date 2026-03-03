@@ -27,7 +27,7 @@ export async function POST(
 
     const result = await db.$transaction(async (tx) => {
       const page = await tx.page.findFirst({
-        where: { id: pageId, site: { userId } },
+        where: { id: pageId, deletedAt: null, site: { userId } },
         select: { id: true },
       });
 

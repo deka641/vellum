@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { Download, ChevronLeft, ChevronRight, Search, AlertCircle, Trash2 } from "lucide-react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { Download, ChevronLeft, ChevronRight, Search, AlertCircle, Trash2, Mail, MailOpen, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/Button/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog/ConfirmDialog";
 import { useToast } from "@/components/ui/Toast/Toast";
@@ -12,6 +12,7 @@ interface Submission {
   id: string;
   blockId: string;
   data: Record<string, string>;
+  readAt: string | null;
   createdAt: string;
   page: { id: string; title: string };
 }
@@ -35,13 +36,16 @@ export function SubmissionsClient({ siteId, pages }: SubmissionsClientProps) {
   const [total, setTotal] = useState(0);
   const [pageFilter, setPageFilter] = useState("");
   const [search, setSearch] = useState("");
+  const [unreadOnly, setUnreadOnly] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showBulkDelete, setShowBulkDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [updatingReadStatus, setUpdatingReadStatus] = useState(false);
   const { toast } = useToast();
+  const searchTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const fetchSubmissions = useCallback(async () => {
+  const fetchSubmissions = useCallback(async (searchQuery?: string) => {
     setLoading(true);
     setFetchError(false);
     try {
@@ -50,6 +54,10 @@ export function SubmissionsClient({ siteId, pages }: SubmissionsClientProps) {
         pageSize: "20",
       });
       if (pageFilter) params.set("pageId", pageFilter);
+      if (unreadOnly) params.set("unreadOnly", "true");
+
+      const q = searchQuery !== undefined ? searchQuery : search;
+      if (q.trim().length >= 2) params.set("q", q.trim());
 
       const res = await fetch(`/api/sites/${siteId}/submissions?${params}`);
       if (res.ok) {
@@ -67,7 +75,7 @@ export function SubmissionsClient({ siteId, pages }: SubmissionsClientProps) {
     } finally {
       setLoading(false);
     }
-  }, [siteId, page, pageFilter]);
+  }, [siteId, page, pageFilter, search, unreadOnly]);
 
   useEffect(() => {
     fetchSubmissions();
@@ -75,24 +83,21 @@ export function SubmissionsClient({ siteId, pages }: SubmissionsClientProps) {
 
   useEffect(() => {
     setPage(1);
-  }, [pageFilter]);
+  }, [pageFilter, unreadOnly]);
 
   // Clear selection when submissions change
   useEffect(() => {
     setSelectedIds(new Set());
   }, [submissions]);
 
-  const filtered = useMemo(() => {
-    if (!search.trim()) return submissions;
-    const q = search.toLowerCase();
-    return submissions.filter((sub) => {
-      const data = sub.data;
-      return (
-        sub.page.title.toLowerCase().includes(q) ||
-        Object.values(data).some((v) => String(v).toLowerCase().includes(q))
-      );
-    });
-  }, [submissions, search]);
+  function handleSearchChange(value: string) {
+    setSearch(value);
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => {
+      setPage(1);
+      fetchSubmissions(value);
+    }, 400);
+  }
 
   function exportCsv() {
     const params = new URLSearchParams();
@@ -113,10 +118,10 @@ export function SubmissionsClient({ siteId, pages }: SubmissionsClientProps) {
   }
 
   function toggleSelectAll() {
-    if (selectedIds.size === filtered.length) {
+    if (selectedIds.size === submissions.length) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(filtered.map((s) => s.id)));
+      setSelectedIds(new Set(submissions.map((s) => s.id)));
     }
   }
 
@@ -146,6 +151,42 @@ export function SubmissionsClient({ siteId, pages }: SubmissionsClientProps) {
     }
   }
 
+  async function handleReadStatus(ids: string[], action: "read" | "unread") {
+    setUpdatingReadStatus(true);
+    try {
+      const res = await fetch(`/api/sites/${siteId}/submissions`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids, action }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const label = action === "read" ? "read" : "unread";
+        toast(`Marked ${data.updated} submission${data.updated !== 1 ? "s" : ""} as ${label}`);
+        // Update local state
+        setSubmissions((prev) =>
+          prev.map((s) =>
+            ids.includes(s.id)
+              ? { ...s, readAt: action === "read" ? new Date().toISOString() : null }
+              : s
+          )
+        );
+        setSelectedIds(new Set());
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast(err.error || "Failed to update read status", "error");
+      }
+    } catch {
+      toast("Something went wrong", "error");
+    } finally {
+      setUpdatingReadStatus(false);
+    }
+  }
+
+  const selectedSubmissions = submissions.filter((s) => selectedIds.has(s.id));
+  const hasUnreadSelected = selectedSubmissions.some((s) => !s.readAt);
+  const hasReadSelected = selectedSubmissions.some((s) => s.readAt);
+
   return (
     <div className={styles.content}>
       <div className={styles.toolbar}>
@@ -156,7 +197,7 @@ export function SubmissionsClient({ siteId, pages }: SubmissionsClientProps) {
             type="text"
             placeholder="Search submissions..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
           />
         </div>
         <select
@@ -169,16 +210,49 @@ export function SubmissionsClient({ siteId, pages }: SubmissionsClientProps) {
             <option key={p.id} value={p.id}>{p.title}</option>
           ))}
         </select>
+        <button
+          className={`${styles.unreadToggle} ${unreadOnly ? styles.unreadToggleActive : ""}`}
+          onClick={() => setUnreadOnly(!unreadOnly)}
+          title={unreadOnly ? "Show all submissions" : "Show unread only"}
+          aria-pressed={unreadOnly}
+        >
+          {unreadOnly ? <EyeOff size={14} /> : <Eye size={14} />}
+          {unreadOnly ? "Unread only" : "All"}
+        </button>
         {selectedIds.size > 0 && (
-          <Button
-            variant="danger"
-            size="sm"
-            leftIcon={<Trash2 size={14} />}
-            onClick={() => setShowBulkDelete(true)}
-            disabled={deleting}
-          >
-            Delete {selectedIds.size}
-          </Button>
+          <>
+            {hasUnreadSelected && (
+              <Button
+                variant="secondary"
+                size="sm"
+                leftIcon={<MailOpen size={14} />}
+                onClick={() => handleReadStatus(Array.from(selectedIds), "read")}
+                disabled={updatingReadStatus}
+              >
+                Mark read
+              </Button>
+            )}
+            {hasReadSelected && (
+              <Button
+                variant="secondary"
+                size="sm"
+                leftIcon={<Mail size={14} />}
+                onClick={() => handleReadStatus(Array.from(selectedIds), "unread")}
+                disabled={updatingReadStatus}
+              >
+                Mark unread
+              </Button>
+            )}
+            <Button
+              variant="danger"
+              size="sm"
+              leftIcon={<Trash2 size={14} />}
+              onClick={() => setShowBulkDelete(true)}
+              disabled={deleting}
+            >
+              Delete {selectedIds.size}
+            </Button>
+          </>
         )}
         <Button
           variant="ghost"
@@ -194,7 +268,7 @@ export function SubmissionsClient({ siteId, pages }: SubmissionsClientProps) {
         <div className={styles.errorBanner}>
           <AlertCircle size={18} />
           <span>Failed to load submissions. Please try again.</span>
-          <button onClick={fetchSubmissions} className={styles.retryBtn}>Retry</button>
+          <button onClick={() => fetchSubmissions()} className={styles.retryBtn}>Retry</button>
         </div>
       )}
 
@@ -202,7 +276,7 @@ export function SubmissionsClient({ siteId, pages }: SubmissionsClientProps) {
         <div className={styles.empty}>
           <p>Loading...</p>
         </div>
-      ) : filtered.length === 0 ? (
+      ) : submissions.length === 0 ? (
         <div className={styles.empty}>
           <p>No form submissions found</p>
           <span>Form submissions from your published pages will appear here.</span>
@@ -216,11 +290,12 @@ export function SubmissionsClient({ siteId, pages }: SubmissionsClientProps) {
                   <th className={styles.th}>
                     <input
                       type="checkbox"
-                      checked={selectedIds.size === filtered.length && filtered.length > 0}
+                      checked={selectedIds.size === submissions.length && submissions.length > 0}
                       onChange={toggleSelectAll}
                       aria-label="Select all submissions"
                     />
                   </th>
+                  <th className={styles.th}></th>
                   <th className={styles.th}>Page</th>
                   <th className={styles.th}>Data</th>
                   <th className={styles.th}>Date</th>
@@ -228,44 +303,68 @@ export function SubmissionsClient({ siteId, pages }: SubmissionsClientProps) {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((sub) => (
-                  <tr key={sub.id} className={styles.tr}>
-                    <td className={styles.td}>
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.has(sub.id)}
-                        onChange={() => toggleSelect(sub.id)}
-                        aria-label={`Select submission from ${sub.page.title}`}
-                      />
-                    </td>
-                    <td className={styles.td}>
-                      <span className={styles.pageName}>{sub.page.title}</span>
-                    </td>
-                    <td className={styles.td}>
-                      <div className={styles.dataFields}>
-                        {Object.entries(sub.data).map(([key, value]) => (
-                          <div key={key} className={styles.dataField}>
-                            <span className={styles.dataKey}>{key}:</span>
-                            <span className={styles.dataValue}>{String(value)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </td>
-                    <td className={styles.td}>
-                      <span className={styles.date}>{formatDate(new Date(sub.createdAt))}</span>
-                    </td>
-                    <td className={styles.td}>
-                      <button
-                        className={styles.deleteBtn}
-                        onClick={() => setDeleteId(sub.id)}
-                        title="Delete submission"
-                        aria-label="Delete submission"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {submissions.map((sub) => {
+                  const isUnread = !sub.readAt;
+                  return (
+                    <tr key={sub.id} className={`${styles.tr} ${isUnread ? styles.trUnread : ""}`}>
+                      <td className={styles.td}>
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(sub.id)}
+                          onChange={() => toggleSelect(sub.id)}
+                          aria-label={`Select submission from ${sub.page.title}`}
+                        />
+                      </td>
+                      <td className={styles.td}>
+                        {isUnread && (
+                          <span className={styles.unreadDot} title="Unread" />
+                        )}
+                      </td>
+                      <td className={styles.td}>
+                        <span className={`${styles.pageName} ${isUnread ? styles.pageNameUnread : ""}`}>
+                          {sub.page.title}
+                        </span>
+                      </td>
+                      <td className={styles.td}>
+                        <div className={styles.dataFields}>
+                          {Object.entries(sub.data).map(([key, value]) => (
+                            <div key={key} className={styles.dataField}>
+                              <span className={styles.dataKey}>{key}:</span>
+                              <span className={`${styles.dataValue} ${isUnread ? styles.dataValueUnread : ""}`}>
+                                {String(value)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </td>
+                      <td className={styles.td}>
+                        <span className={styles.date}>{formatDate(new Date(sub.createdAt))}</span>
+                      </td>
+                      <td className={styles.td}>
+                        <div className={styles.rowActions}>
+                          <button
+                            className={styles.actionBtn}
+                            onClick={() =>
+                              handleReadStatus([sub.id], isUnread ? "read" : "unread")
+                            }
+                            title={isUnread ? "Mark as read" : "Mark as unread"}
+                            aria-label={isUnread ? "Mark as read" : "Mark as unread"}
+                          >
+                            {isUnread ? <MailOpen size={14} /> : <Mail size={14} />}
+                          </button>
+                          <button
+                            className={styles.deleteBtn}
+                            onClick={() => setDeleteId(sub.id)}
+                            title="Delete submission"
+                            aria-label="Delete submission"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

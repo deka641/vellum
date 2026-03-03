@@ -7,6 +7,7 @@ import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import type { Prisma } from "@prisma/client";
 import { logActivity } from "@/lib/activity";
+import { prunePageRevisions } from "@/lib/revisions";
 
 export async function POST(
   req: Request,
@@ -33,7 +34,7 @@ export async function POST(
     }
 
     const page = await db.page.findFirst({
-      where: { id: pageId, site: { userId: session.user.id } },
+      where: { id: pageId, deletedAt: null, site: { userId: session.user.id } },
       include: { site: { select: { slug: true } } },
     });
 
@@ -109,18 +110,7 @@ export async function POST(
       });
 
       // Limit to 20 revisions per page — delete oldest if over limit
-      const revisionCount = await tx.pageRevision.count({ where: { pageId } });
-      if (revisionCount > 20) {
-        const oldest = await tx.pageRevision.findMany({
-          where: { pageId },
-          orderBy: { createdAt: "asc" },
-          take: revisionCount - 20,
-          select: { id: true },
-        });
-        await tx.pageRevision.deleteMany({
-          where: { id: { in: oldest.map((r) => r.id) } },
-        });
-      }
+      await prunePageRevisions(tx, pageId);
 
       return page_updated;
     });
@@ -163,7 +153,7 @@ export async function DELETE(
     const { pageId } = await params;
 
     const page = await db.page.findFirst({
-      where: { id: pageId, site: { userId: session.user.id } },
+      where: { id: pageId, deletedAt: null, site: { userId: session.user.id } },
       include: { site: { select: { slug: true } } },
     });
 

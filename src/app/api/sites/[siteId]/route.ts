@@ -24,7 +24,7 @@ export async function GET(
     const site = await db.site.findFirst({
       where: { id: siteId, userId: session.user.id },
       include: {
-        pages: { orderBy: { sortOrder: "asc" } },
+        pages: { where: { deletedAt: null }, orderBy: { sortOrder: "asc" } },
       },
     });
 
