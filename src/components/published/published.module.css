@@ -69,7 +69,6 @@
   letter-spacing: -0.025em;
   line-height: var(--leading-tight);
   scroll-margin-top: 80px;
-  max-width: var(--published-prose-width);
 }
 
 .heading:target {
@@ -115,6 +114,7 @@
   line-height: var(--leading-relaxed);
   color: var(--color-text-primary);
   max-width: var(--published-prose-width);
+  margin-inline: auto;
 }
 
 .text p {
@@ -128,10 +128,6 @@
 
 .text strong {
   font-weight: var(--weight-semibold);
-}
-
-.text em {
-  color: var(--color-text-secondary);
 }
 
 .text a {
@@ -173,7 +169,7 @@
 
 @media (max-width: 768px) {
   .text {
-    line-height: 1.75;
+    line-height: var(--leading-relaxed);
   }
 }
 
@@ -278,7 +274,6 @@
 
 .buttonContainer {
   padding: var(--space-2) 0;
-  max-width: var(--published-prose-width);
 }
 
 .button {
@@ -433,49 +428,28 @@
   padding: var(--space-6) var(--space-8);
   font-style: italic;
   margin: var(--space-2) 0;
-  max-width: var(--published-prose-width);
 }
 
 .quote-default {
   border-left: 4px solid var(--color-accent);
-  border-left-color: transparent;
   padding-left: var(--space-6);
-  animation: quoteBorderReveal 600ms var(--ease-out) 200ms forwards;
 }
 
 .quote-bordered {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   border-left: 4px solid var(--color-accent);
-  border-left-color: transparent;
-  animation: quoteBorderReveal 600ms var(--ease-out) 200ms forwards;
 }
 
 .quote-filled {
   background: var(--color-bg-secondary);
   border-left: 4px solid var(--color-accent);
-  border-left-color: transparent;
   border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
-  animation: quoteBorderReveal 600ms var(--ease-out) 200ms forwards;
-}
-
-@keyframes quoteBorderReveal {
-  from { border-left-color: transparent; }
-  to { border-left-color: var(--color-accent); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .quote-default,
-  .quote-bordered,
-  .quote-filled {
-    border-left-color: var(--color-accent);
-    animation: none;
-  }
 }
 
 .quoteText {
   font-size: var(--text-xl);
-  line-height: 1.7;
+  line-height: var(--leading-relaxed);
   color: var(--color-text-primary);
 }
 
@@ -649,11 +623,21 @@
 }
 
 .formSuccess {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
   text-align: center;
   padding: var(--space-8) var(--space-6) var(--space-4);
   font-size: var(--text-lg);
-  color: var(--color-text-primary);
+  color: var(--color-success);
   line-height: var(--leading-relaxed);
+}
+
+.formSuccessIcon {
+  width: 48px;
+  height: 48px;
+  color: var(--color-success);
 }
 
 .formResetBtn {
@@ -977,7 +961,7 @@
 }
 
 .snippetPre code {
-  font-family: "SF Mono", "Fira Code", "Fira Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 13.5px;
   line-height: 1.65;
   color: #cdd6f4;
@@ -1189,7 +1173,6 @@
   padding: var(--space-4) 0;
   justify-content: center;
   align-items: center;
-  max-width: var(--published-prose-width);
 }
 
 .socialLink {
@@ -1260,7 +1243,6 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  max-width: var(--published-prose-width);
 }
 
 .accordionItem {
@@ -1349,7 +1331,7 @@ details[open] > .accordionBody {
   padding: 0 var(--space-5);
   font-size: var(--text-base);
   line-height: var(--leading-relaxed);
-  color: var(--color-text-secondary);
+  color: var(--color-text-primary);
   transition: padding 300ms var(--ease-out);
 }
 
@@ -1390,6 +1372,7 @@ details[open] > .accordionBody > .accordionBodyInner {
 .toc {
   scroll-behavior: smooth;
   max-width: var(--published-prose-width);
+  margin-inline: auto;
 }
 
 .tocBoxed {
@@ -1517,7 +1500,6 @@ details[open] > .accordionBody > .accordionBodyInner {
 
 .tableCell em {
   font-style: italic;
-  color: var(--color-text-secondary);
 }
 
 .tableCell a {
@@ -1559,6 +1541,16 @@ details[open] > .accordionBody > .accordionBodyInner {
 
 .tableStriped tbody tr:nth-child(even) {
   background: var(--color-bg-secondary);
+}
+
+@media (hover: hover) {
+  .table tbody tr:hover {
+    background: var(--color-bg-secondary);
+  }
+
+  .tableStriped tbody tr:hover {
+    background: var(--color-bg-tertiary);
+  }
 }
 
 .tableCaption {

@@ -33,7 +33,7 @@
 .errorCode {
   position: relative;
   font-family: var(--font-heading);
-  font-size: clamp(6rem, 15vw, 12rem);
+  font-size: clamp(6rem, 15vw, 10rem);
   font-weight: var(--weight-bold);
   line-height: 1;
   color: var(--color-accent);

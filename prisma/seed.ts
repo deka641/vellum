@@ -979,12 +979,35 @@ async function main() {
         fontPreset: "modern",
       },
       footer: {
-        text: "Atlas Creative — Design & Development Studio",
-        links: [
-          { label: "Home", url: "/s/atlas-studio" },
-          { label: "Services", url: "/s/atlas-studio/services" },
-          { label: "Journal", url: "/s/atlas-studio/journal" },
-          { label: "Contact", url: "/s/atlas-studio/contact" },
+        style: "columns",
+        brandName: "Atlas Creative",
+        description: "Design & development studio crafting exceptional digital experiences.",
+        columns: [
+          {
+            title: "Pages",
+            links: [
+              { label: "Home", url: "/s/atlas-studio" },
+              { label: "About", url: "/s/atlas-studio/about" },
+              { label: "Services", url: "/s/atlas-studio/services" },
+              { label: "Journal", url: "/s/atlas-studio/journal" },
+              { label: "Contact", url: "/s/atlas-studio/contact" },
+              { label: "Gallery", url: "/s/atlas-studio/gallery" },
+            ],
+          },
+          {
+            title: "Connect",
+            links: [
+              { label: "Twitter", url: "https://twitter.com" },
+              { label: "GitHub", url: "https://github.com" },
+              { label: "LinkedIn", url: "https://linkedin.com" },
+              { label: "Dribbble", url: "https://dribbble.com" },
+            ],
+          },
+        ],
+        social: [
+          { platform: "twitter", url: "https://twitter.com" },
+          { platform: "github", url: "https://github.com" },
+          { platform: "linkedin", url: "https://linkedin.com" },
         ],
         showBranding: true,
       },
@@ -1019,14 +1042,27 @@ async function main() {
     {
       type: "text",
       content: {
-        html: "<p>Atlas Creative is a design and development studio that partners with ambitious companies to build products people love. From brand identity to full-stack applications, we bring ideas to life with precision and care.</p>",
+        html: '<p>Atlas Creative is a design and development studio that partners with ambitious companies to build products people love. From <strong>brand identity</strong> to <em>full-stack applications</em>, we bring ideas to life with precision and care. <a href="/s/atlas-studio/about">Learn more about us</a>.</p><ul><li>Strategy &amp; Research</li><li>Design &amp; Branding</li><li>Full-Stack Engineering</li></ul>',
       },
       settings: { align: "center" },
     },
     {
-      type: "button",
-      content: { text: "Explore Our Work", url: "/s/atlas-studio/services", variant: "primary" },
-      settings: { align: "center" },
+      type: "columns",
+      content: {
+        columns: [
+          {
+            blocks: [
+              { id: "hero-btn1", type: "button", content: { text: "Explore Our Work", url: "/s/atlas-studio/services", variant: "primary" }, settings: { align: "center", size: "lg" } },
+            ],
+          },
+          {
+            blocks: [
+              { id: "hero-btn2", type: "button", content: { text: "Get in Touch", url: "/s/atlas-studio/contact", variant: "outline" }, settings: { align: "center", size: "lg" } },
+            ],
+          },
+        ],
+      },
+      settings: { gap: "24px" },
     },
     {
       type: "spacer",
@@ -1089,7 +1125,7 @@ async function main() {
     // ── STATS ──
     {
       type: "spacer",
-      content: { height: 48 },
+      content: { height: 32 },
       settings: {},
     },
     {
@@ -1124,16 +1160,16 @@ async function main() {
       settings: { gap: "24px" },
     },
 
-    // ── TESTIMONIAL ──
-    {
-      type: "spacer",
-      content: { height: 48 },
-      settings: {},
-    },
+    // ── TESTIMONIALS (3 quote styles) ──
     {
       type: "divider",
       content: {},
       settings: { style: "dashed" },
+    },
+    {
+      type: "heading",
+      content: { text: "What Our Clients Say", level: 2 },
+      settings: { align: "center" },
     },
     {
       type: "quote",
@@ -1145,15 +1181,28 @@ async function main() {
       settings: {},
     },
     {
-      type: "divider",
-      content: {},
-      settings: { style: "dashed" },
+      type: "quote",
+      content: {
+        text: "Working with Atlas is like having a world-class product team on speed dial. They don't just execute — they think strategically about what will actually move the needle for your business.",
+        attribution: "Marcus Chen, Founder of CloudSync",
+        style: "bordered",
+      },
+      settings: {},
+    },
+    {
+      type: "quote",
+      content: {
+        text: "The quality of engineering was outstanding. Clean code, excellent test coverage, and documentation that made the handoff seamless. Our internal team was up to speed within days.",
+        attribution: "Priya Nair, VP Engineering at Novabank",
+        style: "default",
+      },
+      settings: {},
     },
 
     // ── OUR PROCESS (Accordion) ──
     {
       type: "spacer",
-      content: { height: 48 },
+      content: { height: 32 },
       settings: {},
     },
     {
@@ -1175,22 +1224,22 @@ async function main() {
           {
             id: "proc1",
             title: "1. Discovery & Strategy",
-            content: "<p>We begin with deep research: stakeholder interviews, user analysis, competitive auditing, and technical assessment. This phase produces a clear project brief, success metrics, and a realistic timeline. We believe that understanding the problem thoroughly is half the solution.</p>",
+            content: "<p>We begin with deep research: stakeholder interviews, user analysis, competitive auditing, and technical assessment. This phase produces a clear project brief, success metrics, and a realistic timeline.</p>",
           },
           {
             id: "proc2",
             title: "2. Design & Prototype",
-            content: "<p>Armed with insights, we move into design. Wireframes establish structure, visual designs bring personality, and interactive prototypes let you experience the product before a single line of code is written. We share progress weekly and iterate based on your feedback.</p>",
+            content: "<p>Armed with insights, we move into design. Wireframes establish structure, visual designs bring personality, and interactive prototypes let you experience the product before a single line of code is written.</p>",
           },
           {
             id: "proc3",
             title: "3. Build & Iterate",
-            content: "<p>Development happens in focused sprints. We ship working features early and often, testing with real users along the way. Our engineering practices prioritize clean code, automated testing, and thorough documentation — because what we build needs to last.</p>",
+            content: "<p>Development happens in focused sprints. We ship working features early and often, testing with real users along the way. Our engineering practices prioritize clean code, automated testing, and thorough documentation.</p>",
           },
           {
             id: "proc4",
             title: "4. Launch & Evolve",
-            content: "<p>Launch is just the beginning. We handle deployment, performance monitoring, and post-launch optimization. Every project includes 30 days of dedicated support. After that, many clients choose an ongoing retainer for continuous improvement.</p>",
+            content: "<p>Launch is just the beginning. We handle deployment, performance monitoring, and post-launch optimization. Every project includes 30 days of dedicated support.</p>",
           },
         ],
         style: "bordered",
@@ -1199,57 +1248,67 @@ async function main() {
       settings: {},
     },
 
-    // ── SECOND TESTIMONIAL ──
+    // ── FEATURED PROJECT (Image) ──
     {
       type: "spacer",
       content: { height: 32 },
       settings: {},
     },
     {
-      type: "quote",
+      type: "heading",
+      content: { text: "Featured Project", level: 2 },
+      settings: { align: "center" },
+    },
+    {
+      type: "image",
       content: {
-        text: "Working with Atlas is like having a world-class product team on speed dial. They don't just execute — they think strategically about what will actually move the needle for your business.",
-        attribution: "Marcus Chen, Founder of CloudSync",
-        style: "bordered",
+        src: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&h=600&fit=crop&q=80",
+        alt: "Modern analytics dashboard showing clean data visualization with charts and metrics on a laptop screen",
+        caption: "CloudSync — Redesigned analytics dashboard delivering 35% faster task completion",
+        link: "/s/atlas-studio/services",
       },
-      settings: {},
+      settings: { align: "center", rounded: true, shadow: true },
     },
 
-    // ── TECH SHOWCASE (Code Block) ──
+    // ── TECH (Code Snippet) ──
     {
       type: "spacer",
-      content: { height: 48 },
+      content: { height: 24 },
       settings: {},
     },
     {
       type: "heading",
-      content: { text: "Built with Modern Technology", level: 2 },
-      settings: {},
-    },
-    {
-      type: "text",
-      content: {
-        html: "<p>We choose tools that balance developer experience with production reliability. Our stack is modern but proven — no hype-driven decisions, just solid engineering. Here's a glimpse of how we build:</p>",
-      },
+      content: { text: "Tech We Use", level: 2 },
       settings: {},
     },
     {
       type: "code",
       content: {
-        code: `<div style="padding: 1.5rem; background: #1e1e2e; color: #cdd6f4; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.7; overflow-x: auto;">
-<span style="color: #89b4fa;">// Modern React with Server Components</span>
-<span style="color: #cba6f7;">export default</span> <span style="color: #89dceb;">async function</span> <span style="color: #a6e3a1;">ProjectPage</span>({ params }) {
-  <span style="color: #cba6f7;">const</span> project = <span style="color: #cba6f7;">await</span> getProject(params.slug);
+        code: `// Modern React with Server Components
+import { db } from "@/lib/db";
+import { BlockRenderer } from "@/components/BlockRenderer";
 
-  <span style="color: #cba6f7;">return</span> (
-    <span style="color: #89dceb;">&lt;article&gt;</span>
-      <span style="color: #89dceb;">&lt;h1&gt;</span>{project.title}<span style="color: #89dceb;">&lt;/h1&gt;</span>
-      <span style="color: #89dceb;">&lt;BlockRenderer</span> blocks={project.blocks} <span style="color: #89dceb;">/&gt;</span>
-    <span style="color: #89dceb;">&lt;/article&gt;</span>
-  );
+interface Props {
+  params: Promise<{ slug: string }>;
 }
-</div>`,
+
+export default async function ProjectPage({ params }: Props) {
+  const { slug } = await params;
+  const project = await db.project.findUniqueOrThrow({
+    where: { slug },
+    include: { blocks: { orderBy: { sortOrder: "asc" } } },
+  });
+
+  return (
+    <article>
+      <h1>{project.title}</h1>
+      <BlockRenderer blocks={project.blocks} />
+    </article>
+  );
+}`,
         language: "html",
+        displayMode: "snippet",
+        snippetLanguage: "typescript",
       },
       settings: {},
     },
@@ -1257,20 +1316,13 @@ async function main() {
     // ── PROJECT HIGHLIGHTS (Table) ──
     {
       type: "spacer",
-      content: { height: 48 },
+      content: { height: 24 },
       settings: {},
     },
     {
       type: "heading",
-      content: { text: "Featured Project Highlights", level: 2 },
+      content: { text: "Project Highlights", level: 2 },
       settings: { align: "center" },
-    },
-    {
-      type: "text",
-      content: {
-        html: "<p>A snapshot of results from our most recent client engagements — because the work speaks louder than words.</p>",
-      },
-      settings: { align: "center", marginBottom: "16px" },
     },
     {
       type: "table",
@@ -1281,6 +1333,7 @@ async function main() {
           ["CloudSync Dashboard", "SaaS / B2B", "10 weeks", "-35% task completion time"],
           ["Novabank Rebrand", "Finance", "8 weeks", "+40% brand recognition"],
           ["Terraform Academy", "Education", "14 weeks", "50K learners in month one"],
+          ["PulseMetrics", "Analytics", "16 weeks", "3x data processing speed"],
         ],
         striped: true,
         caption: "Selected projects from 2024-2025",
@@ -1288,35 +1341,15 @@ async function main() {
       settings: {},
     },
 
-    // ── IMAGE SHOWCASE ──
-    {
-      type: "image",
-      content: {
-        src: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&h=600&fit=crop&q=80",
-        alt: "Modern analytics dashboard showing clean data visualization with charts and metrics on a laptop screen",
-        caption: "CloudSync — Redesigned analytics dashboard delivering 35% faster task completion",
-        width: 1200,
-        height: 600,
-      },
-      settings: { align: "center", rounded: true, shadow: true },
-    },
-
     // ── VIDEO EMBED ──
     {
       type: "spacer",
-      content: { height: 48 },
+      content: { height: 32 },
       settings: {},
     },
     {
       type: "heading",
-      content: { text: "How We Think About Design", level: 2 },
-      settings: { align: "center" },
-    },
-    {
-      type: "text",
-      content: {
-        html: "<p>Great products emerge from a deep understanding of people, technology, and context. Here's a glimpse into our creative philosophy.</p>",
-      },
+      content: { text: "Watch Our Showreel", level: 2 },
       settings: { align: "center" },
     },
     {
@@ -1328,28 +1361,16 @@ async function main() {
       settings: { aspectRatio: "16/9" },
     },
 
-    // ── CONTACT CTA + FORM ──
+    // ── CONTACT FORM ──
     {
       type: "spacer",
-      content: { height: 48 },
+      content: { height: 32 },
       settings: {},
     },
     {
-      type: "divider",
-      content: {},
-      settings: { style: "solid" },
-    },
-    {
       type: "heading",
-      content: { text: "Start a Conversation", level: 2 },
-      settings: { align: "center", marginTop: "32px" },
-    },
-    {
-      type: "text",
-      content: {
-        html: "<p>Have a project in mind? Tell us about it — we respond to every inquiry within one business day. No pressure, no sales pitch, just an honest conversation about how we can help.</p>",
-      },
-      settings: { align: "center", marginBottom: "24px" },
+      content: { text: "Get in Touch", level: 2 },
+      settings: { align: "center" },
     },
     {
       type: "form",
@@ -1358,7 +1379,7 @@ async function main() {
           { id: "name", type: "text", label: "Your Name", required: true, placeholder: "Full name" },
           { id: "email", type: "email", label: "Email Address", required: true, placeholder: "you@example.com" },
           { id: "budget", type: "select", label: "Project Budget", required: false, placeholder: "Select a range", options: ["Under $10K", "$10K – $25K", "$25K – $50K", "$50K – $100K", "$100K+"] },
-          { id: "message", type: "textarea", label: "Tell Us About Your Project", required: true, placeholder: "What are you building? What problem are you solving? What does success look like?" },
+          { id: "message", type: "textarea", label: "Tell Us About Your Project", required: true, placeholder: "What are you building? What problem are you solving?" },
         ],
         submitText: "Send Message",
         successMessage: "Thank you! We've received your message and will get back to you within one business day.",
@@ -1366,16 +1387,16 @@ async function main() {
       settings: {},
     },
 
-    // ── SOCIAL FOOTER ──
+    // ── SOCIAL (icons + pills) ──
     {
       type: "spacer",
-      content: { height: 32 },
+      content: { height: 24 },
       settings: {},
     },
     {
-      type: "divider",
-      content: {},
-      settings: { style: "solid" },
+      type: "heading",
+      content: { text: "Follow Us", level: 3 },
+      settings: { align: "center" },
     },
     {
       type: "social",
@@ -1386,6 +1407,25 @@ async function main() {
           { platform: "linkedin", url: "https://linkedin.com" },
           { platform: "dribbble", url: "https://dribbble.com" },
         ],
+        style: "icons",
+      },
+      settings: { align: "center" },
+    },
+    {
+      type: "spacer",
+      content: { height: 16 },
+      settings: {},
+    },
+    {
+      type: "social",
+      content: {
+        links: [
+          { platform: "twitter", url: "https://twitter.com" },
+          { platform: "github", url: "https://github.com" },
+          { platform: "linkedin", url: "https://linkedin.com" },
+          { platform: "dribbble", url: "https://dribbble.com" },
+        ],
+        style: "pills",
       },
       settings: { align: "center" },
     },
@@ -1427,7 +1467,7 @@ async function main() {
     {
       type: "text",
       content: {
-        html: "<p>Atlas Creative was founded in 2020 with a simple conviction: the best digital products come from teams that care as much about craft as they do about outcomes. We're a team of 15 designers, engineers, and strategists who've spent the last five years proving that conviction right.</p>",
+        html: "<p>Atlas Creative was founded in 2020 with a simple conviction: the best digital products come from teams that care as much about craft as they do about outcomes.</p>",
       },
       settings: { align: "center" },
     },
@@ -1437,14 +1477,31 @@ async function main() {
       settings: {},
     },
     {
-      type: "heading",
-      content: { text: "Our Story", level: 2 },
-      settings: {},
+      type: "columns",
+      content: {
+        columns: [
+          {
+            blocks: [
+              { id: "ab-h1", type: "heading", content: { text: "Our Story", level: 2 }, settings: {} },
+              { id: "ab-t1", type: "text", content: { html: "<p>It started with a frustration. Our founders, Elena and Marcus, were building products at different companies and kept hitting the same wall: great ideas compromised by rushed execution, beautiful designs undermined by poor engineering.</p><p>They believed a small, senior team could do better work than agencies ten times their size. Atlas Creative launched with three people, a handful of clients, and a commitment to proving that thesis.</p>" }, settings: {} },
+            ],
+          },
+          {
+            blocks: [
+              { id: "ab-h2", type: "heading", content: { text: "Our Vision", level: 2 }, settings: {} },
+              { id: "ab-t2", type: "text", content: { html: "<p>Five years later, we've partnered with over 120 companies across 14 countries. Our work has been recognized by Awwwards, CSS Design Awards, and featured in design publications worldwide.</p><p>More importantly, our client retention rate sits at 89% — because we build relationships, not just products.</p>" }, settings: {} },
+            ],
+          },
+        ],
+      },
+      settings: { gap: "32px" },
     },
     {
-      type: "text",
+      type: "quote",
       content: {
-        html: "<p>It started with a frustration. Our founders, Elena and Marcus, were building products at different companies and kept hitting the same wall: great ideas compromised by rushed execution, beautiful designs undermined by poor engineering, and smart strategies lost in translation between teams.</p><p>They believed a small, senior team that bridged strategy, design, and engineering could do better work than agencies ten times their size. Atlas Creative launched with three people, a handful of clients, and a commitment to proving that thesis.</p><p>Five years later, we've partnered with over 120 companies across 14 countries. Our work has been recognized by Awwwards, CSS Design Awards, and featured in design publications worldwide. More importantly, our client retention rate sits at 89% — because we build relationships, not just products.</p>",
+        text: "We don't just hire talented people — we hire people who genuinely care about the work. That's the difference between a team and a group of contractors.",
+        attribution: "Elena Vasquez, CEO",
+        style: "filled",
       },
       settings: {},
     },
@@ -1455,7 +1512,7 @@ async function main() {
     },
     {
       type: "heading",
-      content: { text: "What We Believe", level: 2 },
+      content: { text: "Our Values", level: 2 },
       settings: { align: "center" },
     },
     {
@@ -1464,20 +1521,20 @@ async function main() {
         columns: [
           {
             blocks: [
-              { id: "ab1", type: "heading", content: { text: "Simplicity Is Hard", level: 3 }, settings: { align: "center" } },
-              { id: "ab2", type: "text", content: { html: "<p>Anyone can add complexity. The real skill is removing it. We obsess over making things feel effortless — even when the underlying problem is deeply complex.</p>" }, settings: { align: "center" } },
+              { id: "val1", type: "heading", content: { text: "Simplicity Is Hard", level: 3 }, settings: { align: "center" } },
+              { id: "val2", type: "text", content: { html: "<p>Anyone can add complexity. The real skill is removing it. We obsess over making things feel effortless — even when the underlying problem is deeply complex.</p>" }, settings: { align: "center" } },
             ],
           },
           {
             blocks: [
-              { id: "ab3", type: "heading", content: { text: "Details Compound", level: 3 }, settings: { align: "center" } },
-              { id: "ab4", type: "text", content: { html: "<p>A pixel here, a millisecond there — small choices accumulate into the difference between good and exceptional. We sweat the small stuff because it's never actually small.</p>" }, settings: { align: "center" } },
+              { id: "val3", type: "heading", content: { text: "Details Compound", level: 3 }, settings: { align: "center" } },
+              { id: "val4", type: "text", content: { html: "<p>A pixel here, a millisecond there — small choices accumulate into the difference between good and exceptional. We sweat the small stuff because it's never actually small.</p>" }, settings: { align: "center" } },
             ],
           },
           {
             blocks: [
-              { id: "ab5", type: "heading", content: { text: "Honesty Wins", level: 3 }, settings: { align: "center" } },
-              { id: "ab6", type: "text", content: { html: "<p>We'll tell you if your idea needs rethinking. We'll flag risks early. We'll admit when we're wrong. Radical honesty builds trust, and trust builds great products.</p>" }, settings: { align: "center" } },
+              { id: "val5", type: "heading", content: { text: "Honesty Wins", level: 3 }, settings: { align: "center" } },
+              { id: "val6", type: "text", content: { html: "<p>We'll tell you if your idea needs rethinking. We'll flag risks early. We'll admit when we're wrong. Radical honesty builds trust, and trust builds great products.</p>" }, settings: { align: "center" } },
             ],
           },
         ],
@@ -1501,69 +1558,29 @@ async function main() {
           {
             blocks: [
               { id: "tm1", type: "heading", content: { text: "Elena Vasquez", level: 3 }, settings: { align: "center" } },
-              { id: "tm2", type: "text", content: { html: "<p><strong>CEO & Co-Founder</strong></p><p>Former design lead at Stripe. 12 years in product design. Believes the best tools are invisible — they get out of your way and let you create.</p>" }, settings: { align: "center" } },
+              { id: "tm2", type: "text", content: { html: "<p><strong>CEO & Co-Founder</strong></p><p>Former design lead at Stripe. 12 years in product design. Believes the best tools are invisible.</p>" }, settings: { align: "center" } },
             ],
           },
           {
             blocks: [
               { id: "tm3", type: "heading", content: { text: "Marcus Chen", level: 3 }, settings: { align: "center" } },
-              { id: "tm4", type: "text", content: { html: "<p><strong>CTO & Co-Founder</strong></p><p>Full-stack engineer and open-source contributor. Built distributed systems at scale before founding Atlas. Author of two technical books on web performance.</p>" }, settings: { align: "center" } },
+              { id: "tm4", type: "text", content: { html: "<p><strong>CTO & Co-Founder</strong></p><p>Full-stack engineer and open-source contributor. Author of two technical books on web performance.</p>" }, settings: { align: "center" } },
             ],
           },
-        ],
-      },
-      settings: { gap: "32px" },
-    },
-    {
-      type: "columns",
-      content: {
-        columns: [
           {
             blocks: [
               { id: "tm5", type: "heading", content: { text: "Priya Nair", level: 3 }, settings: { align: "center" } },
-              { id: "tm6", type: "text", content: { html: "<p><strong>Head of Design</strong></p><p>Brand strategist with a background in typography and motion design. Previously built design systems at Figma used by thousands of teams.</p>" }, settings: { align: "center" } },
-            ],
-          },
-          {
-            blocks: [
-              { id: "tm7", type: "heading", content: { text: "David Kim", level: 3 }, settings: { align: "center" } },
-              { id: "tm8", type: "text", content: { html: "<p><strong>Head of Engineering</strong></p><p>Systems architect specializing in performance and reliability. Obsessed with sub-100ms response times and zero-downtime deployments.</p>" }, settings: { align: "center" } },
+              { id: "tm6", type: "text", content: { html: "<p><strong>Head of Design</strong></p><p>Brand strategist with a background in typography and motion design. Previously built design systems at Figma.</p>" }, settings: { align: "center" } },
             ],
           },
         ],
       },
       settings: { gap: "32px" },
-    },
-    {
-      type: "spacer",
-      content: { height: 32 },
-      settings: {},
-    },
-    {
-      type: "quote",
-      content: {
-        text: "We don't just hire talented people — we hire people who genuinely care about the work. That's the difference between a team and a group of contractors.",
-        attribution: "Elena Vasquez, CEO",
-        style: "filled",
-      },
-      settings: {},
     },
     {
       type: "divider",
       content: {},
       settings: { style: "solid" },
-    },
-    {
-      type: "heading",
-      content: { text: "Join the Team", level: 2 },
-      settings: { align: "center" },
-    },
-    {
-      type: "text",
-      content: {
-        html: "<p>We're always looking for curious, talented people who care deeply about craft. We offer competitive salaries, remote flexibility, and an environment where your best work is expected and supported.</p>",
-      },
-      settings: { align: "center" },
     },
     {
       type: "button",
@@ -1608,7 +1625,7 @@ async function main() {
     {
       type: "text",
       content: {
-        html: "<p>We offer end-to-end product design and development services. Every engagement is tailored to your specific goals, timeline, and budget. Here's what we do best.</p>",
+        html: "<p>We offer end-to-end product design and development services. Every engagement is tailored to your specific goals, timeline, and budget.</p>",
       },
       settings: { align: "center" },
     },
@@ -1624,19 +1641,19 @@ async function main() {
           {
             blocks: [
               { id: "sv1", type: "heading", content: { text: "Brand & Identity", level: 3 }, settings: { align: "center" } },
-              { id: "sv2", type: "text", content: { html: "<p>Logo design, visual identity, brand guidelines, and design systems that give your company a cohesive, memorable presence across every touchpoint.</p><p><strong>Starting at $8,000</strong></p>" }, settings: { align: "center" } },
+              { id: "sv2", type: "text", content: { html: "<p>Logo design, visual identity, brand guidelines, and design systems that give your company a cohesive, memorable presence.</p><p><strong>Starting at $8,000</strong></p>" }, settings: { align: "center" } },
             ],
           },
           {
             blocks: [
               { id: "sv3", type: "heading", content: { text: "Web Design & Dev", level: 3 }, settings: { align: "center" } },
-              { id: "sv4", type: "text", content: { html: "<p>Marketing sites, landing pages, and content platforms. Responsive, fast, accessible, and built to convert. We handle everything from concept to deployment.</p><p><strong>Starting at $12,000</strong></p>" }, settings: { align: "center" } },
+              { id: "sv4", type: "text", content: { html: "<p>Marketing sites, landing pages, and content platforms. Responsive, fast, accessible, and built to convert.</p><p><strong>Starting at $12,000</strong></p>" }, settings: { align: "center" } },
             ],
           },
           {
             blocks: [
               { id: "sv5", type: "heading", content: { text: "Product Design", level: 3 }, settings: { align: "center" } },
-              { id: "sv6", type: "text", content: { html: "<p>End-to-end UX/UI for SaaS products, mobile apps, and internal tools. User research, wireframing, prototyping, and design systems built for scale.</p><p><strong>Starting at $15,000</strong></p>" }, settings: { align: "center" } },
+              { id: "sv6", type: "text", content: { html: "<p>End-to-end UX/UI for SaaS products, mobile apps, and internal tools. User research, wireframing, and prototyping.</p><p><strong>Starting at $15,000</strong></p>" }, settings: { align: "center" } },
             ],
           },
         ],
@@ -1655,19 +1672,19 @@ async function main() {
           {
             blocks: [
               { id: "sv7", type: "heading", content: { text: "Full-Stack Development", level: 3 }, settings: { align: "center" } },
-              { id: "sv8", type: "text", content: { html: "<p>Custom web applications, APIs, and integrations. React, Next.js, Node.js, PostgreSQL, and cloud infrastructure. Performance-first, test-driven, deployment-ready.</p><p><strong>Starting at $20,000</strong></p>" }, settings: { align: "center" } },
+              { id: "sv8", type: "text", content: { html: "<p>Custom web applications, APIs, and integrations. React, Next.js, Node.js, PostgreSQL, and cloud infrastructure.</p><p><strong>Starting at $20,000</strong></p>" }, settings: { align: "center" } },
             ],
           },
           {
             blocks: [
               { id: "sv9", type: "heading", content: { text: "Consulting & Audits", level: 3 }, settings: { align: "center" } },
-              { id: "sv10", type: "text", content: { html: "<p>Design system audits, accessibility reviews, performance optimization, and technical architecture consulting. Expert guidance without long-term commitment.</p><p><strong>$250/hour</strong></p>" }, settings: { align: "center" } },
+              { id: "sv10", type: "text", content: { html: "<p>Design system audits, accessibility reviews, performance optimization, and technical architecture consulting.</p><p><strong>$250/hour</strong></p>" }, settings: { align: "center" } },
             ],
           },
           {
             blocks: [
               { id: "sv11", type: "heading", content: { text: "Retainer Partnership", level: 3 }, settings: { align: "center" } },
-              { id: "sv12", type: "text", content: { html: "<p>Ongoing design and development support. A dedicated team that knows your product inside out. Perfect for companies that need continuous iteration.</p><p><strong>From $5,000/month</strong></p>" }, settings: { align: "center" } },
+              { id: "sv12", type: "text", content: { html: "<p>Ongoing design and development support. A dedicated team that knows your product inside out.</p><p><strong>From $5,000/month</strong></p>" }, settings: { align: "center" } },
             ],
           },
         ],
@@ -1676,51 +1693,33 @@ async function main() {
     },
     {
       type: "spacer",
-      content: { height: 48 },
+      content: { height: 24 },
       settings: {},
     },
     {
       type: "divider",
       content: {},
-      settings: { style: "solid" },
+      settings: { style: "dotted" },
     },
     {
       type: "heading",
-      content: { text: "Frequently Asked Questions", level: 2 },
+      content: { text: "Feature Comparison", level: 2 },
       settings: { align: "center", marginTop: "32px" },
     },
     {
-      type: "accordion",
+      type: "table",
       content: {
-        items: [
-          {
-            id: "faq1",
-            title: "How long does a typical project take?",
-            content: "<p>Brand identity projects take 4-6 weeks. Website design and development typically runs 6-10 weeks. Product design and full-stack applications range from 10-20 weeks depending on scope. We'll give you a detailed timeline during discovery.</p>",
-          },
-          {
-            id: "faq2",
-            title: "What's your design process like?",
-            content: "<p>We follow a four-phase approach: Discovery (research and strategy), Design (wireframes, visuals, prototypes), Build (development and testing), and Launch (deployment and optimization). We share progress weekly and iterate based on your feedback throughout.</p>",
-          },
-          {
-            id: "faq3",
-            title: "Do you work with startups?",
-            content: "<p>Absolutely — startups make up about 40% of our client base. We understand the unique constraints of early-stage companies and can work within limited budgets and tight timelines. We've helped several startups go from idea to launched product in under 8 weeks.</p>",
-          },
-          {
-            id: "faq4",
-            title: "Can you work with our existing team?",
-            content: "<p>Yes. We frequently embed with in-house teams for specific projects or phases. Whether you need design support, engineering capacity, or strategic oversight, we integrate smoothly with existing workflows and tools.</p>",
-          },
-          {
-            id: "faq5",
-            title: "What happens after launch?",
-            content: "<p>Every project includes 30 days of post-launch support at no extra cost. After that, most clients transition to a monthly retainer for ongoing improvements, bug fixes, and new feature development. We're invested in long-term success, not one-off projects.</p>",
-          },
+        headers: ["Feature", "Starter", "Professional", "Enterprise"],
+        rows: [
+          ["Custom Design", "1 page", "Up to 10 pages", "Unlimited"],
+          ["Responsive Development", "Yes", "Yes", "Yes"],
+          ["CMS Integration", "Basic", "Advanced", "Custom"],
+          ["SEO Optimization", "On-page", "Full audit", "Ongoing"],
+          ["Support", "30 days", "90 days", "Dedicated team"],
+          ["Performance Monitoring", "—", "Monthly reports", "Real-time"],
         ],
-        style: "bordered",
-        iconPosition: "right",
+        striped: true,
+        caption: "Service tier comparison — all plans include free consultations",
       },
       settings: {},
     },
@@ -1731,19 +1730,59 @@ async function main() {
     },
     {
       type: "heading",
-      content: { text: "Let's Talk About Your Project", level: 2 },
+      content: { text: "Frequently Asked Questions", level: 2 },
       settings: { align: "center" },
+    },
+    {
+      type: "accordion",
+      content: {
+        items: [
+          {
+            id: "faq1",
+            title: "How long does a typical project take?",
+            content: "<p>Brand identity projects take 4-6 weeks. Website design and development typically runs 6-10 weeks. Product design and full-stack applications range from 10-20 weeks depending on scope.</p>",
+          },
+          {
+            id: "faq2",
+            title: "What's your design process like?",
+            content: "<p>We follow a four-phase approach: Discovery (research and strategy), Design (wireframes, visuals, prototypes), Build (development and testing), and Launch (deployment and optimization).</p>",
+          },
+          {
+            id: "faq3",
+            title: "Do you work with startups?",
+            content: "<p>Absolutely — startups make up about 40% of our client base. We understand the unique constraints of early-stage companies and can work within limited budgets and tight timelines.</p>",
+          },
+          {
+            id: "faq4",
+            title: "Can you work with our existing team?",
+            content: "<p>Yes. We frequently embed with in-house teams for specific projects or phases. We integrate smoothly with existing workflows and tools.</p>",
+          },
+          {
+            id: "faq5",
+            title: "What happens after launch?",
+            content: "<p>Every project includes 30 days of post-launch support at no extra cost. After that, most clients transition to a monthly retainer for ongoing improvements.</p>",
+          },
+        ],
+        style: "minimal",
+        iconPosition: "right",
+      },
+      settings: {},
+    },
+    {
+      type: "spacer",
+      content: { height: 32 },
+      settings: {},
+    },
+    {
+      type: "button",
+      content: { text: "Start a Project", url: "/s/atlas-studio/contact", variant: "outline" },
+      settings: { align: "center", size: "sm" },
     },
     {
       type: "text",
       content: {
-        html: "<p>Every great project starts with a conversation. Tell us what you're building and we'll share how we can help — no obligation, no sales pitch.</p>",
+        html: "<p>Every great project starts with a conversation. No obligation, no sales pitch.</p>",
       },
-      settings: { align: "center" },
-    },
-    {
-      type: "button",
-      content: { text: "Get in Touch", url: "/s/atlas-studio/contact", variant: "primary" },
       settings: { align: "center" },
     },
   ];
@@ -1794,7 +1833,7 @@ async function main() {
     },
     {
       type: "toc",
-      content: { maxDepth: 2, style: "boxed", ordered: false },
+      content: { maxDepth: 2, style: "minimal", ordered: true },
       settings: {},
     },
     {
@@ -1812,7 +1851,7 @@ async function main() {
     {
       type: "text",
       content: {
-        html: "<p>Dan McKinley coined the idea of \"innovation tokens\" — every team gets a limited number to spend on new, unproven technology. Spend them wisely on things that differentiate your product. Spend them foolishly on commodity problems, and you'll burn engineering hours debugging issues that the React/Next.js/PostgreSQL ecosystem solved years ago.</p><p>Our rule of thumb: <strong>use boring tools for commodity problems, save innovation for your unique value proposition.</strong> If your competitive advantage isn't \"we have a novel database,\" don't use a novel database.</p>",
+        html: '<p>Dan McKinley coined the idea of "innovation tokens" — every team gets a limited number to spend on new, unproven technology. Spend them wisely on things that differentiate your product.</p><p>Our rule of thumb: <strong>use boring tools for commodity problems, save innovation for your unique value proposition.</strong></p>',
       },
       settings: {},
     },
@@ -1844,13 +1883,13 @@ async function main() {
           {
             blocks: [
               { id: "j1", type: "heading", content: { text: "Frontend", level: 3 }, settings: {} },
-              { id: "j2", type: "text", content: { html: "<p><strong>React + Next.js.</strong> Massive ecosystem, excellent TypeScript support, battle-tested performance patterns. Server Components eliminated most of our bundle size concerns. When a junior developer has a question, the answer is one Google search away.</p>" }, settings: {} },
+              { id: "j2", type: "text", content: { html: "<p><strong>React + Next.js.</strong> Massive ecosystem, excellent TypeScript support, battle-tested performance patterns. Server Components eliminated most of our bundle size concerns.</p>" }, settings: {} },
             ],
           },
           {
             blocks: [
               { id: "j3", type: "heading", content: { text: "Backend", level: 3 }, settings: {} },
-              { id: "j4", type: "text", content: { html: "<p><strong>Node.js + PostgreSQL + Prisma.</strong> This combination handles everything from simple CRUD to complex analytics queries. PostgreSQL's reliability record is decades long. Prisma gives us type-safe queries without writing raw SQL for the 90% case.</p>" }, settings: {} },
+              { id: "j4", type: "text", content: { html: "<p><strong>Node.js + PostgreSQL + Prisma.</strong> This combination handles everything from simple CRUD to complex analytics queries. PostgreSQL's reliability record is decades long.</p>" }, settings: {} },
             ],
           },
         ],
@@ -1865,26 +1904,43 @@ async function main() {
     {
       type: "text",
       content: {
-        html: "<p>We've seen the cost of chasing trends firsthand. A few real examples from our early days:</p><ul><li><strong>The \"cutting-edge\" CSS framework</strong> that was abandoned by its maintainer 6 months after we shipped. We spent 3 weeks migrating.</li><li><strong>The serverless database</strong> that looked amazing in demos but had cold start times that made our API unusable at 8 AM Monday mornings.</li><li><strong>The state management library</strong> with elegant abstractions that turned into debugging nightmares the moment we needed to handle optimistic updates with error recovery.</li></ul><p>Each of these cost us real money, real client frustration, and real credibility. We learned.</p>",
+        html: "<p>We've seen the cost of chasing trends firsthand:</p><ul><li><strong>The \"cutting-edge\" CSS framework</strong> that was abandoned 6 months after we shipped. We spent 3 weeks migrating.</li><li><strong>The serverless database</strong> with cold start times that made our API unusable at 8 AM Monday mornings.</li><li><strong>The state management library</strong> that turned into debugging nightmares with optimistic updates.</li></ul><p>Each of these cost real money, real client frustration, and real credibility.</p>",
       },
+      settings: {},
+    },
+    {
+      type: "heading",
+      content: { text: "Our Decision Framework", level: 3 },
       settings: {},
     },
     {
       type: "code",
       content: {
-        code: `<div style="padding: 1.5rem; background: #fef3c7; border-radius: 8px; font-family: system-ui; font-size: 0.9rem; line-height: 1.7; border-left: 4px solid #f59e0b;">
-<strong>Our Technology Decision Framework</strong>
+        code: `// Technology Decision Framework
+interface TechEvaluation {
+  name: string;
+  criteria: {
+    productionYears: number;      // > 2 years in production at scale?
+    communitySize: "small" | "medium" | "large";
+    rampUpDays: number;           // Days for mid-level dev to be productive
+    failureModesDocumented: boolean;
+    solvesRealProblem: boolean;   // Not a hypothetical future problem
+  };
+}
 
-Before adopting any tool, we ask five questions:
-1. Has it been in production at scale for > 2 years?
-2. Is the community large enough to survive a core maintainer leaving?
-3. Can a mid-level developer be productive with it in < 1 week?
-4. Are the failure modes well-documented and understood?
-5. Does it solve a problem we actually have (not one we might have)?
-
-If the answer to any of these is "no," we need a very compelling reason to proceed.
-</div>`,
+function shouldAdopt(tech: TechEvaluation): boolean {
+  const { criteria } = tech;
+  return (
+    criteria.productionYears > 2 &&
+    criteria.communitySize === "large" &&
+    criteria.rampUpDays <= 7 &&
+    criteria.failureModesDocumented &&
+    criteria.solvesRealProblem
+  );
+}`,
         language: "html",
+        displayMode: "snippet",
+        snippetLanguage: "typescript",
       },
       settings: {},
     },
@@ -1896,7 +1952,7 @@ If the answer to any of these is "no," we need a very compelling reason to proce
     {
       type: "text",
       content: {
-        html: "<p>Boring doesn't mean static. We do adopt new tools — carefully, deliberately, and for specific reasons:</p><ol><li><strong>React Server Components:</strong> Adopted after 18 months of maturity in Next.js. The bundle size and performance improvements were undeniable, and the mental model simplified our codebase.</li><li><strong>Edge deployment:</strong> We moved static assets and certain API routes to the edge once the tooling stabilized. The latency improvements for international clients were significant.</li><li><strong>AI-assisted code review:</strong> We use AI tools in our development workflow, but as assistants, not replacements. They catch bugs, suggest optimizations, and help with documentation.</li></ol><p>The common thread: each adoption happened after the technology proved itself in production elsewhere, not because it was trendy.</p>",
+        html: "<p>Boring doesn't mean static. We adopt new tools carefully:</p><ol><li><strong>React Server Components:</strong> Adopted after 18 months of maturity. The performance improvements were undeniable.</li><li><strong>Edge deployment:</strong> Moved once tooling stabilized. Latency improvements for international clients were significant.</li><li><strong>AI-assisted code review:</strong> As assistants, not replacements. They catch bugs and help with documentation.</li></ol>",
       },
       settings: {},
     },
@@ -1908,7 +1964,7 @@ If the answer to any of these is "no," we need a very compelling reason to proce
     {
       type: "text",
       content: {
-        html: "<p>Our clients don't hire us because of our tech stack. They hire us because we deliver reliable, well-crafted products on time and on budget. Boring technology is what makes that possible.</p><p>The next time someone pitches you a tool because it's \"the future,\" ask them: <strong>is it boring enough to bet your business on?</strong> If not, maybe wait until it is.</p>",
+        html: "<p>Our clients don't hire us because of our tech stack. They hire us because we deliver reliable, well-crafted products on time and on budget. Boring technology is what makes that possible.</p><p>The next time someone pitches you a tool because it's \"the future,\" ask them: <strong>is it boring enough to bet your business on?</strong></p>",
       },
       settings: {},
     },
@@ -1936,6 +1992,7 @@ If the answer to any of these is "no," we need a very compelling reason to proce
           { platform: "twitter", url: "https://twitter.com" },
           { platform: "linkedin", url: "https://linkedin.com" },
         ],
+        style: "icons",
       },
       settings: { align: "center" },
     },
@@ -1992,14 +2049,14 @@ If the answer to any of these is "no," we need a very compelling reason to proce
         columns: [
           {
             blocks: [
-              { id: "ct1", type: "heading", content: { text: "Send Us a Message", level: 2 }, settings: {} },
-              { id: "ct2", type: "text", content: { html: "<p>Fill out the form and we'll get back to you within one business day. We respond to every inquiry personally — no automated replies, no sales bots.</p>" }, settings: {} },
+              { id: "ct1", type: "heading", content: { text: "Contact Information", level: 2 }, settings: {} },
+              { id: "ct2", type: "text", content: { html: "<p><strong>Email</strong><br>hello@atlascreative.studio</p><p><strong>Phone</strong><br>+1 (415) 555-0132<br>Mon-Fri, 9 AM – 6 PM PST</p><p><strong>Office</strong><br>580 Howard Street, Suite 400<br>San Francisco, CA 94105</p>" }, settings: {} },
             ],
           },
           {
             blocks: [
-              { id: "ct3", type: "heading", content: { text: "Other Ways to Reach Us", level: 2 }, settings: {} },
-              { id: "ct4", type: "text", content: { html: "<p><strong>Email</strong><br>hello@atlascreative.studio</p><p><strong>Phone</strong><br>+1 (415) 555-0132<br>Mon-Fri, 9 AM – 6 PM PST</p><p><strong>Office</strong><br>580 Howard Street, Suite 400<br>San Francisco, CA 94105</p>" }, settings: {} },
+              { id: "ct3", type: "heading", content: { text: "Send Us a Message", level: 2 }, settings: {} },
+              { id: "ct4", type: "text", content: { html: "<p>Fill out the form below and we'll get back to you within one business day.</p>" }, settings: {} },
             ],
           },
         ],
@@ -2015,12 +2072,13 @@ If the answer to any of these is "no," we need a very compelling reason to proce
       type: "form",
       content: {
         fields: [
-          { id: "name", type: "text", label: "Your Name", required: true, placeholder: "Full name" },
+          { id: "name", type: "text", label: "Full Name", required: true, placeholder: "Your full name" },
           { id: "email", type: "email", label: "Email Address", required: true, placeholder: "you@company.com" },
-          { id: "company", type: "text", label: "Company", required: false, placeholder: "Your company (optional)" },
-          { id: "interest", type: "select", label: "What are you looking for?", required: true, placeholder: "Select a service", options: ["Brand & Identity", "Web Design & Development", "Product Design", "Full-Stack Development", "Consulting & Audit", "Retainer Partnership", "Something Else"] },
-          { id: "budget", type: "select", label: "Approximate Budget", required: false, placeholder: "Select a range (optional)", options: ["Under $10K", "$10K – $25K", "$25K – $50K", "$50K – $100K", "$100K+", "Not sure yet"] },
-          { id: "message", type: "textarea", label: "Tell Us About Your Project", required: true, placeholder: "What are you building? What problem are you solving? What does success look like? The more context you share, the better our initial conversation will be." },
+          { id: "phone", type: "tel", label: "Phone Number", required: false, placeholder: "+1 (555) 000-0000" },
+          { id: "inquiry", type: "select", label: "Inquiry Type", required: true, placeholder: "Select a topic", options: ["Brand & Identity", "Web Design & Development", "Product Design", "Full-Stack Development", "Consulting", "Partnership", "Other"] },
+          { id: "budget", type: "radio", label: "Budget Range", required: false, options: ["Under $10K", "$10K – $25K", "$25K – $50K", "$50K – $100K", "$100K+"] },
+          { id: "newsletter", type: "checkbox", label: "Subscribe to our newsletter for design and tech insights", required: false },
+          { id: "message", type: "textarea", label: "Your Message", required: true, placeholder: "Tell us about your project, timeline, and goals. The more context, the better our initial conversation will be." },
         ],
         submitText: "Send Message",
         successMessage: "Thank you for reaching out! We've received your message and will get back to you within one business day.",
@@ -2033,16 +2091,6 @@ If the answer to any of these is "no," we need a very compelling reason to proce
       settings: {},
     },
     {
-      type: "divider",
-      content: {},
-      settings: { style: "solid" },
-    },
-    {
-      type: "heading",
-      content: { text: "Follow Our Work", level: 3 },
-      settings: { align: "center" },
-    },
-    {
       type: "social",
       content: {
         links: [
@@ -2050,7 +2098,21 @@ If the answer to any of these is "no," we need a very compelling reason to proce
           { platform: "dribbble", url: "https://dribbble.com" },
           { platform: "github", url: "https://github.com" },
           { platform: "linkedin", url: "https://linkedin.com" },
+          { platform: "youtube", url: "https://youtube.com" },
         ],
+        style: "pills",
+      },
+      settings: { align: "center" },
+    },
+    {
+      type: "divider",
+      content: {},
+      settings: { style: "solid" },
+    },
+    {
+      type: "text",
+      content: {
+        html: '<p>Prefer a direct conversation? <a href="mailto:hello@atlascreative.studio">Email us directly</a> or call during business hours.</p>',
       },
       settings: { align: "center" },
     },
@@ -2068,7 +2130,112 @@ If the answer to any of these is "no," we need a very compelling reason to proce
   console.log("Created Contact page with", contactBlocks.length, "blocks");
 
   // ──────────────────────────────────────────────
-  // 10. PAGE 6 — Case Studies (DRAFT — shows draft feature)
+  // 10. PAGE 6 — Gallery
+  // ──────────────────────────────────────────────
+  const galleryPage = await prisma.page.create({
+    data: {
+      title: "Gallery",
+      slug: "gallery",
+      status: "PUBLISHED",
+      publishedAt: new Date(),
+      showInNav: true,
+      siteId: site.id,
+      sortOrder: 5,
+      metaTitle: "Gallery — Atlas Creative",
+    },
+  });
+
+  const galleryBlocks = [
+    {
+      type: "heading",
+      content: { text: "Our Work in Action", level: 1 },
+      settings: { align: "center" },
+    },
+    {
+      type: "text",
+      content: {
+        html: "<p>A curated selection of projects, interfaces, and brand work from our studio. Each piece represents a collaboration with clients who share our passion for quality.</p>",
+      },
+      settings: { align: "center" },
+    },
+    {
+      type: "spacer",
+      content: { height: 32 },
+      settings: {},
+    },
+    {
+      type: "columns",
+      content: {
+        columns: [
+          {
+            blocks: [
+              { id: "gal1", type: "image", content: { src: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&h=400&fit=crop&q=80", alt: "Analytics dashboard with clean data visualization", caption: "CloudSync Dashboard Redesign" }, settings: { rounded: true } },
+            ],
+          },
+          {
+            blocks: [
+              { id: "gal2", type: "image", content: { src: "https://images.unsplash.com/photo-1559028012-481c04fa702d?w=600&h=400&fit=crop&q=80", alt: "Mobile app interface with modern design patterns", caption: "Meridian Health Mobile App" }, settings: { rounded: true } },
+            ],
+          },
+          {
+            blocks: [
+              { id: "gal3", type: "image", content: { src: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&h=400&fit=crop&q=80", alt: "Brand identity system with logo variations", caption: "Novabank Brand Identity" }, settings: { rounded: true } },
+            ],
+          },
+        ],
+      },
+      settings: { gap: "24px" },
+    },
+    {
+      type: "spacer",
+      content: { height: 32 },
+      settings: {},
+    },
+    {
+      type: "columns",
+      content: {
+        columns: [
+          {
+            blocks: [
+              { id: "gal4", type: "image", content: { src: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=500&fit=crop&q=80", alt: "Developer workspace with code on multiple monitors", caption: "Engineering workspace — where the code comes to life" }, settings: { shadow: true, rounded: true } },
+            ],
+          },
+          {
+            blocks: [
+              { id: "gal5", type: "image", content: { src: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=500&fit=crop&q=80", alt: "Design team collaboration session with wireframes", caption: "Design sprint — collaborative prototyping session" }, settings: { shadow: true, rounded: true } },
+            ],
+          },
+        ],
+      },
+      settings: { gap: "24px" },
+    },
+    {
+      type: "spacer",
+      content: { height: 32 },
+      settings: {},
+    },
+    {
+      type: "text",
+      content: {
+        html: '<p>Interested in seeing more or discussing a project? <a href="/s/atlas-studio/contact">Get in touch</a> — we\'d love to hear from you.</p>',
+      },
+      settings: { align: "center" },
+    },
+  ];
+
+  await prisma.block.createMany({
+    data: galleryBlocks.map((block, i) => ({
+      type: block.type,
+      content: block.content,
+      settings: block.settings,
+      sortOrder: i,
+      pageId: galleryPage.id,
+    })),
+  });
+  console.log("Created Gallery page with", galleryBlocks.length, "blocks");
+
+  // ──────────────────────────────────────────────
+  // 11. PAGE 7 — Case Studies (DRAFT)
   // ──────────────────────────────────────────────
   const draftPage = await prisma.page.create({
     data: {
@@ -2077,7 +2244,7 @@ If the answer to any of these is "no," we need a very compelling reason to proce
       status: "DRAFT",
       showInNav: false,
       siteId: site.id,
-      sortOrder: 5,
+      sortOrder: 6,
     },
   });
 
@@ -2107,7 +2274,7 @@ If the answer to any of these is "no," we need a very compelling reason to proce
     {
       type: "text",
       content: {
-        html: "<p><strong>Challenge:</strong> Meridian Health's wellness app had strong user acquisition but poor retention. Users signed up but stopped engaging after the first week.</p><p><strong>Our Approach:</strong> We conducted 30 user interviews, identified three core friction points in the onboarding flow, and redesigned the first-week experience from scratch. We introduced personalized goal-setting, habit streaks with social accountability, and a simplified dashboard that surfaces the most relevant data.</p><p><strong>Results:</strong> 7-day retention increased from 23% to 61%. Monthly active users grew by 40% within three months. The app was featured in the App Store's \"Apps We Love\" editorial.</p>",
+        html: "<p><strong>Challenge:</strong> Meridian Health's wellness app had strong user acquisition but poor retention. Users signed up but stopped engaging after the first week.</p><p><strong>Our Approach:</strong> We conducted 30 user interviews, identified three core friction points in the onboarding flow, and redesigned the first-week experience from scratch.</p><p><strong>Results:</strong> 7-day retention increased from 23% to 61%. Monthly active users grew by 40% within three months.</p>",
       },
       settings: {},
     },
@@ -2124,7 +2291,7 @@ If the answer to any of these is "no," we need a very compelling reason to proce
     {
       type: "text",
       content: {
-        html: "<p><strong>Challenge:</strong> CloudSync's analytics dashboard had become a \"Frankenstein\" of features bolted on over four years. Users complained about information overload and couldn't find the data they needed.</p><p><strong>Our Approach:</strong> Rather than redesigning everything at once, we used analytics data to identify the 5 most-used features and the 15 least-used. We rebuilt the core experience around what users actually needed, progressively disclosed advanced features, and added a custom report builder for power users.</p><p><strong>Results:</strong> Average task completion time dropped by 35%. Support tickets related to \"can't find X\" decreased by 60%. NPS score improved from 32 to 67.</p>",
+        html: "<p><strong>Challenge:</strong> CloudSync's analytics dashboard had become a \"Frankenstein\" of features bolted on over four years. Users complained about information overload.</p><p><strong>Our Approach:</strong> We identified the 5 most-used features and rebuilt the core experience around them, progressively disclosing advanced features.</p><p><strong>Results:</strong> Average task completion time dropped by 35%. Support tickets decreased by 60%. NPS improved from 32 to 67.</p>",
       },
       settings: {},
     },
@@ -2142,15 +2309,45 @@ If the answer to any of these is "no," we need a very compelling reason to proce
   console.log("Created Case Studies page (DRAFT) with", draftBlocks.length, "blocks");
 
   // ──────────────────────────────────────────────
+  // 12. Tags
+  // ──────────────────────────────────────────────
+  const [tagDesign, tagDev, tagStrategy, tagCaseStudy, tagProcess] = await Promise.all([
+    prisma.tag.create({ data: { name: "Design", slug: "design", siteId: site.id } }),
+    prisma.tag.create({ data: { name: "Development", slug: "development", siteId: site.id } }),
+    prisma.tag.create({ data: { name: "Strategy", slug: "strategy", siteId: site.id } }),
+    prisma.tag.create({ data: { name: "Case Study", slug: "case-study", siteId: site.id } }),
+    prisma.tag.create({ data: { name: "Process", slug: "process", siteId: site.id } }),
+  ]);
+
+  await prisma.pageTag.createMany({
+    data: [
+      { pageId: homePage.id, tagId: tagDesign.id },
+      { pageId: homePage.id, tagId: tagDev.id },
+      { pageId: aboutPage.id, tagId: tagStrategy.id },
+      { pageId: aboutPage.id, tagId: tagProcess.id },
+      { pageId: servicesPage.id, tagId: tagDesign.id },
+      { pageId: servicesPage.id, tagId: tagDev.id },
+      { pageId: servicesPage.id, tagId: tagStrategy.id },
+      { pageId: journalPage.id, tagId: tagDev.id },
+      { pageId: journalPage.id, tagId: tagProcess.id },
+      { pageId: galleryPage.id, tagId: tagDesign.id },
+      { pageId: galleryPage.id, tagId: tagCaseStudy.id },
+      { pageId: draftPage.id, tagId: tagCaseStudy.id },
+    ],
+  });
+  console.log("Created 5 tags with page assignments");
+
+  // ──────────────────────────────────────────────
   // Summary
   // ──────────────────────────────────────────────
-  const totalBlocks = homeBlocks.length + aboutBlocks.length + servicesBlocks.length + journalBlocks.length + contactBlocks.length + draftBlocks.length;
+  const totalBlocks = homeBlocks.length + aboutBlocks.length + servicesBlocks.length + journalBlocks.length + contactBlocks.length + galleryBlocks.length + draftBlocks.length;
   console.log("\n────────────────────────────────────");
   console.log("Seed complete!");
   console.log("────────────────────────────────────");
   console.log(`Site:   ${site.name} (/s/${site.slug})`);
-  console.log(`Pages:  6 (5 published + 1 draft)`);
+  console.log(`Pages:  7 (6 published + 1 draft)`);
   console.log(`Blocks: ${totalBlocks} total`);
+  console.log(`Tags:   5`);
   console.log(`Demo:   demo@vellum.app / password123`);
   console.log("────────────────────────────────────");
 }

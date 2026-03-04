@@ -20,9 +20,7 @@ export function PageNavigation({ prevPage, nextPage }: PageNavigationProps) {
           <span className={styles.label}>&larr; Previous</span>
           <span className={styles.title}>{prevPage.title}</span>
         </a>
-      ) : (
-        <span />
-      )}
+      ) : null}
       {nextPage ? (
         <a href={nextPage.href} className={`${styles.link} ${styles.linkNext}`}>
           <span className={styles.label}>Next &rarr;</span>

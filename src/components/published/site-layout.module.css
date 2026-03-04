@@ -66,11 +66,11 @@
   z-index: var(--z-sticky);
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border-light);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 3px rgba(var(--shadow-color), 0.04);
 }
 
 .headerInner {
-  max-width: 1080px;
+  max-width: var(--published-max-width);
   margin: 0 auto;
   padding: var(--space-4) var(--space-6);
   display: flex;
@@ -231,11 +231,11 @@
 .mobileNav {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1, 4px);
+  gap: var(--space-1);
   max-height: 0;
   overflow: hidden;
   opacity: 0;
-  padding: 0 var(--space-6, 24px);
+  padding: 0 var(--space-6);
   border-top: 1px solid transparent;
   background: var(--color-surface);
   position: relative;
@@ -253,18 +253,8 @@
   max-height: 80vh;
   overflow-y: auto;
   opacity: 1;
-  padding: var(--space-2, 8px) var(--space-6, 24px) var(--space-4, 16px);
+  padding: var(--space-2) var(--space-6) var(--space-4);
   border-top-color: var(--color-border-light);
-}
-
-.mobileNavOpen::after {
-  content: "";
-  display: block;
-  width: 32px;
-  height: 4px;
-  border-radius: 2px;
-  background: var(--color-border, #ddd);
-  margin: 8px auto 0;
 }
 
 .mobileNav .navLink {
@@ -318,7 +308,7 @@
 }
 
 .footerInner {
-  max-width: 1080px;
+  max-width: var(--published-max-width);
   margin: 0 auto;
   padding: var(--space-10) var(--space-6);
   display: flex;
@@ -359,6 +349,10 @@
   border-radius: var(--radius-sm);
 }
 
+.footerLink:active {
+  color: var(--color-accent-hover);
+}
+
 .footerBrand {
   font-family: var(--font-body);
   font-size: var(--text-xs);
@@ -369,7 +363,7 @@
 /* --- Footer with columns --- */
 
 .footerInnerColumns {
-  max-width: 1080px;
+  max-width: var(--published-max-width);
   margin: 0 auto;
   padding: var(--space-12) var(--space-6) var(--space-8);
 }
@@ -496,19 +490,19 @@
   margin-top: var(--space-2);
   padding: 0.8rem var(--space-8);
   background: var(--color-accent);
-  color: var(--color-surface);
+  color: var(--color-text-inverse);
   font-family: var(--font-body);
   font-size: var(--text-base);
   font-weight: var(--weight-semibold);
   text-decoration: none;
   border-radius: var(--radius-lg);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 3px rgba(var(--shadow-color), 0.1), 0 1px 2px rgba(var(--shadow-color), 0.06);
   transition: all var(--duration-normal) var(--ease-out);
 }
 
 .notFoundLink:hover {
   background: var(--color-accent-hover);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 12px rgba(var(--shadow-color), 0.12), 0 2px 4px rgba(var(--shadow-color), 0.06);
 }
 
 @media (hover: hover) {
@@ -519,7 +513,7 @@
 
 .notFoundLink:active {
   transform: translateY(0);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 2px rgba(var(--shadow-color), 0.08);
 }
 
 .notFoundLink:focus-visible {

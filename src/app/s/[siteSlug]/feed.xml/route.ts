@@ -60,6 +60,9 @@ export async function GET(
         select: { type: true, content: true },
         take: 5,
       },
+      pageTags: {
+        include: { tag: { select: { name: true } } },
+      },
     },
     orderBy: { publishedAt: "desc" },
     take: 50,
@@ -81,12 +84,19 @@ export async function GET(
         );
       const pubDate = page.publishedAt || page.createdAt;
 
+      const enclosure = page.ogImage
+        ? `\n      <enclosure url="${escapeXml(page.ogImage.startsWith("http") ? page.ogImage : `${baseUrl}${page.ogImage}`)}" type="image/jpeg" length="0"/>`
+        : "";
+      const categories = page.pageTags
+        .map((pt) => `\n      <category>${escapeXml(pt.tag.name)}</category>`)
+        .join("");
+
       return `    <item>
       <title>${escapeXml(page.title)}</title>
       <link>${escapeXml(pageUrl)}</link>
       <guid isPermaLink="true">${escapeXml(pageUrl)}</guid>
       <description>${escapeXml(description)}</description>
-      <pubDate>${pubDate.toUTCString()}</pubDate>
+      <pubDate>${pubDate.toUTCString()}</pubDate>${enclosure}${categories}
     </item>`;
     })
     .join("\n");
