@@ -286,8 +286,14 @@ export default function EditorPage() {
   if (loading) {
     return (
       <div className={styles.loadingContainer}>
-        <Skeleton height={56} />
-        <Skeleton height={600} />
+        <Skeleton height={56} className={styles.loadingToolbar} />
+        <div className={styles.loadingBody}>
+          <Skeleton height={40} width="60%" />
+          <Skeleton height={120} />
+          <Skeleton height={80} />
+          <Skeleton height={200} />
+          <Skeleton height={60} />
+        </div>
       </div>
     );
   }

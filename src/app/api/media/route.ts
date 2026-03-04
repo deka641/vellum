@@ -3,7 +3,7 @@ import { revalidateTag } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { saveUploadedFile, UnsafeFileTypeError } from "@/lib/upload";
-import { getImageDimensions, optimizeImage } from "@/lib/image";
+import { getImageDimensions, optimizeImage, generateWebpVariant } from "@/lib/image";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { apiError } from "@/lib/api-helpers";
 import { logger } from "@/lib/logger";
@@ -23,6 +23,8 @@ export async function GET(req: Request) {
     const limit = 24;
     const search = (searchParams.get("search")?.trim() || "").slice(0, 200);
     const type = searchParams.get("type") || "";
+    const sort = searchParams.get("sort") || "date";
+    const order = searchParams.get("order") === "asc" ? "asc" as const : "desc" as const;
 
     const where: Prisma.MediaWhereInput = { userId: session.user.id };
 
@@ -44,10 +46,17 @@ export async function GET(req: Request) {
       ];
     }
 
+    const orderByMap: Record<string, Prisma.MediaOrderByWithRelationInput> = {
+      date: { createdAt: order },
+      name: { filename: order },
+      size: { size: order },
+    };
+    const orderBy = orderByMap[sort] || { createdAt: order };
+
     const [media, total] = await Promise.all([
       db.media.findMany({
         where,
-        orderBy: { createdAt: "desc" },
+        orderBy,
         skip: (page - 1) * limit,
         take: limit,
       }),
@@ -96,12 +105,17 @@ export async function POST(req: Request) {
       // Get image dimensions if applicable
       let width: number | null = null;
       let height: number | null = null;
+      let webpUrl: string | null = null;
       if (mimeType.startsWith("image/")) {
         await optimizeImage(filename);
         const dims = await getImageDimensions(filename);
         if (dims) {
           width = dims.width;
           height = dims.height;
+        }
+        const webpFilename = await generateWebpVariant(filename);
+        if (webpFilename) {
+          webpUrl = `/uploads/${webpFilename}`;
         }
       }
 
@@ -113,6 +127,7 @@ export async function POST(req: Request) {
           width,
           height,
           url,
+          webpUrl,
           userId: session.user.id,
         },
       });

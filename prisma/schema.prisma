@@ -158,6 +158,7 @@ model Media {
   width     Int?
   height    Int?
   url       String
+  webpUrl   String?
   alt       String?
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)

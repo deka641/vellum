@@ -105,6 +105,24 @@
   text-align: right;
 }
 
+.tagBadges {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.tagBadge {
+  display: inline-block;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: var(--weight-medium);
+  color: var(--color-text-secondary);
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
 .navToggle {
   display: flex;
   align-items: center;

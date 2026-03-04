@@ -53,3 +53,9 @@
     justify-content: center;
   }
 }
+
+@media print {
+  .shareBar {
+    display: none !important;
+  }
+}

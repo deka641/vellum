@@ -242,6 +242,8 @@ export default async function PublicSitePage({ params }: Props) {
         pageId={page.id}
         tags={page.pageTags.map((pt) => ({ id: pt.tag.id, name: pt.tag.name, slug: pt.tag.slug }))}
         siteSlug={siteSlug}
+        publishedAt={page.publishedAt}
+        updatedAt={page.updatedAt}
       />
       <SocialShareBar
         title={page.title}

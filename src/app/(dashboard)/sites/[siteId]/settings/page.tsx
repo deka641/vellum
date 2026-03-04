@@ -50,6 +50,7 @@ export default function SiteSettingsPage() {
   const [redirectToPath, setRedirectToPath] = useState("");
   const [redirectPermanent, setRedirectPermanent] = useState(true);
   const [addingRedirect, setAddingRedirect] = useState(false);
+  const [redirectsError, setRedirectsError] = useState(false);
   const faviconInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
@@ -85,11 +86,16 @@ export default function SiteSettingsPage() {
       .finally(() => setLoading(false));
 
     fetch(`/api/sites/${params.siteId}/redirects`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load redirects");
+        return res.json();
+      })
       .then((data) => {
         if (Array.isArray(data)) setRedirects(data);
       })
-      .catch(() => {});
+      .catch(() => {
+        setRedirectsError(true);
+      });
   }, [params.siteId]);
 
   async function handleAddRedirect() {
@@ -636,7 +642,27 @@ export default function SiteSettingsPage() {
             Redirects are created automatically when you change a published page&apos;s slug. You can also add manual redirects.
           </p>
 
-          {redirects.length > 0 ? (
+          {redirectsError ? (
+            <div className={styles.redirectsEmpty} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--space-2)" }}>
+              <span>Failed to load redirects</span>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  setRedirectsError(false);
+                  fetch(`/api/sites/${params.siteId}/redirects`)
+                    .then((res) => {
+                      if (!res.ok) throw new Error("Failed");
+                      return res.json();
+                    })
+                    .then((data) => { if (Array.isArray(data)) setRedirects(data); })
+                    .catch(() => setRedirectsError(true));
+                }}
+              >
+                Retry
+              </Button>
+            </div>
+          ) : redirects.length > 0 ? (
             <table className={styles.redirectsTable}>
               <thead>
                 <tr>

@@ -19,6 +19,30 @@ export async function getImageDimensions(
   return null;
 }
 
+const WEBP_CONVERTIBLE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png"]);
+
+export async function generateWebpVariant(
+  filename: string
+): Promise<string | null> {
+  try {
+    const ext = path.extname(filename).toLowerCase();
+    if (!WEBP_CONVERTIBLE_EXTENSIONS.has(ext)) {
+      return null;
+    }
+
+    const filepath = path.join(UPLOAD_DIR, filename);
+    const webpFilename = `${filename}.webp`;
+    const webpPath = path.join(UPLOAD_DIR, webpFilename);
+
+    await sharp(filepath).webp({ quality: 82 }).toFile(webpPath);
+
+    return webpFilename;
+  } catch (error) {
+    logger.warn("image", `generateWebpVariant failed for ${filename}:`, error);
+    return null;
+  }
+}
+
 export async function optimizeImage(filename: string): Promise<void> {
   try {
     const filepath = path.join(UPLOAD_DIR, filename);

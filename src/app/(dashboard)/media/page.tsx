@@ -34,6 +34,7 @@ export default function MediaPage() {
   const [typeFilter, setTypeFilter] = useState<MediaTypeFilter>("all");
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [sortBy, setSortBy] = useState("date-desc");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
@@ -52,7 +53,7 @@ export default function MediaPage() {
   // Reset page when filters change
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, typeFilter]);
+  }, [debouncedSearch, typeFilter, sortBy]);
 
   const fetchMedia = useCallback(async () => {
     setLoading(true);
@@ -61,6 +62,9 @@ export default function MediaPage() {
       const params = new URLSearchParams({ page: String(page) });
       if (debouncedSearch) params.set("search", debouncedSearch);
       if (typeFilter !== "all") params.set("type", typeFilter);
+      const [sortField, sortOrder] = sortBy.split("-");
+      if (sortField && sortField !== "date") params.set("sort", sortField);
+      if (sortOrder === "asc") params.set("order", "asc");
 
       const res = await fetch(`/api/media?${params}`);
       if (res.ok) {
@@ -77,7 +81,7 @@ export default function MediaPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, debouncedSearch, typeFilter]);
+  }, [page, debouncedSearch, typeFilter, sortBy]);
 
   useEffect(() => {
     fetchMedia();
@@ -205,6 +209,18 @@ export default function MediaPage() {
                   </button>
                 ))}
               </div>
+              <select
+                className={styles.sortSelect}
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+              >
+                <option value="date-desc">Newest first</option>
+                <option value="date-asc">Oldest first</option>
+                <option value="name-asc">Name A-Z</option>
+                <option value="name-desc">Name Z-A</option>
+                <option value="size-desc">Largest first</option>
+                <option value="size-asc">Smallest first</option>
+              </select>
               <Button
                 variant={selectionMode ? "primary" : "secondary"}
                 size="sm"

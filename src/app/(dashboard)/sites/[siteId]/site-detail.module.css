@@ -159,6 +159,13 @@
   line-height: var(--leading-normal);
 }
 
+.templateCardMeta {
+  font-size: 10px;
+  color: var(--color-text-tertiary);
+  margin-top: var(--space-1);
+  text-transform: capitalize;
+}
+
 /* Trash */
 .trashTitle {
   display: flex;

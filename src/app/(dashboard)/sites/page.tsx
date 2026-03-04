@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Plus, Globe, Upload, AlertCircle } from "lucide-react";
+import { Plus, Globe, Upload, AlertCircle, Search } from "lucide-react";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { SiteCard } from "@/components/dashboard/SiteCard";
 import { Button } from "@/components/ui/Button/Button";
@@ -38,6 +38,7 @@ export default function SitesPage() {
   const [duplicateName, setDuplicateName] = useState("");
   const [duplicating, setDuplicating] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const importInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const router = useRouter();
@@ -182,7 +183,7 @@ export default function SitesPage() {
             <p>Something went wrong. Please check your connection and try again.</p>
             <Button onClick={fetchSites} variant="secondary">Retry</Button>
           </div>
-        ) : sites.length === 0 ? (
+        ) : sites.length === 0 && !searchQuery ? (
           <div className={styles.empty}>
             <div className={styles.emptyIconCircle}>
               <Globe size={28} strokeWidth={1.5} />
@@ -194,11 +195,37 @@ export default function SitesPage() {
             </Link>
           </div>
         ) : (
-          <div className={styles.grid}>
-            {sites.map((site) => (
-              <SiteCard key={site.id} site={site} onDelete={handleDelete} onDuplicate={handleDuplicate} />
-            ))}
-          </div>
+          <>
+            {sites.length > 3 && (
+              <div className={styles.searchBar}>
+                <div className={styles.searchWrap}>
+                  <Search size={16} className={styles.searchIcon} />
+                  <input
+                    className={styles.searchInput}
+                    type="text"
+                    placeholder="Search sites..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
+            {(() => {
+              const q = searchQuery.toLowerCase();
+              const filtered = q
+                ? sites.filter((s) => s.name.toLowerCase().includes(q) || (s.description || "").toLowerCase().includes(q))
+                : sites;
+              return filtered.length === 0 ? (
+                <div className={styles.noResults}>No sites matching &ldquo;{searchQuery}&rdquo;</div>
+              ) : (
+                <div className={styles.grid}>
+                  {filtered.map((site) => (
+                    <SiteCard key={site.id} site={site} onDelete={handleDelete} onDuplicate={handleDuplicate} />
+                  ))}
+                </div>
+              );
+            })()}
+          </>
         )}
       </div>
       <ConfirmDialog

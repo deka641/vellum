@@ -52,8 +52,13 @@ export async function POST(req: Request) {
       },
     });
 
-    // Log the reset link since no SMTP is configured
-    logger.info("password-reset", `Reset link generated for ${user.email}: /reset-password?token=${token}`);
+    // Log that a reset was generated (never log the token itself)
+    logger.info("password-reset", `Reset link generated for ${user.email}`);
+
+    // In development, optionally log the full link for testing
+    if (process.env.LOG_RESET_TOKENS === "true") {
+      logger.info("password-reset", `[DEV] Reset link: /reset-password?token=${token}`);
+    }
 
     return successResponse;
   } catch (error) {

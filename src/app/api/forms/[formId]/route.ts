@@ -53,7 +53,7 @@ export async function POST(
     // Verify the page exists and is published
     const page = await db.page.findFirst({
       where: { id: pageId, status: "PUBLISHED" },
-      include: { site: { select: { name: true, notificationEmail: true } } },
+      include: { site: { select: { id: true, name: true, notificationEmail: true } } },
     });
 
     if (!page) {
@@ -97,6 +97,7 @@ export async function POST(
       notifyFormSubmission({
         to: page.site.notificationEmail,
         siteName: page.site.name,
+        siteId: page.site.id,
         pageTitle: page.title,
         data: sanitizedData,
       }).catch((err) => logger.warn("form-notification", "Failed to send notification", err));

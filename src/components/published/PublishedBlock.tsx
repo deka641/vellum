@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { sanitizeRichHtml, sanitizeUrl, sanitizeImageSrc, getSafeVideoEmbedUrl, sanitizeEmbedHtml } from "@/lib/sanitize";
 import { slugify } from "@/lib/utils";
+import { HeadingAnchor } from "./HeadingAnchor";
 import { PublishedForm } from "./PublishedForm";
 import { ImageLightbox } from "./ImageLightbox";
 import { SocialIcon } from "./SocialIcon";
@@ -53,11 +54,12 @@ export function PublishedBlock({ block, pageId, allBlocks }: PublishedBlockProps
       return (
         <Tag
           id={headingId}
-          className={styles.heading}
+          className={`${styles.heading} ${styles.headingWithAnchor}`}
           style={{ textAlign: align, ...extraStyle }}
           data-level={level}
         >
           {text}
+          <HeadingAnchor id={headingId} />
         </Tag>
       );
     }
@@ -85,21 +87,37 @@ export function PublishedBlock({ block, pageId, allBlocks }: PublishedBlockProps
       if (!content.src) return null;
       const imgLink = content.link ? sanitizeUrl(content.link as string) : null;
       const hasLink = imgLink && imgLink !== "#";
+      const safeSrc = sanitizeImageSrc(content.src as string);
+      const webpSrc = typeof content.webpUrl === "string" && content.webpUrl
+        ? content.webpUrl
+        : safeSrc.startsWith("/uploads/") && /\.(jpe?g|png)$/i.test(safeSrc)
+          ? `${safeSrc}.webp`
+          : null;
+      const imgTag = (
+        <img
+          src={safeSrc}
+          alt={(content.alt as string) || ""}
+          className={styles.image}
+          loading="lazy"
+          decoding="async"
+          {...(typeof content.width === "number" && content.width > 0 ? { width: content.width } : {})}
+          {...(typeof content.height === "number" && content.height > 0 ? { height: content.height } : {})}
+          style={{
+            borderRadius: settings.rounded ? "var(--radius-lg)" : undefined,
+            boxShadow: settings.shadow ? "var(--shadow-lg)" : undefined,
+          }}
+        />
+      );
       const imgContent = (
         <>
-          <img
-            src={sanitizeImageSrc(content.src as string)}
-            alt={(content.alt as string) || ""}
-            className={styles.image}
-            loading="lazy"
-            decoding="async"
-            {...(typeof content.width === "number" && content.width > 0 ? { width: content.width } : {})}
-            {...(typeof content.height === "number" && content.height > 0 ? { height: content.height } : {})}
-            style={{
-              borderRadius: settings.rounded ? "var(--radius-lg)" : undefined,
-              boxShadow: settings.shadow ? "var(--shadow-lg)" : undefined,
-            }}
-          />
+          {webpSrc ? (
+            <picture>
+              <source srcSet={webpSrc} type="image/webp" />
+              {imgTag}
+            </picture>
+          ) : (
+            imgTag
+          )}
           {!hasLink && (
             <span className={styles.lightboxHint} aria-hidden="true">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

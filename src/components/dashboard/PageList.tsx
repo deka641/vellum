@@ -44,6 +44,7 @@ interface Page {
   scheduledPublishAt?: string | null;
   sortOrder?: number;
   showInNav?: boolean;
+  pageTags?: Array<{ tag: { id: string; name: string; slug: string } }>;
 }
 
 interface PageListProps {
@@ -130,10 +131,24 @@ function SortablePageItem({
             {page.status === "PUBLISHED" ? "Published" : "Draft"}
           </Badge>
           {page.scheduledPublishAt && (
-            <Badge variant="warning" dot>
+            <Badge
+              variant="warning"
+              dot
+              title={`Scheduled for ${new Date(page.scheduledPublishAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}`}
+            >
               <Clock size={10} />
               Scheduled
             </Badge>
+          )}
+          {page.pageTags && page.pageTags.length > 0 && (
+            <span className={styles.tagBadges}>
+              {page.pageTags.slice(0, 3).map((pt) => (
+                <span key={pt.tag.id} className={styles.tagBadge}>{pt.tag.name}</span>
+              ))}
+              {page.pageTags.length > 3 && (
+                <span className={styles.tagBadge}>+{page.pageTags.length - 3}</span>
+              )}
+            </span>
           )}
           <span className={styles.date}>
             {formatRelativeDate(page.updatedAt)}
@@ -162,7 +177,7 @@ function SortablePageItem({
                 Edit
               </Link>
             </DropdownMenuItem>
-            {page.status === "PUBLISHED" && (
+            {page.status === "PUBLISHED" ? (
               <DropdownMenuItem asChild>
                 <a
                   href={page.isHomepage ? `/s/${siteSlug}` : `/s/${siteSlug}/${page.slug}`}
@@ -171,6 +186,17 @@ function SortablePageItem({
                 >
                   <ExternalLink size={16} />
                   View published
+                </a>
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem asChild>
+                <a
+                  href={`/preview/${page.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Eye size={16} />
+                  Preview
                 </a>
               </DropdownMenuItem>
             )}

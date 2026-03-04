@@ -21,6 +21,12 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog/ConfirmDialog";
 import styles from "./site-detail.module.css";
 import dialogStyles from "@/components/ui/Dialog/Dialog.module.css";
 
+interface TagItem {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 interface PageItem {
   id: string;
   title: string;
@@ -32,6 +38,7 @@ interface PageItem {
   scheduledPublishAt: string | null;
   sortOrder: number;
   showInNav: boolean;
+  pageTags?: Array<{ tag: TagItem }>;
 }
 
 interface SiteDetail {
@@ -40,6 +47,7 @@ interface SiteDetail {
   slug: string;
   description: string | null;
   pages: PageItem[];
+  tags?: TagItem[];
 }
 
 interface Template {
@@ -64,6 +72,7 @@ export default function SiteDetailPage() {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "DRAFT" | "PUBLISHED">("ALL");
+  const [tagFilter, setTagFilter] = useState<string>("ALL");
   const [showTrash, setShowTrash] = useState(false);
   const [trashedPages, setTrashedPages] = useState<PageItem[]>([]);
   const [deletePageId, setDeletePageId] = useState<string | null>(null);
@@ -96,7 +105,10 @@ export default function SiteDetailPage() {
     fetch(`/api/sites/${params.siteId}/submissions?pageSize=1&unreadOnly=true`)
       .then((res) => res.ok ? res.json() : null)
       .then((data) => { if (data) setUnreadCount(data.total); })
-      .catch(() => { /* non-critical */ });
+      .catch(() => {
+        // Non-critical: badge simply won't show rather than showing 0
+        setUnreadCount(-1);
+      });
   }, [params.siteId]);
 
   useEffect(() => {
@@ -507,7 +519,7 @@ export default function SiteDetailPage() {
             <Link href={`/sites/${site.id}/submissions`}>
               <Button variant="secondary" leftIcon={<Send size={16} />} size="sm">
                 Submissions
-                {unreadCount > 0 && (
+                {unreadCount > 0 && unreadCount !== -1 && (
                   <span className={styles.unreadBadge}>{unreadCount}</span>
                 )}
               </Button>
@@ -610,6 +622,18 @@ export default function SiteDetailPage() {
                 <option value="DRAFT">Draft</option>
                 <option value="PUBLISHED">Published</option>
               </select>
+              {site.tags && site.tags.length > 0 && (
+                <select
+                  className={styles.statusSelect}
+                  value={tagFilter}
+                  onChange={(e) => setTagFilter(e.target.value)}
+                >
+                  <option value="ALL">All tags</option>
+                  {site.tags.map((tag) => (
+                    <option key={tag.id} value={tag.id}>{tag.name}</option>
+                  ))}
+                </select>
+              )}
             </div>
             {contentSearching && (
               <div className={styles.searchLoading}>Searching content...</div>
@@ -646,7 +670,8 @@ export default function SiteDetailPage() {
                 const q = searchQuery.toLowerCase();
                 const matchesSearch = !q || p.title.toLowerCase().includes(q) || p.slug.toLowerCase().includes(q);
                 const matchesStatus = statusFilter === "ALL" || p.status === statusFilter;
-                return matchesSearch && matchesStatus;
+                const matchesTag = tagFilter === "ALL" || (p.pageTags?.some((pt) => pt.tag.id === tagFilter) ?? false);
+                return matchesSearch && matchesStatus && matchesTag;
               })}
               siteSlug={site.slug}
               onDelete={handleDeletePage}
@@ -687,18 +712,27 @@ export default function SiteDetailPage() {
                     <span className={styles.templateCardName}>Blank</span>
                     <span className={styles.templateCardDesc}>Start from scratch</span>
                   </div>
-                  {nonBlankTemplates.map((template) => (
-                    <div
-                      key={template.id}
-                      className={`${styles.templateCard} ${selectedTemplateId === template.id ? styles.templateCardSelected : ""}`}
-                      onClick={() => setSelectedTemplateId(template.id)}
-                    >
-                      <span className={styles.templateCardName}>{template.name}</span>
-                      {template.description && (
-                        <span className={styles.templateCardDesc}>{template.description}</span>
-                      )}
-                    </div>
-                  ))}
+                  {nonBlankTemplates.map((template) => {
+                    const blockTypes = (template.blocks as Array<{ type: string }>)
+                      .map((b) => b.type)
+                      .filter((t, i, arr) => arr.indexOf(t) === i);
+                    return (
+                      <div
+                        key={template.id}
+                        className={`${styles.templateCard} ${selectedTemplateId === template.id ? styles.templateCardSelected : ""}`}
+                        onClick={() => setSelectedTemplateId(template.id)}
+                      >
+                        <span className={styles.templateCardName}>{template.name}</span>
+                        {template.description && (
+                          <span className={styles.templateCardDesc}>{template.description}</span>
+                        )}
+                        <span className={styles.templateCardMeta}>
+                          {template.blocks.length} block{template.blocks.length !== 1 ? "s" : ""}
+                          {blockTypes.length > 0 && `: ${blockTypes.slice(0, 4).join(", ")}${blockTypes.length > 4 ? "..." : ""}`}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             );
