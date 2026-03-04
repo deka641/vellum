@@ -99,4 +99,6 @@
   --sidebar-width-collapsed: 64px;
   --topbar-height:           56px;
   --editor-panel-width:      320px;
+  --published-max-width:     1080px;
+  --published-prose-width:   760px;
 }

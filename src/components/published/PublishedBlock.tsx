@@ -184,6 +184,7 @@ export function PublishedBlock({ block, pageId, allBlocks }: PublishedBlockProps
       return (
         <div
           className={styles.columns}
+          data-columns={columns.length}
           style={{
             gap: (settings.gap as string) || "24px",
             ...(columnWidths ? { gridTemplateColumns: columnWidths.map(w => `${w}%`).join(" ") } : {}),

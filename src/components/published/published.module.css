@@ -13,15 +13,19 @@
 
 .container {
   width: 100%;
-  max-width: 760px;
+  max-width: var(--published-max-width);
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--space-8);
 }
 
 @media (max-width: 768px) {
   .page {
     padding: var(--space-8) var(--space-4);
+  }
+
+  .container {
+    gap: var(--space-6);
   }
 }
 
@@ -65,6 +69,7 @@
   letter-spacing: -0.025em;
   line-height: var(--leading-tight);
   scroll-margin-top: 80px;
+  max-width: var(--published-prose-width);
 }
 
 .heading:target {
@@ -109,6 +114,7 @@
   font-size: var(--text-base);
   line-height: var(--leading-relaxed);
   color: var(--color-text-primary);
+  max-width: var(--published-prose-width);
 }
 
 .text p {
@@ -197,10 +203,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(var(--shadow-color), 0.6);
   backdrop-filter: blur(4px);
   border-radius: var(--radius-md);
-  color: #fff;
+  color: var(--color-text-inverse);
   opacity: 0;
   transform: scale(0.85);
   transition: opacity 250ms ease, transform 250ms ease;
@@ -272,6 +278,7 @@
 
 .buttonContainer {
   padding: var(--space-2) 0;
+  max-width: var(--published-prose-width);
 }
 
 .button {
@@ -342,6 +349,8 @@
   padding: 16px 32px;
   font-size: 1.125rem;
   min-width: 200px;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 @media (hover: hover) {
@@ -383,8 +392,16 @@
   gap: var(--space-3);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 480px) {
   .columns {
+    grid-template-columns: 1fr !important;
+    gap: var(--space-6) !important;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+  .columns[data-columns="3"],
+  .columns[data-columns="4"] {
     grid-template-columns: 1fr !important;
     gap: var(--space-6) !important;
   }
@@ -397,7 +414,7 @@
   position: relative;
   border-radius: var(--radius-lg);
   overflow: hidden;
-  background: #000;
+  background: var(--color-bg-tertiary);
   box-shadow: var(--shadow-md);
 }
 
@@ -416,6 +433,7 @@
   padding: var(--space-6) var(--space-8);
   font-style: italic;
   margin: var(--space-2) 0;
+  max-width: var(--published-prose-width);
 }
 
 .quote-default {
@@ -910,6 +928,47 @@
   outline-offset: 2px;
 }
 
+.snippetWrapper::before,
+.snippetWrapper::after {
+  content: "";
+  position: absolute;
+  top: 36px;
+  bottom: 0;
+  width: 24px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 1;
+}
+
+.snippetWrapper::before {
+  left: 0;
+  background: linear-gradient(to right, #1e1e2e, transparent);
+  border-radius: 0 0 0 var(--radius-lg);
+}
+
+.snippetWrapper::after {
+  right: 0;
+  background: linear-gradient(to left, #1e1e2e, transparent);
+  border-radius: 0 0 var(--radius-lg) 0;
+}
+
+:global([data-theme-mode="light"]) .snippetWrapper::before {
+  background: linear-gradient(to right, #f8f9fc, transparent);
+}
+
+:global([data-theme-mode="light"]) .snippetWrapper::after {
+  background: linear-gradient(to left, #f8f9fc, transparent);
+}
+
+.snippetScrollLeft::before {
+  opacity: 1;
+}
+
+.snippetScrollRight::after {
+  opacity: 1;
+}
+
 .snippetPre {
   margin: 0;
   padding: var(--space-4) var(--space-5);
@@ -1130,6 +1189,7 @@
   padding: var(--space-4) 0;
   justify-content: center;
   align-items: center;
+  max-width: var(--published-prose-width);
 }
 
 .socialLink {
@@ -1144,6 +1204,17 @@
 
 .socialLink:hover {
   color: var(--color-accent);
+}
+
+.socialLink svg {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.socialPill svg {
+  width: 18px;
+  height: 18px;
 }
 
 @media (hover: hover) {
@@ -1189,6 +1260,7 @@
   display: flex;
   flex-direction: column;
   gap: 0;
+  max-width: var(--published-prose-width);
 }
 
 .accordionItem {
@@ -1282,7 +1354,7 @@ details[open] > .accordionBody {
 }
 
 details[open] > .accordionBody > .accordionBodyInner {
-  padding: var(--space-1) var(--space-5) var(--space-5);
+  padding: var(--space-3) var(--space-5) var(--space-5);
 }
 
 .accordionBodyInner p {
@@ -1317,6 +1389,7 @@ details[open] > .accordionBody > .accordionBodyInner {
 
 .toc {
   scroll-behavior: smooth;
+  max-width: var(--published-prose-width);
 }
 
 .tocBoxed {
@@ -1505,5 +1578,36 @@ details[open] > .accordionBody > .accordionBodyInner {
   .tableHeader,
   .tableCell {
     padding: var(--space-2) var(--space-3);
+    min-width: 60px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: var(--space-6) var(--space-3);
+  }
+
+  .btn-lg {
+    min-width: 0;
+    width: 100%;
+    text-align: center;
+  }
+
+  .formBlock {
+    padding: var(--space-5);
+  }
+
+  .formInput,
+  .formTextarea,
+  .formSelect {
+    font-size: 16px;
+  }
+
+  .quote {
+    padding: var(--space-4);
+  }
+
+  .quoteText {
+    font-size: var(--text-base);
   }
 }

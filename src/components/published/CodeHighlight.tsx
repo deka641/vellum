@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import hljs from "highlight.js/lib/core";
 import javascript from "highlight.js/lib/languages/javascript";
 import typescript from "highlight.js/lib/languages/typescript";
@@ -30,16 +30,31 @@ hljs.registerLanguage("php", php);
 
 export function CodeHighlight({ code, language }: { code: string; language?: string }) {
   const codeRef = useRef<HTMLElement>(null);
+  const preRef = useRef<HTMLPreElement>(null);
   const [copied, setCopied] = useState(false);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
   useEffect(() => {
     if (codeRef.current) {
-      // Reset any previous highlighting
       codeRef.current.removeAttribute("data-highlighted");
       codeRef.current.textContent = code;
       hljs.highlightElement(codeRef.current);
     }
   }, [code, language]);
+
+  const checkScroll = useCallback(() => {
+    const el = preRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 0);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
+  }, []);
+
+  useEffect(() => {
+    checkScroll();
+    window.addEventListener("resize", checkScroll);
+    return () => window.removeEventListener("resize", checkScroll);
+  }, [checkScroll, code]);
 
   const handleCopy = async () => {
     try {
@@ -47,7 +62,6 @@ export function CodeHighlight({ code, language }: { code: string; language?: str
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback for older browsers
       const textarea = document.createElement("textarea");
       textarea.value = code;
       textarea.style.position = "fixed";
@@ -64,7 +78,7 @@ export function CodeHighlight({ code, language }: { code: string; language?: str
   const langLabel = language && language !== "plaintext" ? language : undefined;
 
   return (
-    <div className={styles.snippetWrapper}>
+    <div className={`${styles.snippetWrapper} ${canScrollLeft ? styles.snippetScrollLeft : ""} ${canScrollRight ? styles.snippetScrollRight : ""}`}>
       <div className={styles.snippetHeader}>
         {langLabel && <span className={styles.snippetLang}>{langLabel}</span>}
         <button
@@ -91,7 +105,7 @@ export function CodeHighlight({ code, language }: { code: string; language?: str
           )}
         </button>
       </div>
-      <pre className={styles.snippetPre}>
+      <pre ref={preRef} className={styles.snippetPre} onScroll={checkScroll}>
         <code
           ref={codeRef}
           className={language && language !== "plaintext" ? `language-${language}` : ""}
