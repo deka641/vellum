@@ -2,13 +2,7 @@
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { PublishedBlock } from "./PublishedBlock";
-
-interface BlockData {
-  id: string;
-  type: string;
-  content: Record<string, unknown>;
-  settings: Record<string, unknown>;
-}
+import type { BlockData } from "@/types/blocks";
 
 export function SafePublishedBlock({ block, pageId, allBlocks }: { block: BlockData; pageId?: string; allBlocks?: BlockData[] }) {
   return (

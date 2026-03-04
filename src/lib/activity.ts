@@ -29,22 +29,16 @@ export function logActivity(entry: ActivityEntry): void {
       // Probabilistic cleanup: ~1% chance per write to keep max 500 entries
       if (Math.random() >= 0.01) return;
       try {
-        const count = await db.activityLog.count({
-          where: { userId: entry.userId },
-        });
-        if (count > 500) {
-          const oldest = await db.activityLog.findMany({
-            where: { userId: entry.userId },
-            orderBy: { createdAt: "asc" },
-            take: count - 500,
-            select: { id: true },
-          });
-          if (oldest.length > 0) {
-            await db.activityLog.deleteMany({
-              where: { id: { in: oldest.map((o) => o.id) } },
-            });
-          }
-        }
+        await db.$executeRaw`
+          DELETE FROM "ActivityLog"
+          WHERE "userId" = ${entry.userId}
+            AND "id" NOT IN (
+              SELECT "id" FROM "ActivityLog"
+              WHERE "userId" = ${entry.userId}
+              ORDER BY "createdAt" DESC
+              LIMIT 500
+            )
+        `;
       } catch (err) {
         logger.warn("activity-cleanup", "Failed to prune old activity logs", err);
       }

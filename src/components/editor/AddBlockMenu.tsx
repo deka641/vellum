@@ -177,14 +177,24 @@ function BlockPreview({ type }: { type: string }) {
 }
 
 interface AddBlockMenuProps {
-  onAdd: (type: BlockType) => void;
+  onAdd: (type: BlockType, contentOverride?: Record<string, unknown>) => void;
 }
+
+const COLUMN_PRESETS: { label: string; widths: number[] }[] = [
+  { label: "50 / 50", widths: [50, 50] },
+  { label: "33 / 33 / 33", widths: [33, 34, 33] },
+  { label: "66 / 34", widths: [66, 34] },
+  { label: "34 / 66", widths: [34, 66] },
+  { label: "75 / 25", widths: [75, 25] },
+  { label: "25 / 75", widths: [25, 75] },
+];
 
 const ALL_CATEGORIES = [{ key: "all", label: "All" }, ...blockCategories] as const;
 
 export function AddBlockMenu({ onAdd }: AddBlockMenuProps) {
   const [filter, setFilter] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
+  const [showColumnPresets, setShowColumnPresets] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const lowerFilter = filter.toLowerCase();
 
@@ -251,7 +261,13 @@ export function AddBlockMenu({ onAdd }: AddBlockMenuProps) {
                 <button
                   key={block.type}
                   className={styles.blockButton}
-                  onClick={() => onAdd(block.type)}
+                  onClick={() => {
+                    if (block.type === "columns") {
+                      setShowColumnPresets(true);
+                    } else {
+                      onAdd(block.type);
+                    }
+                  }}
                 >
                   <span className={styles.blockIcon}>
                     {iconMap[block.icon]}
@@ -266,6 +282,47 @@ export function AddBlockMenu({ onAdd }: AddBlockMenuProps) {
       })}
       {filteredBlocks.length === 0 && (filter || activeCategory !== "all") && (
         <p className={styles.noResults}>No blocks matching &ldquo;{filter || activeCategory}&rdquo;</p>
+      )}
+      {showColumnPresets && (
+        <div className={styles.presetOverlay}>
+          <div className={styles.presetPanel}>
+            <div className={styles.presetHeader}>
+              <span className={styles.presetTitle}>Choose layout</span>
+              <button
+                className={styles.presetClose}
+                onClick={() => setShowColumnPresets(false)}
+                aria-label="Cancel"
+              >
+                &times;
+              </button>
+            </div>
+            <div className={styles.presetGrid}>
+              {COLUMN_PRESETS.map((preset) => (
+                <button
+                  key={preset.label}
+                  className={styles.presetButton}
+                  onClick={() => {
+                    const cols = preset.widths.map(() => ({ blocks: [] }));
+                    onAdd("columns", { columns: cols, columnWidths: preset.widths });
+                    setShowColumnPresets(false);
+                  }}
+                  title={preset.label}
+                >
+                  <div className={styles.presetBars}>
+                    {preset.widths.map((w, i) => (
+                      <div
+                        key={i}
+                        className={styles.presetBar}
+                        style={{ flex: w }}
+                      />
+                    ))}
+                  </div>
+                  <span className={styles.presetLabel}>{preset.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

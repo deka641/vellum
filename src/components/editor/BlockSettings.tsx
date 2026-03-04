@@ -292,6 +292,22 @@ export function BlockSettings() {
                 ))}
               </div>
             </div>
+            <div className={styles.field}>
+              <label className={styles.label}>Size</label>
+              <div className={styles.buttonGroup}>
+                {(["sm", "md", "lg"] as const).map((s) => (
+                  <button
+                    key={s}
+                    className={`${styles.alignBtn} ${
+                      ((block.settings.size as string) || "md") === s ? styles.active : ""
+                    }`}
+                    onClick={() => handleSettingsUpdate(block.id, { size: s })}
+                  >
+                    {s === "sm" ? "Small" : s === "md" ? "Medium" : "Large"}
+                  </button>
+                ))}
+              </div>
+            </div>
           </>
         )}
 

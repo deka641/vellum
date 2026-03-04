@@ -328,6 +328,22 @@
   transform: translateY(0);
 }
 
+.btn-sm {
+  padding: 8px 16px;
+  font-size: 0.875rem;
+}
+
+.btn-md {
+  padding: 12px 24px;
+  font-size: 1rem;
+}
+
+.btn-lg {
+  padding: 16px 32px;
+  font-size: 1.125rem;
+  min-width: 200px;
+}
+
 @media (hover: hover) {
   .btn-primary:hover,
   .btn-secondary:hover,

@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/auth-helpers";
 import { parseSiteTheme, generateThemeVariables, FONT_PRESETS } from "@/lib/theme";
 import { PublishedPage } from "@/components/published/PublishedPage";
+import type { BlockType, BlockData } from "@/types/blocks";
 
 interface Props {
   params: Promise<{ pageId: string }>;
@@ -22,9 +23,9 @@ export default async function PreviewPage({ params }: Props) {
 
   if (!page) notFound();
 
-  const blocks = page.blocks.map((b) => ({
+  const blocks: BlockData[] = page.blocks.map((b) => ({
     id: b.id,
-    type: b.type,
+    type: b.type as BlockType,
     content: b.content as Record<string, unknown>,
     settings: (b.settings || {}) as Record<string, unknown>,
     parentId: b.parentId,

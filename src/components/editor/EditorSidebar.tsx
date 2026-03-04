@@ -22,8 +22,8 @@ export function EditorSidebar({ mobileOpen, onMobileToggle }: EditorSidebarProps
   const addBlock = useEditorStore((s) => s.addBlock);
   const pageId = useEditorStore((s) => s.pageId);
 
-  function handleAddBlock(type: BlockType) {
-    addBlock(type);
+  function handleAddBlock(type: BlockType, contentOverride?: Record<string, unknown>) {
+    addBlock(type, undefined, contentOverride);
     setActiveTab("settings");
   }
 

@@ -167,7 +167,7 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
 
   if (submitted) {
     return (
-      <div className={styles.formBlock}>
+      <div className={styles.formBlock} role="status" aria-live="polite">
         <p className={`${styles.formSuccess} ${styles.formSuccessAnimated}`}>{successMessage || "Thank you! Your submission has been received."}</p>
         <button
           type="button"

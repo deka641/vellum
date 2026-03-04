@@ -8,6 +8,7 @@ import { WebPageJsonLd, BreadcrumbJsonLd } from "@/components/published/JsonLd";
 import { Breadcrumbs } from "@/components/published/Breadcrumbs";
 import { PageNavigation } from "@/components/published/PageNavigation";
 import { SocialShareBar } from "@/components/published/SocialShareBar";
+import type { BlockType, BlockData } from "@/types/blocks";
 
 const getSite = cache((slug: string) =>
   db.site.findUnique({ where: { slug } })
@@ -177,9 +178,9 @@ export default async function PublicSitePage({ params }: Props) {
   const canonical = buildPageUrl(baseUrl, siteSlug, page.isHomepage, page.slug);
   const siteUrl = `${baseUrl}/s/${siteSlug}`;
 
-  const blocks = page.blocks.map((b) => ({
+  const blocks: BlockData[] = page.blocks.map((b) => ({
     id: b.id,
-    type: b.type,
+    type: b.type as BlockType,
     content: b.content as Record<string, unknown>,
     settings: (b.settings || {}) as Record<string, unknown>,
     parentId: b.parentId,

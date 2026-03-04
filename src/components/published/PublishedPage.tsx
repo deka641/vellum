@@ -19,6 +19,10 @@ interface PublishedPageProps {
 }
 
 export function PublishedPage({ title, blocks, pageId, tags, siteSlug }: PublishedPageProps) {
+  const hasH1Block = blocks.some(
+    (b) => !b.parentId && b.type === "heading" && (b.content as Record<string, unknown>).level === 1
+  );
+
   return (
     <div className={styles.page}>
       <div className={styles.container}>
@@ -34,6 +38,9 @@ export function PublishedPage({ title, blocks, pageId, tags, siteSlug }: Publish
               </Link>
             ))}
           </div>
+        )}
+        {!hasH1Block && title && (
+          <h1 className={styles.heading} data-level="1">{title}</h1>
         )}
         {blocks.filter(b => !b.parentId).map((block, i) => (
           <ScrollReveal key={block.id} delay={Math.min(i * 50, 200)}>

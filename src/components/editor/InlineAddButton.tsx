@@ -7,7 +7,7 @@ import { AddBlockMenu } from "./AddBlockMenu";
 import styles from "./InlineAddButton.module.css";
 
 interface InlineAddButtonProps {
-  onAdd: (type: BlockType) => void;
+  onAdd: (type: BlockType, contentOverride?: Record<string, unknown>) => void;
 }
 
 export function InlineAddButton({ onAdd }: InlineAddButtonProps) {
@@ -40,8 +40,8 @@ export function InlineAddButton({ onAdd }: InlineAddButtonProps) {
       {open && (
         <div className={styles.popover} onClick={(e) => e.stopPropagation()}>
           <AddBlockMenu
-            onAdd={(type) => {
-              onAdd(type);
+            onAdd={(type, contentOverride) => {
+              onAdd(type, contentOverride);
               setOpen(false);
             }}
           />

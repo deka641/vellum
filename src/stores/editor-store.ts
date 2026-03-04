@@ -45,7 +45,7 @@ interface EditorState {
 
   // Actions
   setPage: (pageId: string, title: string, blocks: EditorBlock[], updatedAt: string, description?: string | null, slug?: string, meta?: { metaTitle?: string | null; ogImage?: string | null; noindex?: boolean }) => void;
-  addBlock: (type: BlockType, index?: number) => void;
+  addBlock: (type: BlockType, index?: number, contentOverride?: Partial<BlockContent>) => void;
   removeBlock: (id: string) => void;
   updateBlockContent: (id: string, content: Partial<BlockContent>) => void;
   updateBlockSettings: (id: string, settings: Partial<BlockSettings>) => void;
@@ -178,9 +178,12 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     });
   },
 
-  addBlock: (type, index) =>
+  addBlock: (type, index, contentOverride) =>
     set((state) => {
       const block = createBlock(type);
+      if (contentOverride) {
+        Object.assign(block.content, contentOverride);
+      }
       const newBlocks = [...state.blocks];
       const insertAt = index !== undefined ? index : newBlocks.length;
       newBlocks.splice(insertAt, 0, block);

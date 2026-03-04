@@ -17,7 +17,7 @@ export type BlockType =
 
 export interface BlockData {
   id: string;
-  type: string;
+  type: BlockType;
   content: Record<string, unknown>;
   settings: Record<string, unknown>;
   parentId?: string | null;

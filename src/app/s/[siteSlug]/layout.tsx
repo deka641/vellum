@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { getBaseUrl } from "@/lib/url";
-import { sanitizeUrl } from "@/lib/sanitize";
+import { sanitizeImageSrc } from "@/lib/sanitize";
 import { parseSiteTheme, generateThemeVariables, FONT_PRESETS, getLuminance } from "@/lib/theme";
 import { SiteHeader } from "@/components/published/SiteHeader";
 import { SiteFooter } from "@/components/published/SiteFooter";
@@ -51,7 +51,7 @@ export default async function PublishedSiteLayout({ params, children }: Props) {
       <style>{`html{scroll-behavior:smooth}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}`}</style>
       <ReadingProgress />
       <a href="#main-content" className={styles.skipLink}>Skip to content</a>
-      {site.favicon && <link rel="icon" href={sanitizeUrl(site.favicon)} />}
+      {site.favicon && <link rel="icon" href={sanitizeImageSrc(site.favicon)} />}
       <link rel="alternate" type="application/rss+xml" title={`${site.name} RSS Feed`} href={`/s/${site.slug}/feed.xml`} />
       {fontPreset?.googleFontsUrl && (
         <>

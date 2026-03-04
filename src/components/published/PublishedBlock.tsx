@@ -140,20 +140,22 @@ export function PublishedBlock({ block, pageId, allBlocks }: PublishedBlockProps
       );
     }
 
-    case "button":
+    case "button": {
+      const btnSize = (settings.size as string) || "md";
       return (
         <div className={styles.buttonContainer} style={{ textAlign: align, ...extraStyle }}>
           <a
             href={sanitizeUrl(content.url as string)}
             className={`${styles.button} ${
               styles[`btn-${content.variant || "primary"}`]
-            }`}
+            } ${styles[`btn-${btnSize}`] || ""}`}
             {...(content.openInNewTab ? { target: "_blank", rel: "noopener noreferrer" } : {})}
           >
             {content.text as string}
           </a>
         </div>
       );
+    }
 
     case "spacer":
       return <div style={{ height: `${content.height || 48}px` }} />;
@@ -469,8 +471,10 @@ export function PublishedBlock({ block, pageId, allBlocks }: PublishedBlockProps
       );
     }
 
-    default:
+    default: {
+      const _exhaustive: never = type;
       return null;
+    }
   }
 }
 

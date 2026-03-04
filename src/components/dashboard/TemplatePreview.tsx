@@ -9,14 +9,7 @@ import {
   DialogClose,
 } from "@/components/ui/Dialog/Dialog";
 import { Button } from "@/components/ui/Button/Button";
-
-interface BlockData {
-  id: string;
-  type: string;
-  content: Record<string, unknown>;
-  settings: Record<string, unknown>;
-  parentId?: string | null;
-}
+import type { BlockType, BlockData } from "@/types/blocks";
 
 interface TemplatePreviewProps {
   open: boolean;
@@ -26,7 +19,10 @@ interface TemplatePreviewProps {
 }
 
 export function TemplatePreview({ open, onClose, name, blocks }: TemplatePreviewProps) {
-  const typedBlocks = (blocks || []) as BlockData[];
+  const typedBlocks = ((blocks || []) as Array<Omit<BlockData, "type"> & { type: string }>).map((b) => ({
+    ...b,
+    type: b.type as BlockType,
+  }));
   const topLevelBlocks = typedBlocks.filter((b) => !b.parentId);
 
   return (

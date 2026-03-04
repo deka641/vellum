@@ -82,7 +82,7 @@ export async function PATCH(
         name: parsed.data.name ?? site.name,
         description: parsed.data.description ?? site.description,
         ...(parsed.data.theme !== undefined && { theme: parsed.data.theme }),
-        ...(parsed.data.favicon !== undefined && { favicon: parsed.data.favicon ? sanitizeUrl(parsed.data.favicon) : parsed.data.favicon }),
+        ...(parsed.data.favicon !== undefined && { favicon: parsed.data.favicon ? sanitizeImageSrc(parsed.data.favicon) : parsed.data.favicon }),
         ...(parsed.data.logo !== undefined && { logo: parsed.data.logo ? sanitizeImageSrc(parsed.data.logo) : parsed.data.logo }),
         ...(parsed.data.footer !== undefined && { footer: parsed.data.footer }),
         ...(parsed.data.notificationEmail !== undefined && { notificationEmail: parsed.data.notificationEmail }),

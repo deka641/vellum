@@ -97,8 +97,8 @@ export function EditorCanvas({ onAddBlock }: EditorCanvasProps) {
     setActiveId(null);
   }, []);
 
-  const handleAddBlockAt = useCallback((type: BlockType, index: number) => {
-    addBlock(type, index);
+  const handleAddBlockAt = useCallback((type: BlockType, index: number, contentOverride?: Record<string, unknown>) => {
+    addBlock(type, index, contentOverride);
   }, [addBlock]);
 
   // File drop handlers
@@ -286,7 +286,7 @@ export function EditorCanvas({ onAddBlock }: EditorCanvasProps) {
                     exit={motion_.exit}
                     transition={motion_.transition}
                   >
-                    <InlineAddButton onAdd={(type: BlockType) => handleAddBlockAt(type, index)} />
+                    <InlineAddButton onAdd={(type: BlockType, contentOverride?: Record<string, unknown>) => handleAddBlockAt(type, index, contentOverride)} />
                     <BlockWrapper id={block.id}>
                       {uploadingBlocks.has(block.id) ? (
                         <div className={styles.uploadingPlaceholder}>

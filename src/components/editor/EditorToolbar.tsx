@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Eye, ExternalLink, Save, Undo2, Redo2, Loader2, AlertCircle, AlertTriangle, Monitor, Tablet, Smartphone, Check, MoreHorizontal, Clock, CalendarClock, X, PanelRight } from "lucide-react";
+import { ArrowLeft, Eye, ExternalLink, Save, Undo2, Redo2, Loader2, AlertCircle, AlertTriangle, Monitor, Tablet, Smartphone, Check, MoreHorizontal, Clock, CalendarClock, X, PanelRight, Copy } from "lucide-react";
 import { Button } from "@/components/ui/Button/Button";
 import { IconButton } from "@/components/ui/IconButton/IconButton";
 import { Badge } from "@/components/ui/Badge/Badge";
@@ -16,6 +16,7 @@ import {
 import dynamic from "next/dynamic";
 import { useEditorStore } from "@/stores/editor-store";
 import { useAutosave } from "@/hooks/use-autosave";
+import { useToast } from "@/components/ui/Toast/Toast";
 import styles from "./EditorToolbar.module.css";
 
 const KeyboardShortcutsDialog = dynamic(
@@ -155,8 +156,10 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, schedu
   const { pageTitle, pageSlug, setPageTitle, isDirty, isSaving, saveError, conflict, undo, redo, previewMode, setPreviewMode, lastSavedAt } =
     useEditorStore();
   const { save } = useAutosave();
+  const { toast } = useToast();
   const hasConflict = conflict !== null;
   const relativeTime = useRelativeTime(lastSavedAt);
+  const [duplicating, setDuplicating] = useState(false);
   const countdown = useCountdown(scheduledPublishAt);
 
   const [showAutoSaving, setShowAutoSaving] = useState(false);
@@ -199,6 +202,36 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, schedu
       setScheduleLoading(false);
     }
   }, [scheduleDate, onSchedule]);
+
+  const handleDuplicate = useCallback(async () => {
+    if (duplicating) return;
+    setDuplicating(true);
+    try {
+      const { pageId } = useEditorStore.getState();
+      const res = await fetch("/api/pages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: `${pageTitle} (copy)`,
+          slug: `${pageSlug}-copy`,
+          siteId,
+          sourcePageId: pageId,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast(data.error || "Failed to duplicate page", "error");
+        return;
+      }
+      const newPage = await res.json();
+      toast("Page duplicated");
+      router.push(`/editor/${newPage.id}`);
+    } catch {
+      toast("Failed to duplicate page", "error");
+    } finally {
+      setDuplicating(false);
+    }
+  }, [duplicating, pageTitle, pageSlug, siteId, toast, router]);
 
   return (
     <div className={styles.toolbar}>
@@ -376,6 +409,11 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, schedu
               <DropdownMenuItem onClick={() => setPreviewMode("mobile")}>
                 <Smartphone size={16} />
                 Mobile view
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleDuplicate} disabled={duplicating}>
+                <Copy size={16} />
+                {duplicating ? "Duplicating…" : "Duplicate page"}
               </DropdownMenuItem>
               {scheduledPublishAt && (
                 <>

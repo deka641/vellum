@@ -71,6 +71,7 @@ model Page {
   @@index([siteId, status])
   @@index([siteId, sortOrder])
   @@index([siteId, deletedAt])
+  @@index([siteId, status, deletedAt])
   @@index([scheduledPublishAt, status])
 }
 
@@ -164,6 +165,7 @@ model Media {
 
   @@index([userId])
   @@index([userId, createdAt])
+  @@index([userId, mimeType])
 }
 
 model Redirect {
