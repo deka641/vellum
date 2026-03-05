@@ -333,17 +333,20 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       lastSavedAt: state.conflict?.serverUpdatedAt ?? state.lastSavedAt,
     })),
 
-  duplicateBlock: (id) =>
+  duplicateBlock: (id) => {
+    let duplicateId: string | null = null;
     set((state) => {
       // Try top-level first
       const topIndex = state.blocks.findIndex((b) => b.id === id);
       if (topIndex !== -1) {
         const duplicate = cloneBlock(state.blocks[topIndex]);
+        duplicateId = duplicate.id;
         const newBlocks = [...state.blocks];
         newBlocks.splice(topIndex + 1, 0, duplicate);
         return {
           blocks: newBlocks,
           selectedBlockId: duplicate.id,
+          settledBlockId: duplicate.id,
           isDirty: true,
           blocksDirty: true,
           saveError: null,
@@ -360,6 +363,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
           const idx = colBlocks.findIndex((cb) => cb.id === id);
           if (idx === -1) continue;
           const duplicate = cloneBlock(colBlocks[idx]);
+          duplicateId = duplicate.id;
           const newCols = structuredClone(cols);
           newCols[ci].blocks.splice(idx + 1, 0, duplicate);
           const newBlocks = state.blocks.map((b) =>
@@ -368,6 +372,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
           return {
             blocks: newBlocks,
             selectedBlockId: duplicate.id,
+            settledBlockId: duplicate.id,
             isDirty: true,
             blocksDirty: true,
             saveError: null,
@@ -377,7 +382,13 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       }
 
       return state;
-    }),
+    });
+    if (duplicateId) {
+      setTimeout(() => {
+        set({ settledBlockId: null });
+      }, 400);
+    }
+  },
 
   setPreviewMode: (mode) => set({ previewMode: mode }),
 
@@ -405,7 +416,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     }
   },
 
-  pasteBlock: () =>
+  pasteBlock: () => {
+    let pastedId: string | null = null;
     set((state) => {
       let raw: string | null;
       try {
@@ -429,6 +441,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       if (typeof parsed.content !== "object" || parsed.content === null) return state;
 
       const newBlock = cloneBlock(parsed);
+      pastedId = newBlock.id;
 
       // Insert after selected block, or at end
       const newBlocks = [...state.blocks];
@@ -446,12 +459,19 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       return {
         blocks: newBlocks,
         selectedBlockId: newBlock.id,
+        settledBlockId: newBlock.id,
         isDirty: true,
         blocksDirty: true,
         saveError: null,
         ...pushHistory({ ...state, blocks: newBlocks }),
       };
-    }),
+    });
+    if (pastedId) {
+      setTimeout(() => {
+        set({ settledBlockId: null });
+      }, 400);
+    }
+  },
 
   // Column-aware actions
   addBlockToColumn: (parentId, colIndex, type) =>

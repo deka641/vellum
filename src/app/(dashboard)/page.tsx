@@ -9,9 +9,19 @@ import { formatDate } from "@/lib/utils";
 import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
 import styles from "./home.module.css";
 
+interface SiteOverview {
+  id: string;
+  name: string;
+  slug: string;
+  updatedAt: Date;
+  pageCount: number;
+  publishedCount: number;
+  submissionCount: number;
+}
+
 const getDashboardData = unstable_cache(
   async (userId: string) => {
-    const [siteCount, pageCounts, submissionCount, unreadSubmissionCount, mediaCount, recentPages, recentSubmissions, firstSite] =
+    const [siteCount, pageCounts, submissionCount, unreadSubmissionCount, mediaCount, recentPages, recentSubmissions, firstSite, sites] =
       await Promise.all([
         db.site.count({ where: { userId } }),
         db.page.groupBy({
@@ -60,12 +70,36 @@ const getDashboardData = unstable_cache(
           orderBy: { createdAt: "asc" },
           select: { id: true },
         }),
+        db.site.findMany({
+          where: { userId },
+          orderBy: { updatedAt: "desc" },
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            updatedAt: true,
+            pages: {
+              where: { deletedAt: null },
+              select: { status: true, formSubmissions: { select: { id: true } } },
+            },
+          },
+        }),
       ]);
 
     const pageCount = pageCounts.reduce((sum, g) => sum + g._count, 0);
     const publishedCount = pageCounts.find((g) => g.status === "PUBLISHED")?._count ?? 0;
 
-    return { siteCount, pageCount, publishedCount, submissionCount, unreadSubmissionCount, mediaCount, recentPages, recentSubmissions, firstSite };
+    const siteOverviews: SiteOverview[] = sites.map((site) => ({
+      id: site.id,
+      name: site.name,
+      slug: site.slug,
+      updatedAt: site.updatedAt,
+      pageCount: site.pages.length,
+      publishedCount: site.pages.filter((p) => p.status === "PUBLISHED").length,
+      submissionCount: site.pages.reduce((sum, p) => sum + p.formSubmissions.length, 0),
+    }));
+
+    return { siteCount, pageCount, publishedCount, submissionCount, unreadSubmissionCount, mediaCount, recentPages, recentSubmissions, firstSite, siteOverviews };
   },
   ["dashboard"],
   { revalidate: 30, tags: ["dashboard"] }
@@ -74,7 +108,7 @@ const getDashboardData = unstable_cache(
 export default async function DashboardPage() {
   const user = await requireAuth();
 
-  const { siteCount, pageCount, publishedCount, submissionCount, unreadSubmissionCount, mediaCount, recentPages, recentSubmissions, firstSite } =
+  const { siteCount, pageCount, publishedCount, submissionCount, unreadSubmissionCount, mediaCount, recentPages, recentSubmissions, firstSite, siteOverviews } =
     await getDashboardData(user.id);
 
   return (
@@ -136,6 +170,25 @@ export default async function DashboardPage() {
             Browse Templates
           </Link>
         </div>
+
+        {siteOverviews.length > 1 && (
+          <div className={styles.card}>
+            <h3 className={styles.cardTitle}>Sites Overview</h3>
+            <div className={styles.siteOverviewGrid}>
+              {siteOverviews.map((site) => (
+                <Link key={site.id} href={`/sites/${site.id}`} className={styles.siteOverviewCard}>
+                  <div className={styles.siteOverviewName}>{site.name}</div>
+                  <div className={styles.siteOverviewStats}>
+                    <span>{site.pageCount} pages</span>
+                    <span>{site.publishedCount} published</span>
+                    {site.submissionCount > 0 && <span>{site.submissionCount} submissions</span>}
+                  </div>
+                  <div className={styles.siteOverviewDate}>Updated {formatDate(site.updatedAt)}</div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className={styles.grid}>
           <div className={styles.card}>

@@ -4,7 +4,7 @@ import { type Metadata } from "next";
 import { db } from "@/lib/db";
 import { getBaseUrl, buildPageUrl } from "@/lib/url";
 import { PublishedPage } from "@/components/published/PublishedPage";
-import { WebPageJsonLd, BreadcrumbJsonLd } from "@/components/published/JsonLd";
+import { WebPageJsonLd, BreadcrumbJsonLd, FaqJsonLd, ContactPageJsonLd } from "@/components/published/JsonLd";
 import { Breadcrumbs } from "@/components/published/Breadcrumbs";
 import { PageNavigation } from "@/components/published/PageNavigation";
 import { SocialShareBar } from "@/components/published/SocialShareBar";
@@ -64,6 +64,39 @@ function stripHtmlTags(html: string): string {
   return html.replace(/<[^>]*>/g, "").trim();
 }
 
+function extractFaqItems(blocks: BlockLike[]): { question: string; answer: string }[] {
+  const items: { question: string; answer: string }[] = [];
+  for (const block of blocks) {
+    if (block.type === "accordion" && Array.isArray(block.content.items)) {
+      for (const item of block.content.items as Array<{ title?: string; content?: string }>) {
+        if (item.title && item.content) {
+          items.push({ question: item.title, answer: stripHtmlTags(item.content) });
+        }
+      }
+    }
+    if (block.type === "columns" && Array.isArray(block.content.columns)) {
+      for (const col of block.content.columns as Array<{ blocks?: BlockLike[] }>) {
+        if (Array.isArray(col.blocks)) {
+          items.push(...extractFaqItems(col.blocks));
+        }
+      }
+    }
+  }
+  return items;
+}
+
+function hasFormBlock(blocks: BlockLike[]): boolean {
+  for (const block of blocks) {
+    if (block.type === "form") return true;
+    if (block.type === "columns" && Array.isArray(block.content.columns)) {
+      for (const col of block.content.columns as Array<{ blocks?: BlockLike[] }>) {
+        if (Array.isArray(col.blocks) && hasFormBlock(col.blocks)) return true;
+      }
+    }
+  }
+  return false;
+}
+
 function extractTextSnippet(blocks: BlockLike[], maxLength = 160): string | undefined {
   for (const block of blocks) {
     if (block.type === "text" && typeof block.content.html === "string") {
@@ -113,7 +146,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     || extractTextSnippet(blockData)
     || (page.isHomepage ? site.description : undefined)
     || undefined;
-  const ogImage = page.ogImage || findFirstImageSrc(blockData);
+  const ogImage = page.ogImage || findFirstImageSrc(blockData) || (site.defaultOgImage as string | null) || undefined;
   const metaTitle = page.metaTitle || page.title;
 
   return {
@@ -220,6 +253,13 @@ export default async function PublicSitePage({ params }: Props) {
     breadcrumbItems.push({ name: page.title, url: canonical });
   }
 
+  const blockData = blocks.map((b) => ({
+    type: b.type,
+    content: b.content as Record<string, unknown>,
+  }));
+  const faqItems = extractFaqItems(blockData);
+  const pageHasForm = hasFormBlock(blockData);
+
   return (
     <>
       <WebPageJsonLd
@@ -231,6 +271,8 @@ export default async function PublicSitePage({ params }: Props) {
         isPartOf={{ name: site.name, url: siteUrl }}
       />
       <BreadcrumbJsonLd items={breadcrumbItems} />
+      {faqItems.length > 0 && <FaqJsonLd items={faqItems} />}
+      {pageHasForm && <ContactPageJsonLd name={page.title} url={canonical} />}
       <Breadcrumbs
         siteName={site.name}
         siteHref={homeHref}

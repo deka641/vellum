@@ -1,7 +1,12 @@
 "use client";
 
-import { useRef, useEffect, type CSSProperties } from "react";
+import { useRef, useEffect, useState, type CSSProperties } from "react";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import LinkExtension from "@tiptap/extension-link";
+import Placeholder from "@tiptap/extension-placeholder";
 import { useEditorStore } from "@/stores/editor-store";
+import { TextToolbar } from "./TextToolbar";
 import type { QuoteContent, BlockSettings } from "@/types/blocks";
 import styles from "./blocks.module.css";
 
@@ -14,19 +19,58 @@ interface QuoteBlockProps {
 export function QuoteBlock({ id, content, settings }: QuoteBlockProps) {
   const updateBlockContent = useEditorStore((s) => s.updateBlockContent);
   const variant = content.style || "default";
-  const elRef = useRef<HTMLDivElement>(null);
   const isLocalEdit = useRef(false);
+  const [focused, setFocused] = useState(false);
 
-  // Sync store changes (e.g. undo/redo) back to DOM
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        heading: false,
+        bulletList: false,
+        orderedList: false,
+        codeBlock: false,
+        blockquote: false,
+        horizontalRule: false,
+        code: false,
+        listItem: false,
+      }),
+      LinkExtension.configure({
+        openOnClick: false,
+      }),
+      Placeholder.configure({
+        placeholder: "Enter quote text...",
+      }),
+    ],
+    content: content.html || (content.text ? `<p>${content.text}</p>` : ""),
+    immediatelyRender: false,
+    onUpdate: ({ editor }) => {
+      isLocalEdit.current = true;
+      const html = editor.getHTML();
+      const text = editor.getText();
+      updateBlockContent(id, { html, text });
+    },
+    onFocus: () => setFocused(true),
+    onBlur: () => setFocused(false),
+    editorProps: {
+      attributes: {
+        class: styles.tiptapEditor,
+      },
+    },
+  });
+
+  // Sync store changes (e.g. undo/redo) back to TipTap
   useEffect(() => {
+    if (!editor || editor.isDestroyed) return;
     if (isLocalEdit.current) {
       isLocalEdit.current = false;
       return;
     }
-    if (elRef.current && elRef.current.textContent !== (content.text || "")) {
-      elRef.current.textContent = content.text || "";
+    const currentHtml = editor.getHTML();
+    const storeHtml = content.html || (content.text ? `<p>${content.text}</p>` : "");
+    if (currentHtml !== storeHtml) {
+      editor.commands.setContent(storeHtml, { emitUpdate: false });
     }
-  }, [content.text]);
+  }, [content.html, content.text, editor]);
 
   const inlineStyle: CSSProperties = {
     ...(settings.textColor && { color: settings.textColor }),
@@ -42,21 +86,9 @@ export function QuoteBlock({ id, content, settings }: QuoteBlockProps) {
       className={`${styles.quote} ${styles[`quote-${variant}`] || ""}`}
       style={inlineStyle}
     >
-      <div
-        ref={elRef}
-        className={styles.quoteText}
-        contentEditable
-        suppressContentEditableWarning
-        data-placeholder="Enter quote text..."
-        onInput={(e: React.FormEvent<HTMLDivElement>) => {
-          isLocalEdit.current = true;
-          updateBlockContent(id, { text: e.currentTarget.textContent || "" });
-        }}
-        onBlur={(e) =>
-          updateBlockContent(id, { text: e.currentTarget.textContent || "" })
-        }
-      >
-        {content.text || ""}
+      <div className={styles.quoteText}>
+        {focused && editor && <TextToolbar editor={editor} />}
+        <EditorContent editor={editor} />
       </div>
       <input
         className={styles.quoteAttribution}

@@ -51,6 +51,20 @@ export function PublishedBlock({ block, pageId, allBlocks }: PublishedBlockProps
       const headingMap = { 1: "h1", 2: "h2", 3: "h3", 4: "h4" } as const;
       const Tag = headingMap[level as 1 | 2 | 3 | 4] || "h2";
       const headingId = slugify(text);
+      const headingHtml = content.html as string | undefined;
+      if (headingHtml) {
+        return (
+          <Tag
+            id={headingId}
+            className={`${styles.heading} ${styles.headingWithAnchor}`}
+            style={{ textAlign: align, ...extraStyle }}
+            data-level={level}
+          >
+            <span dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(headingHtml) }} />
+            <HeadingAnchor id={headingId} />
+          </Tag>
+        );
+      }
       return (
         <Tag
           id={headingId}
@@ -244,7 +258,8 @@ export function PublishedBlock({ block, pageId, allBlocks }: PublishedBlockProps
 
     case "quote": {
       const text = content.text as string;
-      if (!text || text.trim() === "") return null;
+      const html = content.html as string | undefined;
+      if (!html && (!text || text.trim() === "")) return null;
       const quoteStyle = (content.style as string) || "default";
       const attribution = content.attribution as string | undefined;
       return (
@@ -252,7 +267,11 @@ export function PublishedBlock({ block, pageId, allBlocks }: PublishedBlockProps
           className={`${styles.quote} ${styles[`quote-${quoteStyle}`] || ""}`}
           style={{ textAlign: align, ...extraStyle }}
         >
-          <p className={styles.quoteText}>{text}</p>
+          {html ? (
+            <div className={styles.quoteText} dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(html) }} />
+          ) : (
+            <p className={styles.quoteText}>{text}</p>
+          )}
           {attribution && <cite className={styles.quoteAttribution}>{attribution}</cite>}
         </blockquote>
       );

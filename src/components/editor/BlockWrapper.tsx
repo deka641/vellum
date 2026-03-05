@@ -3,7 +3,7 @@
 import { memo, type ReactNode, useCallback, useState, useEffect } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Trash2, Copy, Clipboard, Eye, EyeOff } from "lucide-react";
+import { GripVertical, Trash2, Copy, Clipboard, Eye, EyeOff, Bookmark } from "lucide-react";
 import { useEditorStore } from "@/stores/editor-store";
 import { useShallow } from "zustand/react/shallow";
 import { useToast } from "@/components/ui/Toast/Toast";
@@ -38,6 +38,9 @@ export const BlockWrapper = memo(function BlockWrapper({ id, children }: BlockWr
   const updateBlockSettings = useEditorStore((s) => s.updateBlockSettings);
   const undo = useEditorStore((s) => s.undo);
   const { toast } = useToast();
+
+  const blockIndex = useEditorStore((s) => s.blocks.findIndex((b) => b.id === id));
+  const blockCount = useEditorStore((s) => s.blocks.length);
 
   const blockLabel = blockType
     ? `${blockType.charAt(0).toUpperCase() + blockType.slice(1)} block`
@@ -90,6 +93,34 @@ export const BlockWrapper = memo(function BlockWrapper({ id, children }: BlockWr
     updateBlockSettings(id, { hidden: !isHidden });
   }, [id, isHidden, updateBlockSettings]);
 
+  const handleSaveAsTemplate = useCallback(async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const block = useEditorStore.getState().blocks.find((b) => b.id === id);
+    if (!block) return;
+    const typeName = block.type.charAt(0).toUpperCase() + block.type.slice(1);
+    const name = `${typeName} template`;
+    try {
+      const res = await fetch("/api/block-templates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          type: block.type,
+          content: block.content,
+          settings: block.settings,
+        }),
+      });
+      if (res.ok) {
+        toast("Block saved as template", "success");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast(data.error || "Failed to save template", "error");
+      }
+    } catch {
+      toast("Failed to save template", "error");
+    }
+  }, [id, toast]);
+
   const handleDelete = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     removeBlock(id);
@@ -124,7 +155,9 @@ export const BlockWrapper = memo(function BlockWrapper({ id, children }: BlockWr
           className={styles.dragHandle}
           {...attributes}
           {...listeners}
-          aria-label="Drag to reorder block"
+          aria-label={`Reorder ${blockLabel}, position ${blockIndex + 1} of ${blockCount}`}
+          aria-roledescription="sortable"
+          aria-describedby="block-reorder-instructions"
         >
           <GripVertical size={14} />
         </button>
@@ -143,6 +176,14 @@ export const BlockWrapper = memo(function BlockWrapper({ id, children }: BlockWr
           aria-label="Copy block to clipboard"
         >
           <Clipboard size={14} />
+        </button>
+        <button
+          className={styles.saveTemplateButton}
+          onClick={handleSaveAsTemplate}
+          title="Save as template"
+          aria-label="Save block as template"
+        >
+          <Bookmark size={14} />
         </button>
         <button
           className={styles.visibilityButton}
@@ -168,6 +209,9 @@ export const BlockWrapper = memo(function BlockWrapper({ id, children }: BlockWr
         >
           {children}
         </ErrorBoundary>
+      </div>
+      <div id="block-reorder-instructions" className={styles.srOnly}>
+        Use Alt+Up and Alt+Down arrow keys to reorder this block
       </div>
     </div>
   );

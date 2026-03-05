@@ -96,6 +96,22 @@
   background: var(--color-bg-secondary);
 }
 
+.saveTemplateButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-md);
+  color: var(--color-text-tertiary);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.saveTemplateButton:hover {
+  color: var(--color-accent);
+  background: var(--color-bg-secondary);
+}
+
 .deleteButton {
   display: flex;
   align-items: center;
@@ -186,6 +202,18 @@
   }
 }
 
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* Tablet: larger touch targets and repositioned toolbar */
 @media (max-width: 1024px) {
   .toolbar {
@@ -204,6 +232,7 @@
   .dragHandle,
   .duplicateButton,
   .copyButton,
+  .saveTemplateButton,
   .deleteButton,
   .visibilityButton {
     width: 40px;
@@ -227,6 +256,7 @@
   .dragHandle,
   .duplicateButton,
   .copyButton,
+  .saveTemplateButton,
   .deleteButton,
   .visibilityButton {
     width: 44px;

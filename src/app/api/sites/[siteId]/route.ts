@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { auth } from "@/lib/auth";
+import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { apiError } from "@/lib/api-helpers";
 import { parseBody, updateSiteSchema } from "@/lib/validations";
@@ -93,10 +94,12 @@ export async function PATCH(
         ...(parsed.data.theme !== undefined && { theme: parsed.data.theme }),
         ...(parsed.data.favicon !== undefined && { favicon: parsed.data.favicon ? sanitizeImageSrc(parsed.data.favicon) : parsed.data.favicon }),
         ...(parsed.data.logo !== undefined && { logo: parsed.data.logo ? sanitizeImageSrc(parsed.data.logo) : parsed.data.logo }),
+        ...(parsed.data.defaultOgImage !== undefined && { defaultOgImage: parsed.data.defaultOgImage ? sanitizeImageSrc(parsed.data.defaultOgImage) : parsed.data.defaultOgImage }),
         ...(parsed.data.footer !== undefined && { footer: parsed.data.footer }),
         ...(parsed.data.notificationEmail !== undefined && { notificationEmail: parsed.data.notificationEmail }),
         ...(parsed.data.customHead !== undefined && { customHead: parsed.data.customHead }),
         ...(parsed.data.customFooter !== undefined && { customFooter: parsed.data.customFooter }),
+        ...(parsed.data.cookieConsent !== undefined && { cookieConsent: parsed.data.cookieConsent ? (parsed.data.cookieConsent as Prisma.InputJsonValue) : Prisma.JsonNull }),
       },
     });
 

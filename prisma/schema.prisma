@@ -27,10 +27,12 @@ model Site {
   favicon           String?
   logo              String?
   notificationEmail String?
+  defaultOgImage    String?
   theme             Json       @default("{}")
   footer            Json       @default("{}")
   customHead        String?    @db.Text
   customFooter      String?    @db.Text
+  cookieConsent     Json?
   userId            String
   user              User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   pages             Page[]
@@ -95,6 +97,7 @@ model Block {
   @@index([pageId])
   @@index([parentId])
   @@index([pageId, sortOrder])
+  @@index([type])
 }
 
 model PageRevision {
@@ -207,6 +210,18 @@ model PageTag {
   @@index([tagId])
 }
 
+model BlockTemplate {
+  id        String   @id @default(cuid())
+  name      String
+  type      String
+  content   Json
+  settings  Json     @default("{}")
+  userId    String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
 model ActivityLog {
   id        String   @id @default(cuid())
   userId    String
@@ -218,4 +233,5 @@ model ActivityLog {
 
   @@index([userId, createdAt])
   @@index([siteId, createdAt])
+  @@index([pageId])
 }

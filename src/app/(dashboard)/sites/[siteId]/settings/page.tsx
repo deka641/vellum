@@ -38,12 +38,17 @@ export default function SiteSettingsPage() {
   const [footerSocialLinks, setFooterSocialLinks] = useState<{ platform: string; url: string }[]>([]);
   const [showBranding, setShowBranding] = useState(true);
   const [notificationEmail, setNotificationEmail] = useState("");
+  const [cookieConsentEnabled, setCookieConsentEnabled] = useState(false);
+  const [cookieConsentMessage, setCookieConsentMessage] = useState("");
+  const [cookieConsentPrivacyUrl, setCookieConsentPrivacyUrl] = useState("");
   const [customHead, setCustomHead] = useState("");
   const [customFooter, setCustomFooter] = useState("");
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [uploadingFavicon, setUploadingFavicon] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [defaultOgImage, setDefaultOgImage] = useState<string | null>(null);
+  const [uploadingOgImage, setUploadingOgImage] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [redirects, setRedirects] = useState<RedirectRecord[]>([]);
   const [redirectFromPath, setRedirectFromPath] = useState("");
@@ -53,6 +58,7 @@ export default function SiteSettingsPage() {
   const [redirectsError, setRedirectsError] = useState(false);
   const faviconInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const ogImageInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetch(`/api/sites/${params.siteId}`)
@@ -62,11 +68,18 @@ export default function SiteSettingsPage() {
         setDescription(site.description || "");
         setFavicon(site.favicon || null);
         setLogo(site.logo || null);
+        setDefaultOgImage(site.defaultOgImage || null);
         const parsed = parseSiteTheme(site.theme);
         if (parsed) setTheme(parsed);
         setNotificationEmail(site.notificationEmail || "");
         setCustomHead(site.customHead || "");
         setCustomFooter(site.customFooter || "");
+        if (site.cookieConsent && typeof site.cookieConsent === "object") {
+          const cc = site.cookieConsent as { enabled?: boolean; message?: string; privacyUrl?: string };
+          setCookieConsentEnabled(cc.enabled === true);
+          setCookieConsentMessage(cc.message || "");
+          setCookieConsentPrivacyUrl(cc.privacyUrl || "");
+        }
         if (site.footer && typeof site.footer === "object") {
           const f = site.footer as {
             text?: string; description?: string;
@@ -192,6 +205,26 @@ export default function SiteSettingsPage() {
     }
   }
 
+  async function handleOgImageUpload(file: File) {
+    setUploadingOgImage(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await fetch("/api/media", { method: "POST", body: formData });
+      if (res.ok) {
+        const media = await res.json();
+        setDefaultOgImage(media.url);
+        toast("Default OG image uploaded");
+      } else {
+        toast("Failed to upload image", "error");
+      }
+    } catch {
+      toast("Upload failed", "error");
+    } finally {
+      setUploadingOgImage(false);
+    }
+  }
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -206,9 +239,17 @@ export default function SiteSettingsPage() {
           theme,
           favicon,
           logo,
+          defaultOgImage,
           notificationEmail: notificationEmail.trim() || null,
           customHead: customHead.trim() || null,
           customFooter: customFooter.trim() || null,
+          cookieConsent: cookieConsentEnabled
+            ? {
+                enabled: true,
+                message: cookieConsentMessage.trim() || undefined,
+                privacyUrl: cookieConsentPrivacyUrl.trim() || undefined,
+              }
+            : null,
           footer: {
             text: footerText || undefined,
             description: footerDescription || undefined,
@@ -380,6 +421,50 @@ export default function SiteSettingsPage() {
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) handleLogoUpload(file);
+                  e.target.value = "";
+                }}
+              />
+            </div>
+          </div>
+
+          <div className={styles.faviconSection}>
+            <label className={styles.faviconLabel}>Default Social Preview Image</label>
+            <p style={{ fontSize: "var(--text-sm)", color: "var(--color-text-secondary)", margin: "0 0 var(--space-2) 0" }}>
+              Used as the OG image for pages without their own preview image
+            </p>
+            <div className={styles.faviconRow}>
+              {defaultOgImage ? (
+                <div className={styles.logoPreview}>
+                  <img src={defaultOgImage} alt="Default OG image" />
+                  <button
+                    type="button"
+                    className={styles.faviconRemove}
+                    onClick={() => setDefaultOgImage(null)}
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                <div className={styles.faviconPlaceholder}>No image</div>
+              )}
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                leftIcon={<Upload size={14} />}
+                disabled={uploadingOgImage}
+                onClick={() => ogImageInputRef.current?.click()}
+              >
+                {uploadingOgImage ? "Uploading..." : "Upload"}
+              </Button>
+              <input
+                ref={ogImageInputRef}
+                type="file"
+                accept=".png,.jpg,.jpeg,.webp"
+                style={{ display: "none" }}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleOgImageUpload(file);
                   e.target.value = "";
                 }}
               />
@@ -582,6 +667,34 @@ export default function SiteSettingsPage() {
               />
               <span>Show &quot;Built with Vellum&quot; branding</span>
             </label>
+          </div>
+
+          <div className={styles.footerSection}>
+            <h3 className={styles.footerSectionTitle}>Cookie Consent</h3>
+            <label className={styles.checkboxRow}>
+              <input
+                type="checkbox"
+                checked={cookieConsentEnabled}
+                onChange={(e) => setCookieConsentEnabled(e.target.checked)}
+              />
+              <span>Show cookie consent banner on published site</span>
+            </label>
+            {cookieConsentEnabled && (
+              <>
+                <Input
+                  label="Banner message"
+                  value={cookieConsentMessage}
+                  onChange={(e) => setCookieConsentMessage(e.target.value)}
+                  placeholder="This site uses cookies to enhance your experience."
+                />
+                <Input
+                  label="Privacy policy URL"
+                  value={cookieConsentPrivacyUrl}
+                  onChange={(e) => setCookieConsentPrivacyUrl(e.target.value)}
+                  placeholder="https://example.com/privacy"
+                />
+              </>
+            )}
           </div>
 
           <details className={styles.customCodeSection}>

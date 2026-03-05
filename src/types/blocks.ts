@@ -25,6 +25,7 @@ export interface BlockData {
 
 export interface HeadingContent {
   text: string;
+  html?: string;
   level: 1 | 2 | 3 | 4;
 }
 
@@ -70,6 +71,7 @@ export interface VideoContent {
 
 export interface QuoteContent {
   text: string;
+  html?: string;
   attribution?: string;
   style: "default" | "bordered" | "filled";
 }

@@ -215,6 +215,9 @@ function sanitizeBlockContent(block: BlockLike): BlockLike {
       if (typeof content.text === "string") {
         content.text = sanitize(content.text, { allowedTags: [], allowedAttributes: {} });
       }
+      if (typeof content.html === "string") {
+        content.html = sanitizeRichHtml(content.html);
+      }
       break;
 
     case "text":

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Search, ChevronLeft, ChevronRight, AlertCircle, RefreshCw } from "lucide-react";
+import { Skeleton } from "@/components/ui/Skeleton/Skeleton";
 import {
   Dialog,
   DialogContent,
@@ -129,9 +130,11 @@ export function MediaPickerModal({ open, onOpenChange, onSelect }: MediaPickerMo
           />
         </div>
         {loading ? (
-          <p style={{ textAlign: "center", padding: "2rem", color: "var(--color-text-tertiary)", fontSize: "var(--text-sm)" }}>
-            Loading media...
-          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", gap: "8px", padding: "8px 0" }}>
+            {Array.from({ length: 8 }).map((_, i) => (
+              <Skeleton key={i} height={100} />
+            ))}
+          </div>
         ) : fetchError ? (
           <div style={{ textAlign: "center", padding: "2rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
             <AlertCircle size={24} style={{ color: "var(--color-error, #DC2626)" }} />

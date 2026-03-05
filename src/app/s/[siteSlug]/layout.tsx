@@ -9,6 +9,7 @@ import { ReadingProgress } from "@/components/published/ReadingProgress";
 import { WebSiteJsonLd } from "@/components/published/JsonLd";
 import styles from "@/components/published/site-layout.module.css";
 import { ScrollToTop } from "@/components/published/ScrollToTop";
+import { CookieConsentWrapper } from "@/components/published/CookieConsentWrapper";
 
 interface Props {
   params: Promise<{ siteSlug: string }>;
@@ -71,6 +72,12 @@ export default async function PublishedSiteLayout({ params, children }: Props) {
         <div dangerouslySetInnerHTML={{ __html: site.customFooter }} />
       )}
       <ScrollToTop />
+      {site.cookieConsent && typeof site.cookieConsent === "object" && !Array.isArray(site.cookieConsent) && (site.cookieConsent as Record<string, unknown>).enabled === true && (
+        <CookieConsentWrapper
+          message={(site.cookieConsent as Record<string, unknown>).message as string | undefined}
+          privacyUrl={(site.cookieConsent as Record<string, unknown>).privacyUrl as string | undefined}
+        />
+      )}
     </div>
   );
 }

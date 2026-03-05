@@ -34,6 +34,7 @@ export async function GET(
         id: true,
         title: true,
         note: true,
+        blocks: true,
         createdAt: true,
       },
       orderBy: { createdAt: "desc" },

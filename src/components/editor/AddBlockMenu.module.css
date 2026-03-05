@@ -109,8 +109,14 @@
   cursor: pointer;
 }
 
-.blockButton:hover {
+.blockButton:hover,
+.blockButtonActive {
   background: var(--color-bg-secondary);
+}
+
+.blockButtonActive .blockIcon {
+  background: var(--color-accent-light);
+  color: var(--color-accent);
 }
 
 .blockIcon {
@@ -398,6 +404,112 @@
   color: var(--color-text-secondary);
 }
 
+/* Saved block templates */
+.savedLoadingContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+}
+
+.savedEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-4);
+  color: var(--color-text-tertiary);
+  text-align: center;
+}
+
+.savedEmpty p {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.savedEmpty span {
+  font-size: var(--text-xs);
+}
+
+.savedList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.savedItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  border-radius: var(--radius-md);
+  transition: background var(--duration-fast) var(--ease-out);
+}
+
+.savedItem:hover {
+  background: var(--color-bg-secondary);
+}
+
+.savedItemButton {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: 1;
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+  min-width: 0;
+}
+
+.savedItemIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+.savedItem:hover .savedItemIcon {
+  background: var(--color-accent-light);
+  color: var(--color-accent);
+}
+
+.savedItemName {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.savedItemDelete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-md);
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.savedItem:hover .savedItemDelete {
+  opacity: 1;
+}
+
+.savedItemDelete:hover {
+  color: var(--color-error);
+  background: var(--color-error-light);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .blockButton {
     transition: none;
@@ -412,6 +524,12 @@
     transition: none;
   }
   .presetClose {
+    transition: none;
+  }
+  .savedItem {
+    transition: none;
+  }
+  .savedItemDelete {
     transition: none;
   }
 }

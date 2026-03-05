@@ -1,8 +1,12 @@
 "use client";
 
-import { useRef, useEffect, type CSSProperties } from "react";
+import { useRef, useEffect, useState, type CSSProperties } from "react";
+import { useEditor, EditorContent, Node } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import LinkExtension from "@tiptap/extension-link";
 import { useEditorStore } from "@/stores/editor-store";
 import { AlertTriangle } from "lucide-react";
+import { TextToolbar } from "./TextToolbar";
 import type { HeadingContent, BlockSettings } from "@/types/blocks";
 import styles from "./blocks.module.css";
 
@@ -19,8 +23,36 @@ const headingElements = {
   4: "h4",
 } as const;
 
+/**
+ * Custom Document node that renders as a heading tag directly,
+ * so TipTap content is inline (no wrapping <p>).
+ */
+function createHeadingDocument(level: 1 | 2 | 3 | 4) {
+  return Node.create({
+    name: "doc",
+    topNode: true,
+    content: "inline*",
+    parseHTML() {
+      return [{ tag: headingElements[level] }];
+    },
+    renderHTML({ HTMLAttributes }) {
+      return [headingElements[level], HTMLAttributes, 0];
+    },
+  });
+}
+
+/**
+ * Minimal text node for TipTap (normally provided by @tiptap/extension-text).
+ */
+const TextNode = Node.create({
+  name: "text",
+  group: "inline",
+});
+
 export function HeadingBlock({ id, content, settings }: HeadingBlockProps) {
   const updateBlockContent = useEditorStore((s) => s.updateBlockContent);
+  const isLocalEdit = useRef(false);
+  const [focused, setFocused] = useState(false);
 
   // Check for skipped heading levels
   const headingWarning = useEditorStore((s) => {
@@ -36,20 +68,62 @@ export function HeadingBlock({ id, content, settings }: HeadingBlockProps) {
     return null;
   });
 
-  const Tag = headingElements[content.level] || "h2";
-  const elRef = useRef<HTMLHeadingElement>(null);
-  const isLocalEdit = useRef(false);
+  const headingHtml = content.html || content.text;
 
-  // Sync store changes (e.g. undo/redo) back to DOM
+  const editor = useEditor({
+    extensions: [
+      createHeadingDocument(content.level),
+      TextNode,
+      StarterKit.configure({
+        document: false,
+        text: false,
+        paragraph: false,
+        heading: false,
+        bulletList: false,
+        orderedList: false,
+        listItem: false,
+        blockquote: false,
+        codeBlock: false,
+        horizontalRule: false,
+        hardBreak: false,
+        dropcursor: false,
+        gapcursor: false,
+      }),
+      LinkExtension.configure({
+        openOnClick: false,
+      }),
+    ],
+    content: headingHtml,
+    immediatelyRender: false,
+    onUpdate: ({ editor: ed }) => {
+      isLocalEdit.current = true;
+      const html = ed.getHTML();
+      const plainText = ed.getText();
+      updateBlockContent(id, { text: plainText, html });
+    },
+    onFocus: () => setFocused(true),
+    onBlur: () => setFocused(false),
+    editorProps: {
+      attributes: {
+        class: styles.heading,
+        "data-level": String(content.level),
+      },
+    },
+  });
+
+  // Sync store changes (e.g. undo/redo) back to TipTap
   useEffect(() => {
+    if (!editor || editor.isDestroyed) return;
     if (isLocalEdit.current) {
       isLocalEdit.current = false;
       return;
     }
-    if (elRef.current && elRef.current.textContent !== content.text) {
-      elRef.current.textContent = content.text;
+    const storeHtml = content.html || content.text;
+    const currentHtml = editor.getHTML();
+    if (currentHtml !== storeHtml) {
+      editor.commands.setContent(storeHtml, { emitUpdate: false });
     }
-  }, [content.text]);
+  }, [content.html, content.text, editor]);
 
   const inlineStyle: CSSProperties = {
     ...(settings.textColor && { color: settings.textColor }),
@@ -62,23 +136,10 @@ export function HeadingBlock({ id, content, settings }: HeadingBlockProps) {
 
   return (
     <>
-      <Tag
-        ref={elRef as React.Ref<HTMLHeadingElement>}
-        className={styles.heading}
-        contentEditable
-        suppressContentEditableWarning
-        onInput={(e: React.FormEvent<HTMLHeadingElement>) => {
-          isLocalEdit.current = true;
-          updateBlockContent(id, { text: e.currentTarget.textContent || "" });
-        }}
-        onBlur={(e: React.FocusEvent<HTMLHeadingElement>) =>
-          updateBlockContent(id, { text: e.currentTarget.textContent || "" })
-        }
-        data-level={content.level}
-        style={inlineStyle}
-      >
-        {content.text}
-      </Tag>
+      <div style={inlineStyle}>
+        {focused && editor && <TextToolbar editor={editor} />}
+        <EditorContent editor={editor} />
+      </div>
       {headingWarning && (
         <div className={styles.headingWarning}>
           <AlertTriangle size={14} />

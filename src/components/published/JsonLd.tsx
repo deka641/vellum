@@ -110,3 +110,57 @@ export function BreadcrumbJsonLd({ items }: BreadcrumbJsonLdProps) {
     />
   );
 }
+
+interface FaqItem {
+  question: string;
+  answer: string;
+}
+
+interface FaqJsonLdProps {
+  items: FaqItem[];
+}
+
+export function FaqJsonLd({ items }: FaqJsonLdProps) {
+  if (items.length === 0) return null;
+
+  const data: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: items.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
+    })),
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: safeJsonLd(data) }}
+    />
+  );
+}
+
+interface ContactPageJsonLdProps {
+  name: string;
+  url: string;
+}
+
+export function ContactPageJsonLd({ name, url }: ContactPageJsonLdProps) {
+  const data: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "ContactPage",
+    name,
+    url,
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: safeJsonLd(data) }}
+    />
+  );
+}

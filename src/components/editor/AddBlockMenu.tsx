@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useMemo } from "react";
+import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import {
   Type,
   AlignLeft,
@@ -18,9 +18,13 @@ import {
   ChevronDown,
   List,
   Table,
+  Trash2,
+  Bookmark,
 } from "lucide-react";
 import { type BlockType } from "@/types/blocks";
 import { blockDefinitions, blockCategories } from "@/lib/blocks";
+import { Skeleton } from "@/components/ui/Skeleton/Skeleton";
+import { useToast } from "@/components/ui/Toast/Toast";
 import styles from "./AddBlockMenu.module.css";
 
 const iconMap: Record<string, React.ReactNode> = {
@@ -189,14 +193,62 @@ const COLUMN_PRESETS: { label: string; widths: number[] }[] = [
   { label: "25 / 75", widths: [25, 75] },
 ];
 
-const ALL_CATEGORIES = [{ key: "all", label: "All" }, ...blockCategories] as const;
+interface SavedBlockTemplate {
+  id: string;
+  name: string;
+  type: string;
+  content: Record<string, unknown>;
+  settings: Record<string, unknown>;
+}
+
+const ALL_CATEGORIES = [{ key: "all", label: "All" }, { key: "saved", label: "Saved" }, ...blockCategories] as const;
 
 export function AddBlockMenu({ onAdd }: AddBlockMenuProps) {
   const [filter, setFilter] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [showColumnPresets, setShowColumnPresets] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const [savedTemplates, setSavedTemplates] = useState<SavedBlockTemplate[]>([]);
+  const [savedLoading, setSavedLoading] = useState(false);
+  const [savedFetched, setSavedFetched] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const lowerFilter = filter.toLowerCase();
+  const { toast } = useToast();
+
+  // Fetch saved templates when "Saved" tab is selected
+  useEffect(() => {
+    if (activeCategory === "saved" && !savedFetched) {
+      setSavedLoading(true);
+      fetch("/api/block-templates")
+        .then((res) => res.json())
+        .then((data) => {
+          if (Array.isArray(data)) {
+            setSavedTemplates(data);
+          }
+        })
+        .catch(() => {
+          // silently fail
+        })
+        .finally(() => {
+          setSavedLoading(false);
+          setSavedFetched(true);
+        });
+    }
+  }, [activeCategory, savedFetched]);
+
+  const handleDeleteTemplate = useCallback(async (templateId: string) => {
+    try {
+      const res = await fetch(`/api/block-templates?id=${templateId}`, { method: "DELETE" });
+      if (res.ok) {
+        setSavedTemplates((prev) => prev.filter((t) => t.id !== templateId));
+        toast("Template deleted", "info");
+      } else {
+        toast("Failed to delete template", "error");
+      }
+    } catch {
+      toast("Failed to delete template", "error");
+    }
+  }, [toast]);
 
   const filteredBlocks = useMemo(() => {
     return Object.values(blockDefinitions).filter((b) => {
@@ -207,20 +259,50 @@ export function AddBlockMenu({ onAdd }: AddBlockMenuProps) {
   }, [activeCategory, lowerFilter]);
 
   const categoriesToShow = useMemo(() => {
+    if (activeCategory === "saved") return [];
     if (activeCategory !== "all") {
-      return [blockCategories.find((c) => c.key === activeCategory)!];
+      const found = blockCategories.find((c) => c.key === activeCategory);
+      return found ? [found] : [];
     }
     return [...blockCategories];
   }, [activeCategory]);
 
+  // Reset active index when filter or category changes
+  useEffect(() => {
+    setActiveIndex(-1);
+  }, [filter, activeCategory]);
+
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === "Enter" && filteredBlocks.length > 0) {
-        e.preventDefault();
-        onAdd(filteredBlocks[0].type);
+      if (filteredBlocks.length === 0) return;
+
+      switch (e.key) {
+        case "ArrowDown": {
+          e.preventDefault();
+          setActiveIndex((prev) => (prev + 1) % filteredBlocks.length);
+          break;
+        }
+        case "ArrowUp": {
+          e.preventDefault();
+          setActiveIndex((prev) => (prev <= 0 ? filteredBlocks.length - 1 : prev - 1));
+          break;
+        }
+        case "Enter": {
+          e.preventDefault();
+          const idx = activeIndex >= 0 ? activeIndex : 0;
+          const block = filteredBlocks[idx];
+          if (block) {
+            if (block.type === "columns") {
+              setShowColumnPresets(true);
+            } else {
+              onAdd(block.type);
+            }
+          }
+          break;
+        }
       }
     },
-    [filteredBlocks, onAdd]
+    [filteredBlocks, onAdd, activeIndex]
   );
 
   return (
@@ -235,6 +317,10 @@ export function AddBlockMenu({ onAdd }: AddBlockMenuProps) {
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           onKeyDown={handleKeyDown}
+          role="combobox"
+          aria-expanded="true"
+          aria-controls="block-list"
+          aria-activedescendant={activeIndex >= 0 && filteredBlocks[activeIndex] ? `block-option-${filteredBlocks[activeIndex].type}` : undefined}
         />
       </div>
       <div className={styles.filterChips}>
@@ -248,7 +334,7 @@ export function AddBlockMenu({ onAdd }: AddBlockMenuProps) {
           </button>
         ))}
       </div>
-      {categoriesToShow.map((cat) => {
+      {activeCategory !== "saved" && categoriesToShow.map((cat) => {
         const blocks = filteredBlocks.filter((b) => b.category === cat.key);
         if (blocks.length === 0) return null;
         return (
@@ -256,32 +342,81 @@ export function AddBlockMenu({ onAdd }: AddBlockMenuProps) {
             {activeCategory === "all" && (
               <span className={styles.categoryLabel}>{cat.label}</span>
             )}
-            <div className={styles.grid}>
-              {blocks.map((block) => (
-                <button
-                  key={block.type}
-                  className={styles.blockButton}
-                  onClick={() => {
-                    if (block.type === "columns") {
-                      setShowColumnPresets(true);
-                    } else {
-                      onAdd(block.type);
-                    }
-                  }}
-                >
-                  <span className={styles.blockIcon}>
-                    {iconMap[block.icon]}
-                  </span>
-                  <BlockPreview type={block.type} />
-                  <span className={styles.blockLabel}>{block.label}</span>
-                </button>
-              ))}
+            <div className={styles.grid} role="listbox" aria-label="Available blocks">
+              {blocks.map((block) => {
+                const globalIdx = filteredBlocks.indexOf(block);
+                const isActive = globalIdx === activeIndex;
+                return (
+                  <button
+                    key={block.type}
+                    className={`${styles.blockButton} ${isActive ? styles.blockButtonActive : ""}`}
+                    role="option"
+                    aria-selected={isActive}
+                    id={`block-option-${block.type}`}
+                    onClick={() => {
+                      if (block.type === "columns") {
+                        setShowColumnPresets(true);
+                      } else {
+                        onAdd(block.type);
+                      }
+                    }}
+                  >
+                    <span className={styles.blockIcon}>
+                      {iconMap[block.icon]}
+                    </span>
+                    <BlockPreview type={block.type} />
+                    <span className={styles.blockLabel}>{block.label}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         );
       })}
-      {filteredBlocks.length === 0 && (filter || activeCategory !== "all") && (
+      {activeCategory !== "saved" && filteredBlocks.length === 0 && (filter || activeCategory !== "all") && (
         <p className={styles.noResults}>No blocks matching &ldquo;{filter || activeCategory}&rdquo;</p>
+      )}
+      {activeCategory === "saved" && (
+        <div className={styles.category}>
+          {savedLoading ? (
+            <div className={styles.savedLoadingContainer}>
+              <Skeleton width="100%" height="48px" />
+              <Skeleton width="100%" height="48px" />
+              <Skeleton width="100%" height="48px" />
+            </div>
+          ) : savedTemplates.length === 0 ? (
+            <div className={styles.savedEmpty}>
+              <Bookmark size={24} />
+              <p>No saved templates yet</p>
+              <span>Use the bookmark icon on any block to save it as a template</span>
+            </div>
+          ) : (
+            <div className={styles.savedList}>
+              {savedTemplates.map((template) => (
+                <div key={template.id} className={styles.savedItem}>
+                  <button
+                    className={styles.savedItemButton}
+                    onClick={() => onAdd(template.type as BlockType, template.content)}
+                    title={`Insert ${template.name}`}
+                  >
+                    <span className={styles.savedItemIcon}>
+                      {iconMap[blockDefinitions[template.type as BlockType]?.icon] || <Bookmark size={20} />}
+                    </span>
+                    <span className={styles.savedItemName}>{template.name}</span>
+                  </button>
+                  <button
+                    className={styles.savedItemDelete}
+                    onClick={() => handleDeleteTemplate(template.id)}
+                    title="Delete template"
+                    aria-label={`Delete template ${template.name}`}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
       {showColumnPresets && (
         <div className={styles.presetOverlay}>
