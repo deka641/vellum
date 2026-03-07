@@ -262,7 +262,8 @@ export const updatePageSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   description: z.string().max(2000).nullable().optional(),
   slug: z.string().min(1).max(200)
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug must be lowercase letters, numbers, and hyphens")
+    .regex(/^[a-z0-9-]+$/, "Slug must be lowercase letters, numbers, and hyphens")
+    .refine((s) => !s.startsWith("-") && !s.endsWith("-") && !s.includes("--"), "Slug cannot start or end with a hyphen or contain consecutive hyphens")
     .refine((s) => !RESERVED_SLUGS.includes(s), "This slug is reserved and cannot be used")
     .optional(),
   metaTitle: z.string().max(200).nullable().optional(),
@@ -296,7 +297,8 @@ export const updateBlocksSchema = z.object({
 // --- Media ---
 
 export const updateMediaSchema = z.object({
-  alt: z.string().max(1000),
+  alt: z.string().max(1000).optional(),
+  folder: z.string().max(100).nullable().optional(),
 });
 
 export const bulkDeleteMediaSchema = z.object({
@@ -389,8 +391,8 @@ export const formSubmissionSchema = z.object({
 // --- Redirects ---
 
 export const createRedirectSchema = z.object({
-  fromPath: z.string().min(1).max(500).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Path must be lowercase letters, numbers, and hyphens"),
-  toPath: z.string().min(1).max(500).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Path must be lowercase letters, numbers, and hyphens"),
+  fromPath: z.string().min(1).max(500).regex(/^[a-z0-9-]+$/, "Path must be lowercase letters, numbers, and hyphens").refine((s) => !s.startsWith("-") && !s.endsWith("-"), "Path cannot start or end with a hyphen"),
+  toPath: z.string().min(1).max(500).regex(/^[a-z0-9-]+$/, "Path must be lowercase letters, numbers, and hyphens").refine((s) => !s.startsWith("-") && !s.endsWith("-"), "Path cannot start or end with a hyphen"),
   permanent: z.boolean().optional().default(true),
 });
 

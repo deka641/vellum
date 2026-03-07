@@ -146,7 +146,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     || extractTextSnippet(blockData)
     || (page.isHomepage ? site.description : undefined)
     || undefined;
-  const ogImage = page.ogImage || findFirstImageSrc(blockData) || (site.defaultOgImage as string | null) || undefined;
+  const ogImage = page.ogImage || findFirstImageSrc(blockData) || (site.defaultOgImage as string | null) || "/og-default.png";
   const metaTitle = page.metaTitle || page.title;
 
   return {

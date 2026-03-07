@@ -210,6 +210,7 @@ export default async function DashboardPage() {
                       </div>
                       <div className={styles.listRight}>
                         <span className={`${styles.statusDot} ${page.status === "PUBLISHED" ? styles.statusPublished : ""}`} />
+                        <span className={styles.statusLabel}>{page.status === "PUBLISHED" ? "Published" : "Draft"}</span>
                         <span className={styles.listDate}>{formatDate(page.updatedAt)}</span>
                       </div>
                     </Link>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Image as ImageIcon, Search, CheckSquare, Trash2, ChevronLeft, ChevronRight, AlertCircle, RefreshCw } from "lucide-react";
+import { Image as ImageIcon, Search, CheckSquare, Trash2, ChevronLeft, ChevronRight, AlertCircle, RefreshCw, FolderOpen, Plus, Folder } from "lucide-react";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { MediaGrid } from "@/components/media/MediaGrid";
 import { MediaUploader } from "@/components/media/MediaUploader";
@@ -21,6 +21,7 @@ interface MediaItem {
   alt: string | null;
   width: number | null;
   height: number | null;
+  folder: string | null;
 }
 
 type MediaTypeFilter = "all" | "images" | "videos" | "documents";
@@ -40,6 +41,11 @@ export default function MediaPage() {
   const [total, setTotal] = useState(0);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+  const [folders, setFolders] = useState<string[]>([]);
+  const [activeFolder, setActiveFolder] = useState<string | null>(null);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [showNewFolder, setShowNewFolder] = useState(false);
+  const [uploadFolder, setUploadFolder] = useState<string | null>(null);
   const { toast } = useToast();
 
   // Debounce search input
@@ -53,7 +59,7 @@ export default function MediaPage() {
   // Reset page when filters change
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, typeFilter, sortBy]);
+  }, [debouncedSearch, typeFilter, sortBy, activeFolder]);
 
   const fetchMedia = useCallback(async () => {
     setLoading(true);
@@ -62,6 +68,7 @@ export default function MediaPage() {
       const params = new URLSearchParams({ page: String(page) });
       if (debouncedSearch) params.set("search", debouncedSearch);
       if (typeFilter !== "all") params.set("type", typeFilter);
+      if (activeFolder !== null) params.set("folder", activeFolder);
       const [sortField, sortOrder] = sortBy.split("-");
       if (sortField && sortField !== "date") params.set("sort", sortField);
       if (sortOrder === "asc") params.set("order", "asc");
@@ -72,6 +79,7 @@ export default function MediaPage() {
         setItems(data.media || []);
         setTotalPages(data.pages || 1);
         setTotal(data.total || 0);
+        setFolders(data.folders || []);
       } else {
         setFetchError(true);
       }
@@ -81,7 +89,7 @@ export default function MediaPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, debouncedSearch, typeFilter, sortBy]);
+  }, [page, debouncedSearch, typeFilter, sortBy, activeFolder]);
 
   useEffect(() => {
     fetchMedia();
@@ -138,6 +146,34 @@ export default function MediaPage() {
     }
   }
 
+  function handleCreateFolder() {
+    const name = newFolderName.trim();
+    if (!name) return;
+    if (folders.includes(name)) {
+      toast("Folder already exists", "error");
+      return;
+    }
+    setFolders((prev) => [...prev, name].sort());
+    setActiveFolder(name);
+    setUploadFolder(name);
+    setNewFolderName("");
+    setShowNewFolder(false);
+  }
+
+  async function handleMoveToFolder(id: string, folder: string | null) {
+    const res = await fetch(`/api/media/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ folder }),
+    });
+    if (res.ok) {
+      toast(folder ? `Moved to ${folder}` : "Moved to unfiled");
+      fetchMedia();
+    } else {
+      toast("Failed to move file", "error");
+    }
+  }
+
   async function handleUpdateAlt(id: string, alt: string) {
     const res = await fetch(`/api/media/${id}`, {
       method: "PATCH",
@@ -155,10 +191,80 @@ export default function MediaPage() {
   return (
     <>
       <Topbar title="Media Library" description="Upload and manage your files" />
-      <div className={styles.content}>
-        <MediaUploader
-          onUpload={() => { fetchMedia(); }}
-        />
+      <div className={styles.pageLayout}>
+        <aside className={styles.folderSidebar}>
+          <div className={styles.folderHeader}>
+            <span className={styles.folderTitle}>Folders</span>
+            <button
+              className={styles.folderAddBtn}
+              onClick={() => setShowNewFolder(!showNewFolder)}
+              title="New folder"
+            >
+              <Plus size={14} />
+            </button>
+          </div>
+          {showNewFolder && (
+            <div className={styles.newFolderRow}>
+              <input
+                className={styles.newFolderInput}
+                type="text"
+                placeholder="Folder name"
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") handleCreateFolder(); }}
+                maxLength={100}
+                autoFocus
+              />
+              <Button variant="primary" size="sm" onClick={handleCreateFolder}>
+                Add
+              </Button>
+            </div>
+          )}
+          <button
+            className={`${styles.folderItem} ${activeFolder === null ? styles.folderItemActive : ""}`}
+            onClick={() => { setActiveFolder(null); setUploadFolder(null); }}
+          >
+            <FolderOpen size={14} />
+            All files
+          </button>
+          <button
+            className={`${styles.folderItem} ${activeFolder === "__unfiled__" ? styles.folderItemActive : ""}`}
+            onClick={() => { setActiveFolder("__unfiled__"); setUploadFolder(null); }}
+          >
+            <FolderOpen size={14} />
+            Unfiled
+          </button>
+          {folders.map((f) => (
+            <button
+              key={f}
+              className={`${styles.folderItem} ${activeFolder === f ? styles.folderItemActive : ""}`}
+              onClick={() => { setActiveFolder(f); setUploadFolder(f); }}
+            >
+              <Folder size={14} />
+              {f}
+            </button>
+          ))}
+        </aside>
+        <div className={styles.content}>
+        <div className={styles.uploadRow}>
+          <MediaUploader
+            onUpload={() => { fetchMedia(); }}
+            folder={uploadFolder}
+          />
+          <div className={styles.uploadFolderSelect}>
+            <label className={styles.uploadFolderLabel}>Upload to:</label>
+            <select
+              className={styles.sortSelect}
+              value={uploadFolder || ""}
+              onChange={(e) => setUploadFolder(e.target.value || null)}
+            >
+              <option value="">No folder</option>
+              {folders.map((f) => (
+                <option key={f} value={f}>{f}</option>
+              ))}
+            </select>
+          </div>
+        </div>
 
         {loading && items.length === 0 ? (
           <div className={styles.loading}>
@@ -240,6 +346,8 @@ export default function MediaPage() {
               selectionMode={selectionMode}
               selectedIds={selectedIds}
               onToggleSelect={handleToggleSelect}
+              folders={folders}
+              onMoveToFolder={handleMoveToFolder}
             />
             {totalPages > 1 && (
               <div className={styles.pagination}>
@@ -281,6 +389,7 @@ export default function MediaPage() {
             )}
           </>
         )}
+      </div>
       </div>
       <ConfirmDialog
         open={deleteTarget !== null}

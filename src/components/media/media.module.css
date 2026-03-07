@@ -107,6 +107,61 @@
   color: var(--color-text-tertiary);
 }
 
+.moveBtn {
+  position: absolute;
+  top: var(--space-1);
+  right: calc(var(--space-1) + 28px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-tertiary);
+  opacity: 0;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.gridItem:hover .moveBtn {
+  opacity: 1;
+}
+
+.moveBtn:hover {
+  color: var(--color-accent);
+  background: var(--color-accent-light);
+}
+
+.folderPicker {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: var(--space-1);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-top: none;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+
+.folderPickerItem {
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  text-align: left;
+  border-radius: var(--radius-sm);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.folderPickerItem:hover {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+}
+
+.folderPickerItemActive {
+  color: var(--color-accent);
+  font-weight: var(--weight-medium);
+}
+
 .deleteBtn {
   position: absolute;
   top: var(--space-1);

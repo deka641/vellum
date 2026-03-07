@@ -26,7 +26,15 @@ export async function GET(req: Request) {
     const sort = searchParams.get("sort") || "date";
     const order = searchParams.get("order") === "asc" ? "asc" as const : "desc" as const;
 
+    const folder = searchParams.get("folder");
+
     const where: Prisma.MediaWhereInput = { userId: session.user.id };
+
+    if (folder === "__unfiled__") {
+      where.folder = null;
+    } else if (folder) {
+      where.folder = folder;
+    }
 
     if (search) {
       where.OR = [
@@ -53,7 +61,7 @@ export async function GET(req: Request) {
     };
     const orderBy = orderByMap[sort] || { createdAt: order };
 
-    const [media, total] = await Promise.all([
+    const [media, total, folderRecords] = await Promise.all([
       db.media.findMany({
         where,
         orderBy,
@@ -61,13 +69,24 @@ export async function GET(req: Request) {
         take: limit,
       }),
       db.media.count({ where }),
+      db.media.findMany({
+        where: { userId: session.user.id, folder: { not: null } },
+        select: { folder: true },
+        distinct: ["folder"],
+        orderBy: { folder: "asc" },
+      }),
     ]);
+
+    const folders = folderRecords
+      .map((r) => r.folder)
+      .filter((f): f is string => f !== null);
 
     return NextResponse.json({
       media,
       total,
       pages: Math.ceil(total / limit),
       page,
+      folders,
     });
   } catch (error) {
     return apiError("GET /api/media", error);
@@ -86,6 +105,10 @@ export async function POST(req: Request) {
 
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
+    const folderRaw = formData.get("folder") as string | null;
+    const folder = folderRaw && folderRaw.trim().length > 0 && folderRaw.trim().length <= 100
+      ? folderRaw.trim()
+      : null;
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
@@ -128,6 +151,7 @@ export async function POST(req: Request) {
           height,
           url,
           webpUrl,
+          folder,
           userId: session.user.id,
         },
       });

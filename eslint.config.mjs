@@ -40,13 +40,9 @@ export default tseslint.config(
     },
     rules: {
       "security/detect-eval-with-expression": "error",
-      // These are warn-level to surface issues without blocking CI.
-      // The --max-warnings 0 policy means warnings fail the build,
-      // so we disable rules with known false positives for now.
-      // TODO: Enable after auditing flagged patterns
-      // "security/detect-unsafe-regex": "warn",
-      // "security/detect-non-literal-regexp": "warn",
-      // "security/detect-possible-timing-attacks": "warn",
+      "security/detect-unsafe-regex": "error",
+      "security/detect-non-literal-regexp": "error",
+      "security/detect-possible-timing-attacks": "error",
     },
   },
 

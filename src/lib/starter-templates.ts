@@ -165,6 +165,7 @@ export function makeStarterBlocks(pageKey: string, siteName: string) {
         { id: generateId(), type: "heading", content: { text: "Building a Design System That Scales", level: 3 }, settings: {} },
         { id: generateId(), type: "text", content: { html: "<p>A design system is more than a collection of components — it is a shared language that unites your team. In this article, we explore how to build one that grows with your product, from foundational tokens to complex patterns. Learn the principles that keep large-scale systems maintainable and consistent.</p>" }, settings: {} },
         { id: generateId(), type: "button", content: { text: "Read Article", url: "#", variant: "secondary" }, settings: {} },
+        { id: generateId(), type: "code", content: { code: "function greet(name: string): string {\n  return `Hello, ${name}! Welcome to our blog.`;\n}\n\nconsole.log(greet('Reader'));", language: "html", displayMode: "snippet", snippetLanguage: "typescript" }, settings: {} },
         { id: generateId(), type: "spacer", content: { height: 32 }, settings: {} },
         { id: generateId(), type: "heading", content: { text: "Recent Posts", level: 2 }, settings: {} },
         {
@@ -219,6 +220,7 @@ export function makeStarterBlocks(pageKey: string, siteName: string) {
             ],
           }, settings: { gap: "32" }
         },
+        { id: generateId(), type: "video", content: { url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", provider: "youtube" }, settings: {} },
         { id: generateId(), type: "divider", content: {}, settings: {} },
         { id: generateId(), type: "heading", content: { text: "Frequently Asked Questions", level: 2 }, settings: {} },
         {
@@ -274,6 +276,7 @@ export function makeStarterBlocks(pageKey: string, siteName: string) {
       return [
         { id: generateId(), type: "heading", content: { text: "Simple, Transparent Pricing", level: 1 }, settings: { align: "center" } },
         { id: generateId(), type: "text", content: { html: "<p>No hidden fees, no long-term contracts. Choose the plan that fits your needs and scale up as you grow. Every plan includes our core features and dedicated support.</p>" }, settings: { align: "center" } },
+        { id: generateId(), type: "table", content: { headers: ["Feature", "Starter", "Professional", "Enterprise"], rows: [["Pages", "Up to 5", "Unlimited", "Unlimited"], ["Custom domain", "Yes", "Yes", "Yes"], ["SEO tools", "Basic", "Advanced", "Advanced"], ["Form submissions", "No", "Yes", "Yes"], ["Custom code injection", "No", "Yes", "Yes"], ["Priority support", "No", "Yes", "Yes"], ["Dedicated account manager", "No", "No", "Yes"]], caption: "Compare plans at a glance", striped: true }, settings: {} },
         { id: generateId(), type: "spacer", content: { height: 32 }, settings: {} },
         {
           id: generateId(), type: "columns", content: {

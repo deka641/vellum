@@ -48,9 +48,13 @@ export async function PATCH(
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
+    const data: { alt?: string; folder?: string | null } = {};
+    if (parsed.data.alt !== undefined) data.alt = parsed.data.alt;
+    if (parsed.data.folder !== undefined) data.folder = parsed.data.folder;
+
     const updated = await db.media.update({
       where: { id: mediaId },
-      data: { alt: parsed.data.alt },
+      data,
     });
 
     revalidateTag("dashboard", { expire: 0 });

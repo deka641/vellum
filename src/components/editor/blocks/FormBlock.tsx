@@ -35,6 +35,8 @@ const FIELD_TYPES: { value: FormField["type"]; label: string }[] = [
   { value: "checkbox", label: "Checkbox" },
   { value: "tel", label: "Phone" },
   { value: "number", label: "Number" },
+  { value: "date", label: "Date" },
+  { value: "url", label: "URL" },
 ];
 
 function SortableFormField({ field, children }: { field: FormField; children: React.ReactNode }) {
@@ -108,7 +110,7 @@ export function FormBlock({ id, content }: FormBlockProps) {
   const [expandedValidation, setExpandedValidation] = useState<string | null>(null);
 
   const hasOptions = (type: string) => type === "select" || type === "radio";
-  const hasLengthValidation = (type: string) => ["text", "email", "textarea", "tel"].includes(type);
+  const hasLengthValidation = (type: string) => ["text", "email", "textarea", "tel", "url"].includes(type);
   const hasRangeValidation = (type: string) => type === "number";
   const hasPatternValidation = (type: string) => ["text", "tel"].includes(type);
   const hasValidation = (type: string) => hasLengthValidation(type) || hasRangeValidation(type) || hasPatternValidation(type);

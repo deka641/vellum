@@ -124,10 +124,13 @@ export default function EditorPage() {
           target.tagName === "TEXTAREA" ||
           target.closest(".tiptap");
         if (isEditing) return;
-        const { selectedBlockId, copyBlock } = useEditorStore.getState();
-        if (selectedBlockId) {
+        const state = useEditorStore.getState();
+        if (state.selectedBlockIds.size > 1) {
           e.preventDefault();
-          copyBlock(selectedBlockId);
+          state.copyBlocks();
+        } else if (state.selectedBlockId) {
+          e.preventDefault();
+          state.copyBlock(state.selectedBlockId);
         }
       }
       if ((e.metaKey || e.ctrlKey) && e.key === "v") {
@@ -141,7 +144,7 @@ export default function EditorPage() {
         const clipboard = localStorage.getItem("vellum-clipboard");
         if (clipboard) {
           e.preventDefault();
-          useEditorStore.getState().pasteBlock();
+          useEditorStore.getState().pasteBlocks();
         }
       }
       if (e.altKey && (e.key === "ArrowUp" || e.key === "ArrowDown")) {
@@ -175,7 +178,7 @@ export default function EditorPage() {
         }
       }
       if (e.key === "Escape") {
-        useEditorStore.getState().selectBlock(null);
+        useEditorStore.getState().clearSelection();
       }
       if (e.key === "Delete" || e.key === "Backspace") {
         const target = e.target as HTMLElement;
@@ -185,7 +188,10 @@ export default function EditorPage() {
           target.tagName === "TEXTAREA" ||
           target.closest(".tiptap");
         const state = useEditorStore.getState();
-        if (state.selectedBlockId && !isEditing) {
+        if (!isEditing && state.selectedBlockIds.size > 1) {
+          e.preventDefault();
+          state.removeSelectedBlocks();
+        } else if (state.selectedBlockId && !isEditing) {
           e.preventDefault();
           const loc = findBlockLocation(state.blocks, state.selectedBlockId);
           if (!loc) return;

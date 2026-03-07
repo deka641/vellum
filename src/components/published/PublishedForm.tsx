@@ -52,6 +52,19 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
         continue;
       }
 
+      if (field.type === "url" && value) {
+        try {
+          const parsed = new URL(value);
+          if (!["http:", "https:"].includes(parsed.protocol)) {
+            errors[field.id] = "Please enter a valid URL (http or https)";
+            continue;
+          }
+        } catch {
+          errors[field.id] = "Please enter a valid URL";
+          continue;
+        }
+      }
+
       if (field.minLength && value.length < field.minLength) {
         errors[field.id] = `Must be at least ${field.minLength} characters`;
         continue;
@@ -84,6 +97,7 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
           if (/(\+|\*|\{)\s*\).*(\+|\*|\{)/.test(field.pattern) || field.pattern.length > 200) {
             // Skip potentially dangerous patterns
           } else {
+            // eslint-disable-next-line security/detect-non-literal-regexp -- user-defined pattern with ReDoS guard above
             const regex = new RegExp(field.pattern);
             if (!regex.test(value)) {
               errors[field.id] = field.patternMessage || "Invalid format";

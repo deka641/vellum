@@ -20,6 +20,7 @@ type PreviewMode = "desktop" | "tablet" | "mobile";
 interface EditorState {
   blocks: EditorBlock[];
   selectedBlockId: string | null;
+  selectedBlockIds: Set<string>;
   isDirty: boolean;
   blocksDirty: boolean;
   isSaving: boolean;
@@ -75,6 +76,14 @@ interface EditorState {
   updateColumnBlockContent: (parentId: string, blockId: string, content: Partial<BlockContent>) => void;
   updateColumnBlockSettings: (parentId: string, blockId: string, settings: Partial<BlockSettings>) => void;
   moveBlockInColumn: (parentId: string, colIndex: number, fromIndex: number, toIndex: number) => void;
+
+  // Multi-select actions
+  toggleBlockSelection: (id: string) => void;
+  selectBlockRange: (id: string) => void;
+  clearSelection: () => void;
+  copyBlocks: () => void;
+  pasteBlocks: () => void;
+  removeSelectedBlocks: () => void;
 
   copyBlock: (id: string) => void;
   pasteBlock: () => void;
@@ -132,6 +141,7 @@ function cloneBlock(block: EditorBlock): EditorBlock {
 export const useEditorStore = create<EditorState>((set, get) => ({
   blocks: [],
   selectedBlockId: null,
+  selectedBlockIds: new Set<string>(),
   isDirty: false,
   blocksDirty: false,
   isSaving: false,
@@ -168,6 +178,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       pageNoindex: meta?.noindex ?? false,
       blocks,
       selectedBlockId: null,
+      selectedBlockIds: new Set<string>(),
       isDirty: false,
       blocksDirty: false,
       saveError: null,
@@ -200,12 +211,13 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   removeBlock: (id) => {
     // Add to exitingBlockIds to trigger exit animation
     set((state) => {
-      const newExiting = new Set(state.exitingBlockIds);
-      newExiting.add(id);
+      const newSelectedIds = new Set(state.selectedBlockIds);
+      newSelectedIds.delete(id);
       return {
-        exitingBlockIds: newExiting,
+        exitingBlockIds: new Set([...state.exitingBlockIds, id]),
         selectedBlockId:
           state.selectedBlockId === id ? null : state.selectedBlockId,
+        selectedBlockIds: newSelectedIds,
       };
     });
     // Actually remove after animation completes
@@ -285,7 +297,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     }, 300);
   },
 
-  selectBlock: (id) => set({ selectedBlockId: id }),
+  selectBlock: (id) => set({
+    selectedBlockId: id,
+    selectedBlockIds: id ? new Set<string>([id]) : new Set<string>(),
+  }),
 
   setBlocks: (blocks) =>
     set((state) => ({
@@ -391,6 +406,201 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
 
   setPreviewMode: (mode) => set({ previewMode: mode }),
+
+  // Multi-select actions
+  toggleBlockSelection: (id) => set((state) => {
+    const newSet = new Set(state.selectedBlockIds);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    // selectedBlockId is the last one added, or the last remaining, or null
+    const lastSelected = newSet.has(id) ? id : (newSet.size > 0 ? Array.from(newSet).pop()! : null);
+    return {
+      selectedBlockIds: newSet,
+      selectedBlockId: lastSelected,
+    };
+  }),
+
+  selectBlockRange: (id) => set((state) => {
+    // Get all top-level block IDs in order
+    const blockIds = state.blocks.map((b) => b.id);
+    const anchorId = state.selectedBlockId;
+    if (!anchorId) {
+      // No anchor — just select this one
+      return {
+        selectedBlockId: id,
+        selectedBlockIds: new Set<string>([id]),
+      };
+    }
+    const anchorIndex = blockIds.indexOf(anchorId);
+    const targetIndex = blockIds.indexOf(id);
+    if (anchorIndex === -1 || targetIndex === -1) {
+      return {
+        selectedBlockId: id,
+        selectedBlockIds: new Set<string>([id]),
+      };
+    }
+    const start = Math.min(anchorIndex, targetIndex);
+    const end = Math.max(anchorIndex, targetIndex);
+    const rangeIds = blockIds.slice(start, end + 1);
+    return {
+      selectedBlockIds: new Set<string>(rangeIds),
+      // Keep selectedBlockId as anchor so further shift-clicks extend from same point
+      selectedBlockId: anchorId,
+    };
+  }),
+
+  clearSelection: () => set({
+    selectedBlockId: null,
+    selectedBlockIds: new Set<string>(),
+  }),
+
+  copyBlocks: () => {
+    const state = get();
+    if (state.selectedBlockIds.size === 0) return;
+
+    // Collect blocks in order, searching both top-level and columns
+    const blocksToSerialize: EditorBlock[] = [];
+    for (const block of state.blocks) {
+      if (state.selectedBlockIds.has(block.id)) {
+        blocksToSerialize.push(block);
+      }
+      // Also check column children
+      if (block.type === "columns") {
+        const cols = (block.content as ColumnsContent).columns;
+        for (const col of cols) {
+          for (const cb of col.blocks) {
+            if (state.selectedBlockIds.has(cb.id)) {
+              blocksToSerialize.push(cb);
+            }
+          }
+        }
+      }
+    }
+    if (blocksToSerialize.length === 0) return;
+
+    try {
+      localStorage.setItem("vellum-clipboard", JSON.stringify(structuredClone(blocksToSerialize)));
+    } catch {
+      // localStorage full or unavailable
+    }
+  },
+
+  pasteBlocks: () => {
+    let lastPastedId: string | null = null;
+    set((state) => {
+      let raw: string | null;
+      try {
+        raw = localStorage.getItem("vellum-clipboard");
+      } catch {
+        return state;
+      }
+      if (!raw) return state;
+
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(raw);
+      } catch {
+        return state;
+      }
+
+      // Normalize: support both single block (legacy) and array
+      const items: EditorBlock[] = Array.isArray(parsed) ? parsed : [parsed];
+      if (items.length === 0) return state;
+
+      // Validate all blocks
+      const validBlocks: EditorBlock[] = [];
+      for (const item of items) {
+        if (!item || typeof item !== "object" || !("type" in item) || !("id" in item)) continue;
+        const block = item as EditorBlock;
+        const typeResult = blockTypeEnum.safeParse(block.type);
+        if (!typeResult.success) continue;
+        if (typeof block.content !== "object" || block.content === null) continue;
+        validBlocks.push(block);
+      }
+      if (validBlocks.length === 0) return state;
+
+      // Clone all blocks with new IDs
+      const newBlocks = validBlocks.map(cloneBlock);
+      lastPastedId = newBlocks[newBlocks.length - 1].id;
+
+      // Insert after the last selected block, or at end
+      const allBlocks = [...state.blocks];
+      let insertAt = allBlocks.length;
+      if (state.selectedBlockId) {
+        const idx = allBlocks.findIndex((b) => b.id === state.selectedBlockId);
+        if (idx !== -1) insertAt = idx + 1;
+      }
+      allBlocks.splice(insertAt, 0, ...newBlocks);
+
+      const newSelectedIds = new Set(newBlocks.map((b) => b.id));
+
+      return {
+        blocks: allBlocks,
+        selectedBlockId: lastPastedId,
+        selectedBlockIds: newSelectedIds,
+        settledBlockId: lastPastedId,
+        isDirty: true,
+        blocksDirty: true,
+        saveError: null,
+        ...pushHistory({ ...state, blocks: allBlocks }),
+      };
+    });
+    if (lastPastedId) {
+      setTimeout(() => {
+        set({ settledBlockId: null });
+      }, 400);
+    }
+  },
+
+  removeSelectedBlocks: () => {
+    const state = get();
+    if (state.selectedBlockIds.size === 0) return;
+    const idsToRemove = new Set(state.selectedBlockIds);
+
+    // For exit animation, add all to exitingBlockIds
+    set((s) => {
+      const newExiting = new Set(s.exitingBlockIds);
+      for (const blockId of idsToRemove) newExiting.add(blockId);
+      return {
+        exitingBlockIds: newExiting,
+        selectedBlockId: null,
+        selectedBlockIds: new Set<string>(),
+      };
+    });
+
+    // Actually remove after animation
+    const timer = setTimeout(() => {
+      pendingRemoveTimers.delete(timer);
+      set((s) => {
+        const newExiting = new Set(s.exitingBlockIds);
+        for (const blockId of idsToRemove) newExiting.delete(blockId);
+
+        // Remove from top-level and from column children
+        const newBlocks = s.blocks
+          .filter((b) => !idsToRemove.has(b.id))
+          .map((b) => {
+            if (b.type !== "columns") return b;
+            const cols = (b.content as ColumnsContent).columns.map((col) => ({
+              blocks: col.blocks.filter((cb) => !idsToRemove.has(cb.id)),
+            }));
+            return { ...b, content: { columns: cols } };
+          });
+
+        return {
+          blocks: newBlocks,
+          exitingBlockIds: newExiting,
+          isDirty: true,
+          blocksDirty: true,
+          saveError: null,
+          ...pushHistory({ ...s, blocks: newBlocks }),
+        };
+      });
+    }, 200);
+    pendingRemoveTimers.add(timer);
+  },
 
   copyBlock: (id) => {
     const state = get();

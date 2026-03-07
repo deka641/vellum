@@ -264,6 +264,12 @@ a.listLink:hover {
   background: var(--color-success);
 }
 
+.statusLabel {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  font-weight: var(--weight-medium);
+}
+
 .cardFooter {
   padding-top: var(--space-3);
   margin-top: var(--space-2);

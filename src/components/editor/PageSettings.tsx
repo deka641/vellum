@@ -96,7 +96,7 @@ export function PageSettings() {
     if (!pageId || !hasChanges) return;
 
     // Validate slug format
-    if (slug && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+    if (slug && (!/^[a-z0-9-]+$/.test(slug) || slug.startsWith("-") || slug.endsWith("-") || slug.includes("--"))) {
       setSlugError("Slug must be lowercase letters, numbers, and hyphens");
       return;
     }

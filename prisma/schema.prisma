@@ -163,6 +163,7 @@ model Media {
   url       String
   webpUrl   String?
   alt       String?
+  folder    String?
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
@@ -170,6 +171,7 @@ model Media {
   @@index([userId])
   @@index([userId, createdAt])
   @@index([userId, mimeType])
+  @@index([userId, folder])
 }
 
 model Redirect {

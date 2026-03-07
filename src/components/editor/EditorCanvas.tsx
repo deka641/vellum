@@ -59,6 +59,9 @@ export function EditorCanvas({ onAddBlock }: EditorCanvasProps) {
   const moveBlock = useEditorStore((s) => s.moveBlock);
   const addBlock = useEditorStore((s) => s.addBlock);
   const selectBlock = useEditorStore((s) => s.selectBlock);
+  const toggleBlockSelection = useEditorStore((s) => s.toggleBlockSelection);
+  const selectBlockRange = useEditorStore((s) => s.selectBlockRange);
+  const clearSelection = useEditorStore((s) => s.clearSelection);
   const previewMode = useEditorStore((s) => s.previewMode);
   const updateBlockContent = useEditorStore((s) => s.updateBlockContent);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -200,7 +203,7 @@ export function EditorCanvas({ onAddBlock }: EditorCanvasProps) {
   return (
     <div
       className={styles.canvas}
-      onClick={() => selectBlock(null)}
+      onClick={() => clearSelection()}
       onDragOver={handleFileDragOver}
       onDragLeave={handleFileDragLeave}
       onDrop={handleFileDrop}
@@ -287,7 +290,11 @@ export function EditorCanvas({ onAddBlock }: EditorCanvasProps) {
                     transition={motion_.transition}
                   >
                     <InlineAddButton onAdd={(type: BlockType, contentOverride?: Record<string, unknown>) => handleAddBlockAt(type, index, contentOverride)} />
-                    <BlockWrapper id={block.id}>
+                    <BlockWrapper
+                      id={block.id}
+                      onMultiSelect={toggleBlockSelection}
+                      onRangeSelect={selectBlockRange}
+                    >
                       {uploadingBlocks.has(block.id) ? (
                         <div className={styles.uploadingPlaceholder}>
                           <div className={styles.uploadingSpinner} />

@@ -14,10 +14,14 @@ import styles from "./BlockWrapper.module.css";
 interface BlockWrapperProps {
   id: string;
   children: ReactNode;
+  onMultiSelect?: (id: string) => void;
+  onRangeSelect?: (id: string) => void;
 }
 
-export const BlockWrapper = memo(function BlockWrapper({ id, children }: BlockWrapperProps) {
+export const BlockWrapper = memo(function BlockWrapper({ id, children, onMultiSelect, onRangeSelect }: BlockWrapperProps) {
   const isSelected = useEditorStore((s) => s.selectedBlockId === id);
+  const isMultiSelected = useEditorStore((s) => s.selectedBlockIds.has(id));
+  const multiSelectCount = useEditorStore((s) => s.selectedBlockIds.size);
   const { isHidden, marginTop, marginBottom, blockType } = useEditorStore(
     useShallow((s) => {
       const block = s.blocks.find((b) => b.id === id);
@@ -74,8 +78,14 @@ export const BlockWrapper = memo(function BlockWrapper({ id, children }: BlockWr
 
   const handleClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    selectBlock(id);
-  }, [id, selectBlock]);
+    if (e.shiftKey && onRangeSelect) {
+      onRangeSelect(id);
+    } else if ((e.metaKey || e.ctrlKey) && onMultiSelect) {
+      onMultiSelect(id);
+    } else {
+      selectBlock(id);
+    }
+  }, [id, selectBlock, onMultiSelect, onRangeSelect]);
 
   const handleDuplicate = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -139,7 +149,8 @@ export const BlockWrapper = memo(function BlockWrapper({ id, children }: BlockWr
       style={style}
       className={cn(
         styles.wrapper,
-        isSelected && styles.selected,
+        isSelected && multiSelectCount <= 1 && styles.selected,
+        isMultiSelected && multiSelectCount > 1 && styles.multiSelected,
         isDragging && styles.dragging,
         isHidden && styles.hidden,
         isEntering && styles.entering,

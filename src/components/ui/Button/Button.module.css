@@ -95,3 +95,15 @@
   align-items: center;
   justify-content: center;
 }
+
+/* Touch targets: 44px minimum on touch devices (WCAG 2.5.8) */
+@media (hover: none), (pointer: coarse) {
+  .sm {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .md {
+    min-height: 44px;
+  }
+}

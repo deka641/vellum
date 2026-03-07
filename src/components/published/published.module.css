@@ -331,6 +331,14 @@
               opacity 300ms ease;
 }
 
+/* On touch devices, captions are always visible since hover is unavailable */
+@media (hover: none) {
+  .caption {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* --- Buttons --- */
 
 .buttonContainer {
@@ -472,6 +480,7 @@
   overflow: hidden;
   background: var(--color-bg-tertiary);
   box-shadow: var(--shadow-md);
+  aspect-ratio: 16 / 9;
 }
 
 .videoIframe {

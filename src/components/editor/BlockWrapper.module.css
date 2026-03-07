@@ -28,6 +28,15 @@
   opacity: 1;
 }
 
+.multiSelected {
+  border-color: var(--color-accent) !important;
+  background-color: rgba(59, 130, 246, 0.04);
+}
+
+.multiSelected .toolbar {
+  opacity: 1;
+}
+
 .dragging {
   z-index: 10;
 }

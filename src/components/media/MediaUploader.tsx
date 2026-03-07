@@ -7,9 +7,10 @@ import styles from "./media.module.css";
 
 interface MediaUploaderProps {
   onUpload: (media: { id: string; url: string; filename: string }) => void;
+  folder?: string | null;
 }
 
-export function MediaUploader({ onUpload }: MediaUploaderProps) {
+export function MediaUploader({ onUpload, folder }: MediaUploaderProps) {
   const [uploadState, setUploadState] = useState<{
     active: boolean;
     current: number;
@@ -30,6 +31,7 @@ export function MediaUploader({ onUpload }: MediaUploaderProps) {
         setUploadState({ active: true, current: i + 1, total: files.length });
         const formData = new FormData();
         formData.append("file", files[i]);
+        if (folder) formData.append("folder", folder);
 
         try {
           const res = await fetch("/api/media", {

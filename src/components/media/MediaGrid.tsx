@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Trash2, Check, AlertCircle, CheckCircle } from "lucide-react";
+import { Trash2, Check, AlertCircle, CheckCircle, FolderInput } from "lucide-react";
 import { formatFileSize } from "@/lib/utils";
 import styles from "./media.module.css";
 
@@ -14,6 +14,7 @@ interface MediaItem {
   alt: string | null;
   width: number | null;
   height: number | null;
+  folder?: string | null;
 }
 
 interface MediaGridProps {
@@ -25,12 +26,15 @@ interface MediaGridProps {
   selectionMode?: boolean;
   selectedIds?: Set<string>;
   onToggleSelect?: (id: string) => void;
+  folders?: string[];
+  onMoveToFolder?: (id: string, folder: string | null) => void;
 }
 
-export function MediaGrid({ items, onSelect, onDelete, onUpdateAlt, selectable, selectionMode, selectedIds, onToggleSelect }: MediaGridProps) {
+export function MediaGrid({ items, onSelect, onDelete, onUpdateAlt, selectable, selectionMode, selectedIds, onToggleSelect, folders, onMoveToFolder }: MediaGridProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [altValue, setAltValue] = useState("");
   const [savingAlt, setSavingAlt] = useState(false);
+  const [movingId, setMovingId] = useState<string | null>(null);
 
   function handleItemClick(item: MediaItem) {
     if (selectionMode && onToggleSelect) {
@@ -90,6 +94,18 @@ export function MediaGrid({ items, onSelect, onDelete, onUpdateAlt, selectable, 
               <span className={styles.itemName}>{item.filename}</span>
               <span className={styles.itemSize}>{formatFileSize(item.size)}</span>
             </div>
+            {onMoveToFolder && !selectionMode && (
+              <button
+                className={styles.moveBtn}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setMovingId(movingId === item.id ? null : item.id);
+                }}
+                title="Move to folder"
+              >
+                <FolderInput size={14} />
+              </button>
+            )}
             {onDelete && !selectionMode && (
               <button
                 className={styles.deleteBtn}
@@ -102,6 +118,25 @@ export function MediaGrid({ items, onSelect, onDelete, onUpdateAlt, selectable, 
               </button>
             )}
           </div>
+          {movingId === item.id && onMoveToFolder && folders && (
+            <div className={styles.folderPicker} onClick={(e) => e.stopPropagation()}>
+              <button
+                className={`${styles.folderPickerItem} ${!item.folder ? styles.folderPickerItemActive : ""}`}
+                onClick={() => { onMoveToFolder(item.id, null); setMovingId(null); }}
+              >
+                No folder
+              </button>
+              {folders.map((f) => (
+                <button
+                  key={f}
+                  className={`${styles.folderPickerItem} ${item.folder === f ? styles.folderPickerItemActive : ""}`}
+                  onClick={() => { onMoveToFolder(item.id, f); setMovingId(null); }}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+          )}
           {expandedId === item.id && onUpdateAlt && (
             <div className={styles.altEditor}>
               <input

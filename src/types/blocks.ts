@@ -78,7 +78,7 @@ export interface QuoteContent {
 
 export interface FormField {
   id: string;
-  type: "text" | "email" | "textarea" | "select" | "checkbox" | "radio" | "tel" | "number";
+  type: "text" | "email" | "textarea" | "select" | "checkbox" | "radio" | "tel" | "number" | "date" | "url";
   label: string;
   required: boolean;
   placeholder?: string;

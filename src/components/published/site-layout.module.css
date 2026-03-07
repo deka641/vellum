@@ -261,6 +261,9 @@
   display: block;
   padding: var(--space-3) var(--space-3);
   font-size: var(--text-base);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
 }
 
 .mobileNav .navLink::after {

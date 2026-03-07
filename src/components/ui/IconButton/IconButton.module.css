@@ -63,3 +63,12 @@
   color: var(--color-error);
   background: var(--color-error-light);
 }
+
+/* Touch targets: 44px minimum on touch devices (WCAG 2.5.8) */
+@media (hover: none), (pointer: coarse) {
+  .sm,
+  .md {
+    width: 44px;
+    height: 44px;
+  }
+}

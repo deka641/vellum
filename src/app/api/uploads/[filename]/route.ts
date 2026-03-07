@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { readFile, stat } from "fs/promises";
 import path from "path";
 import { apiError } from "@/lib/api-helpers";
+import { rateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
 
@@ -22,6 +23,13 @@ export async function GET(
   { params }: { params: Promise<{ filename: string }> }
 ) {
   const { filename } = await params;
+
+  // Rate limit by IP (public route, no auth required)
+  const ip = getClientIp(_req);
+  const rl = rateLimit(`upload-serve:${ip}`, "read");
+  if (!rl.success) {
+    return rateLimitResponse(rl);
+  }
 
   // Reject path traversal attempts
   if (
