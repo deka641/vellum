@@ -153,6 +153,57 @@
   background: var(--color-bg-secondary);
 }
 
+.convertWrapper {
+  position: relative;
+}
+
+.convertButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-md);
+  color: var(--color-text-tertiary);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.convertButton:hover {
+  color: var(--color-accent);
+  background: var(--color-bg-secondary);
+}
+
+.convertMenu {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  margin-left: 4px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  min-width: 140px;
+  padding: var(--space-1);
+  z-index: 50;
+}
+
+.convertMenuItem {
+  display: block;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+  text-align: left;
+  border-radius: var(--radius-sm);
+  transition: background var(--duration-fast) var(--ease-out);
+  white-space: nowrap;
+}
+
+.convertMenuItem:hover {
+  background: var(--color-bg-secondary);
+  color: var(--color-accent);
+}
+
 .hidden {
   opacity: 0.5;
   border-style: dashed;
@@ -242,12 +293,21 @@
   .duplicateButton,
   .copyButton,
   .saveTemplateButton,
+  .convertButton,
   .deleteButton,
   .visibilityButton {
     width: 40px;
     height: 40px;
     min-width: 40px;
     min-height: 40px;
+  }
+
+  .convertMenu {
+    left: auto;
+    right: 0;
+    top: 100%;
+    margin-left: 0;
+    margin-top: 4px;
   }
 
   .wrapper:hover .toolbar,
@@ -266,6 +326,7 @@
   .duplicateButton,
   .copyButton,
   .saveTemplateButton,
+  .convertButton,
   .deleteButton,
   .visibilityButton {
     width: 44px;

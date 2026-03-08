@@ -421,7 +421,11 @@ export function PublishedBlock({ block, pageId, allBlocks }: PublishedBlockProps
       return (
         <PublishedTableWrapper>
           <figure style={extraStyle}>
-            <table className={`${styles.table} ${striped ? styles.tableStriped : ""}`}>
+            <table
+              className={`${styles.table} ${striped ? styles.tableStriped : ""}`}
+              aria-label={caption || undefined}
+            >
+              {caption && <caption className={styles.tableCaption}>{caption}</caption>}
               {headers.length > 0 && (
                 <thead>
                   <tr>
@@ -450,7 +454,6 @@ export function PublishedBlock({ block, pageId, allBlocks }: PublishedBlockProps
                 ))}
               </tbody>
             </table>
-            {caption && <figcaption className={styles.tableCaption}>{caption}</figcaption>}
           </figure>
         </PublishedTableWrapper>
       );

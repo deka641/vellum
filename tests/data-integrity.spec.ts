@@ -8,7 +8,7 @@ function uniqueId() {
 
 test.describe("Data integrity", () => {
   test("soft-deleted pages do not appear in site page list", async ({ page }) => {
-    const siteId = await goToFirstSite(page);
+    const _siteId = await goToFirstSite(page);
 
     // Create a new page
     await page.getByRole("button", { name: /New page/i }).click();

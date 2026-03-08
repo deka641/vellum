@@ -75,6 +75,19 @@ export async function POST(
       );
     }
 
+    // Validate submitted field names against configured form fields
+    const formContent = formBlock.content as Record<string, unknown>;
+    const configuredFields = (formContent.fields || []) as Array<{ label: string }>;
+    const allowedLabels = new Set(configuredFields.map((f) => f.label));
+    const submittedKeys = Object.keys(parsed.data.data);
+    const unknownFields = submittedKeys.filter((key) => !allowedLabels.has(key));
+    if (unknownFields.length > 0) {
+      return NextResponse.json(
+        { error: `Unknown form fields: ${unknownFields.join(", ")}` },
+        { status: 400 }
+      );
+    }
+
     // Sanitize all values
     const sanitizedData: Record<string, string> = {};
     for (const [key, value] of Object.entries(parsed.data.data)) {

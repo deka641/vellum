@@ -1,0 +1,115 @@
+.calendar {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--color-surface);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.monthLabel {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.navBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-tertiary);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.navBtn:hover {
+  color: var(--color-text-primary);
+  background: var(--color-bg-tertiary);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.dayHeader {
+  padding: var(--space-2);
+  font-size: 11px;
+  font-weight: var(--weight-medium);
+  color: var(--color-text-tertiary);
+  text-align: center;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dayCell {
+  min-height: 60px;
+  padding: var(--space-1);
+  border-right: 1px solid var(--color-border-light, var(--color-border));
+  border-bottom: 1px solid var(--color-border-light, var(--color-border));
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dayCell:nth-child(7n) {
+  border-right: none;
+}
+
+.dayCellToday {
+  background: var(--color-accent-light);
+}
+
+.dayCellScheduled {
+  background: rgba(59, 130, 246, 0.04);
+}
+
+.dayNumber {
+  font-size: 11px;
+  font-weight: var(--weight-medium);
+  color: var(--color-text-tertiary);
+  margin-bottom: 2px;
+}
+
+.dayCellToday .dayNumber {
+  color: var(--color-accent);
+  font-weight: var(--weight-bold);
+}
+
+.scheduledItem {
+  display: block;
+  padding: 1px 4px;
+  font-size: 10px;
+  font-weight: var(--weight-medium);
+  color: var(--color-accent);
+  background: var(--color-accent-light);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+
+.scheduledItem:hover {
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-6);
+  color: var(--color-text-tertiary);
+  font-size: var(--text-sm);
+}

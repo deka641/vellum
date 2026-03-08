@@ -1,14 +1,15 @@
 "use client";
 
-import { memo, type ReactNode, useCallback, useState, useEffect } from "react";
+import { memo, type ReactNode, useCallback, useState, useEffect, useRef } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Trash2, Copy, Clipboard, Eye, EyeOff, Bookmark } from "lucide-react";
+import { GripVertical, Trash2, Copy, Clipboard, Eye, EyeOff, Bookmark, RefreshCw } from "lucide-react";
 import { useEditorStore } from "@/stores/editor-store";
 import { useShallow } from "zustand/react/shallow";
 import { useToast } from "@/components/ui/Toast/Toast";
 import { ErrorBoundary, BlockErrorFallback } from "@/components/ErrorBoundary";
 import { cn } from "@/lib/utils";
+import type { BlockType } from "@/types/blocks";
 import styles from "./BlockWrapper.module.css";
 
 interface BlockWrapperProps {
@@ -39,9 +40,12 @@ export const BlockWrapper = memo(function BlockWrapper({ id, children, onMultiSe
   const removeBlock = useEditorStore((s) => s.removeBlock);
   const duplicateBlock = useEditorStore((s) => s.duplicateBlock);
   const copyBlock = useEditorStore((s) => s.copyBlock);
+  const convertBlock = useEditorStore((s) => s.convertBlock);
   const updateBlockSettings = useEditorStore((s) => s.updateBlockSettings);
   const undo = useEditorStore((s) => s.undo);
   const { toast } = useToast();
+  const [showConvertMenu, setShowConvertMenu] = useState(false);
+  const convertMenuRef = useRef<HTMLDivElement>(null);
 
   const blockIndex = useEditorStore((s) => s.blocks.findIndex((b) => b.id === id));
   const blockCount = useEditorStore((s) => s.blocks.length);
@@ -97,6 +101,40 @@ export const BlockWrapper = memo(function BlockWrapper({ id, children, onMultiSe
     copyBlock(id);
     toast("Block copied to clipboard", "info");
   }, [id, copyBlock, toast]);
+
+  const convertibleTypes: Record<string, { type: BlockType; label: string }[]> = {
+    heading: [
+      { type: "text", label: "Text" },
+      { type: "quote", label: "Quote" },
+    ],
+    text: [
+      { type: "heading", label: "Heading" },
+      { type: "quote", label: "Quote" },
+    ],
+    quote: [
+      { type: "heading", label: "Heading" },
+      { type: "text", label: "Text" },
+    ],
+  };
+  const canConvert = blockType ? blockType in convertibleTypes : false;
+
+  const handleConvert = useCallback((toType: BlockType) => {
+    convertBlock(id, toType);
+    setShowConvertMenu(false);
+    toast(`Converted to ${toType}`, "info");
+  }, [id, convertBlock, toast]);
+
+  // Close convert menu on outside click
+  useEffect(() => {
+    if (!showConvertMenu) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (convertMenuRef.current && !convertMenuRef.current.contains(e.target as Node)) {
+        setShowConvertMenu(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showConvertMenu]);
 
   const handleToggleVisibility = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -196,6 +234,32 @@ export const BlockWrapper = memo(function BlockWrapper({ id, children, onMultiSe
         >
           <Bookmark size={14} />
         </button>
+        {canConvert && (
+          <div className={styles.convertWrapper} ref={convertMenuRef}>
+            <button
+              className={styles.convertButton}
+              onClick={(e) => { e.stopPropagation(); setShowConvertMenu(!showConvertMenu); }}
+              title="Convert block type"
+              aria-label="Convert block type"
+              aria-expanded={showConvertMenu}
+            >
+              <RefreshCw size={14} />
+            </button>
+            {showConvertMenu && blockType && convertibleTypes[blockType] && (
+              <div className={styles.convertMenu}>
+                {convertibleTypes[blockType].map((opt) => (
+                  <button
+                    key={opt.type}
+                    className={styles.convertMenuItem}
+                    onClick={(e) => { e.stopPropagation(); handleConvert(opt.type); }}
+                  >
+                    Convert to {opt.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         <button
           className={styles.visibilityButton}
           onClick={handleToggleVisibility}

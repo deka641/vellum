@@ -58,7 +58,7 @@ export function EditorCanvas({ onAddBlock }: EditorCanvasProps) {
   const blocks = useEditorStore((s) => s.blocks);
   const moveBlock = useEditorStore((s) => s.moveBlock);
   const addBlock = useEditorStore((s) => s.addBlock);
-  const selectBlock = useEditorStore((s) => s.selectBlock);
+
   const toggleBlockSelection = useEditorStore((s) => s.toggleBlockSelection);
   const selectBlockRange = useEditorStore((s) => s.selectBlockRange);
   const clearSelection = useEditorStore((s) => s.clearSelection);

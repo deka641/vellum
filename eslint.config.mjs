@@ -51,11 +51,9 @@ export default tseslint.config(
     rules: {
       // TypeScript handles these better than ESLint
       "no-unused-vars": "off",
-      // TODO: Enable as warn and fix existing unused imports incrementally
-      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrorsIgnorePattern: "^_" }],
 
-      // Allow explicit any — tightening this is a separate effort
-      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-explicit-any": "error",
 
       // Allow require imports (used in some config files)
       "@typescript-eslint/no-require-imports": "off",

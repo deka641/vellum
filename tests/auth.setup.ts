@@ -9,7 +9,7 @@ setup("authenticate as demo user", async ({ page, context }) => {
   const { csrfToken } = await csrfRes.json();
 
   // Step 2: POST credentials directly to the callback endpoint
-  const signInRes = await page.request.post(
+  const _signInRes = await page.request.post(
     `${baseURL}/api/auth/callback/credentials`,
     {
       form: {

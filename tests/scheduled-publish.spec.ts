@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 import { goToFirstSite } from "./helpers";
 
 test.describe("Scheduled publishing", () => {
-  let editorUrl: string;
+  let _editorUrl: string;
 
   test("schedule a page for future publication from editor", async ({ page }) => {
     await goToFirstSite(page);
@@ -20,7 +20,7 @@ test.describe("Scheduled publishing", () => {
     ).toBeVisible({ timeout: 10_000 });
 
     // Save the editor URL for later tests
-    editorUrl = page.url();
+    _editorUrl = page.url();
 
     // Add a heading block so the page has content
     const addButton = page.locator("button", { hasText: "Add block" }).first();

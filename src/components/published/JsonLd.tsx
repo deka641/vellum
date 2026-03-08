@@ -90,7 +90,8 @@ interface BreadcrumbJsonLdProps {
 }
 
 export function BreadcrumbJsonLd({ items }: BreadcrumbJsonLdProps) {
-  if (items.length === 0) return null;
+  // Google requires at least 2 items for breadcrumbs to be useful
+  if (items.length < 2) return null;
 
   const data: Record<string, unknown> = {
     "@context": "https://schema.org",

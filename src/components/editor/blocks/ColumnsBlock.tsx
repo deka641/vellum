@@ -16,7 +16,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Plus, Trash2, GripVertical } from "lucide-react";
-import type { ColumnsContent, BlockSettings, BlockType, EditorBlock } from "@/types/blocks";
+import type { ColumnsContent, BlockSettings, EditorBlock } from "@/types/blocks";
 import { useEditorStore } from "@/stores/editor-store";
 import { blockDefinitions, blockCategories } from "@/lib/blocks";
 import { DISALLOWED_NESTED_TYPES } from "@/lib/validations";

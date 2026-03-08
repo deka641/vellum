@@ -76,7 +76,7 @@ test.describe("Column editor", () => {
       await page.waitForTimeout(300);
 
       // "Columns" should NOT appear in the nested block picker (disallowed)
-      const nestedColumnsOption = page.locator("button").filter({ hasText: /^Columns$/ });
+      const _nestedColumnsOption = page.locator("button").filter({ hasText: /^Columns$/ });
       // Check the block picker that just opened - columns should be filtered out
       const blockPickerButtons = page.locator('[class*="picker"], [class*="menu"]').last();
       const columnsInPicker = blockPickerButtons.locator("button", { hasText: "Columns" });

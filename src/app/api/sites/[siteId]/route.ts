@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import { apiError } from "@/lib/api-helpers";
 import { parseBody, updateSiteSchema } from "@/lib/validations";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
-import { sanitizeUrl, sanitizeImageSrc } from "@/lib/sanitize";
+import { sanitizeImageSrc } from "@/lib/sanitize";
 import { logger } from "@/lib/logger";
 import { logActivity } from "@/lib/activity";
 

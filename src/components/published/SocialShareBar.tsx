@@ -10,7 +10,7 @@ interface SocialShareBarProps {
   isHomepage?: boolean;
 }
 
-export function SocialShareBar({ title, siteSlug, pageSlug, isHomepage }: SocialShareBarProps) {
+export function SocialShareBar({ title, siteSlug: _siteSlug, pageSlug: _pageSlug, isHomepage: _isHomepage }: SocialShareBarProps) {
   const [url, setUrl] = useState("");
   const [copied, setCopied] = useState(false);
 

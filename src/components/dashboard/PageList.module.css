@@ -72,6 +72,21 @@
   flex-shrink: 0;
 }
 
+.thumbnail {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--color-bg-secondary);
+}
+
+.thumbnailImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .info {
   flex: 1;
   display: flex;

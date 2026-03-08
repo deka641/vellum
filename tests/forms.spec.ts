@@ -3,7 +3,7 @@ import { goToFirstSite } from "./helpers";
 
 test.describe("Forms", () => {
   test("submissions page loads", async ({ page }) => {
-    const siteId = await goToFirstSite(page);
+    const _siteId = await goToFirstSite(page);
 
     // Navigate to submissions
     const submissionsLink = page.locator('a[href*="/submissions"]').first();

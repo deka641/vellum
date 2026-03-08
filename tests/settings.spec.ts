@@ -138,7 +138,7 @@ test.describe("Theme settings", () => {
 
 test.describe("Navigation management", () => {
   test("navigation page loads", async ({ page }) => {
-    const siteId = await goToFirstSite(page);
+    const _siteId = await goToFirstSite(page);
 
     // Navigate to navigation management
     const navLink = page.locator('a[href*="/navigation"]').first();

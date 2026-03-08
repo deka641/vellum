@@ -164,7 +164,24 @@
 
 @media (max-width: 768px) {
   .headingAnchor {
-    display: none;
+    position: static;
+    display: inline;
+    transform: none;
+    opacity: 0;
+    font-size: 0.6em;
+    margin-left: var(--space-2);
+    padding: var(--space-1) var(--space-2);
+    vertical-align: middle;
+  }
+
+  .headingWithAnchor:active .headingAnchor {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 768px) and (hover: none) {
+  .headingAnchor {
+    opacity: 0.5;
   }
 }
 
@@ -1624,7 +1641,8 @@ details[open] > .accordionBody > .accordionBodyInner {
 }
 
 .tableCaption {
-  margin-top: var(--space-2);
+  caption-side: bottom;
+  padding-top: var(--space-2);
   font-size: var(--text-sm);
   font-style: italic;
   color: var(--color-text-tertiary);
@@ -1649,10 +1667,15 @@ details[open] > .accordionBody > .accordionBodyInner {
     padding: var(--space-6) var(--space-3);
   }
 
-  .btn-lg {
-    min-width: 0;
+  .button {
+    display: block;
     width: 100%;
     text-align: center;
+    min-height: 44px;
+  }
+
+  .btn-lg {
+    min-width: 0;
   }
 
   .formBlock {

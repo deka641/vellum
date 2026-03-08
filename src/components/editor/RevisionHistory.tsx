@@ -47,7 +47,7 @@ function getBlockSummary(block: EditorBlock): string {
 
 function computeDiff(currentBlocks: EditorBlock[], revisionBlocks: EditorBlock[]): DiffBlock[] {
   const revMap = new Map(revisionBlocks.map((b) => [b.id, b]));
-  const curMap = new Map(currentBlocks.map((b) => [b.id, b]));
+  const _curMap = new Map(currentBlocks.map((b) => [b.id, b]));
   const result: DiffBlock[] = [];
   const seen = new Set<string>();
 

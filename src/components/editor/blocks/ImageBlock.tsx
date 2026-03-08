@@ -82,6 +82,23 @@ export function ImageBlock({ id, content, settings }: ImageBlockProps) {
         className={styles.image}
         style={imgStyle}
       />
+      <div className={styles.imageAltField}>
+        <label className={styles.imageAltLabel} htmlFor={`alt-${id}`}>
+          Alt text
+          {!content.alt && (
+            <span className={styles.imageAltWarning}>Missing</span>
+          )}
+        </label>
+        <input
+          id={`alt-${id}`}
+          type="text"
+          className={styles.imageAltInput}
+          value={content.alt || ""}
+          placeholder="Describe the image for screen readers and SEO"
+          onChange={(e) => updateBlockContent(id, { alt: e.target.value })}
+          onClick={(e) => e.stopPropagation()}
+        />
+      </div>
       {content.caption && (
         <p className={styles.imageCaption}>{content.caption}</p>
       )}

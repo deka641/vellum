@@ -85,6 +85,7 @@ interface EditorState {
   pasteBlocks: () => void;
   removeSelectedBlocks: () => void;
 
+  convertBlock: (id: string, toType: BlockType) => void;
   copyBlock: (id: string) => void;
   pasteBlock: () => void;
   undo: () => void;
@@ -600,6 +601,55 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       });
     }, 200);
     pendingRemoveTimers.add(timer);
+  },
+
+  convertBlock: (id, toType) => {
+    set((state) => {
+      const blockIndex = state.blocks.findIndex((b) => b.id === id);
+      if (blockIndex === -1) return state;
+      const block = state.blocks[blockIndex];
+
+      // Only allow conversions between compatible text-based types
+      const textTypes = new Set<BlockType>(["heading", "text", "quote"]);
+      if (!textTypes.has(block.type) || !textTypes.has(toType)) return state;
+      if (block.type === toType) return state;
+
+      // Extract plain text and HTML from source block
+      let text = "";
+      let html = "";
+      if (block.type === "heading") {
+        text = (block.content as Record<string, unknown>).text as string || "";
+        html = (block.content as Record<string, unknown>).html as string || "";
+      } else if (block.type === "text") {
+        html = (block.content as Record<string, unknown>).html as string || "";
+        text = html.replace(/<[^>]*>/g, "").trim();
+      } else if (block.type === "quote") {
+        text = (block.content as Record<string, unknown>).text as string || "";
+        html = (block.content as Record<string, unknown>).html as string || "";
+      }
+
+      // Build new content based on target type
+      let newContent: Record<string, unknown>;
+      if (toType === "heading") {
+        newContent = { text: text || "Untitled heading", html: html || undefined, level: 2 };
+      } else if (toType === "text") {
+        newContent = { html: html || `<p>${text}</p>` };
+      } else {
+        // quote
+        newContent = { text, html: html || undefined, attribution: "", style: "default" };
+      }
+
+      const newBlocks = [...state.blocks];
+      newBlocks[blockIndex] = { ...block, type: toType, content: newContent };
+
+      return {
+        blocks: newBlocks,
+        isDirty: true,
+        blocksDirty: true,
+        saveError: null,
+        ...pushHistory({ ...state, blocks: newBlocks }),
+      };
+    });
   },
 
   copyBlock: (id) => {

@@ -17,7 +17,7 @@ const createBlockTemplateSchema = z.object({
   settings: z.record(z.string(), z.unknown()).optional().default({}),
 });
 
-export async function GET(req: Request) {
+export async function GET(_req: Request) {
   try {
     const session = await auth();
     if (!session?.user?.id) {

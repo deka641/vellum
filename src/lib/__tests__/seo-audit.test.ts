@@ -498,7 +498,7 @@ describe("runSeoAudit", () => {
         makeHeading(2, words(150)),
         makeImage(""), // alt: error (1 error)
       ];
-      const { score, checks } = runSeoAudit(
+      const { score, checks: _checks } = runSeoAudit(
         blocks,
         "A".repeat(40),     // title: good
         null,

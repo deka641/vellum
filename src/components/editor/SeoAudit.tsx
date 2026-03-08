@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { CheckCircle, AlertTriangle, XCircle } from "lucide-react";
 import { useEditorStore } from "@/stores/editor-store";
 import { runSeoAudit, type SeoStatus } from "@/lib/seo-audit";
+import { SocialPreview } from "./SocialPreview";
 import styles from "./SeoAudit.module.css";
 
 const statusIcon: Record<SeoStatus, React.ReactNode> = {
@@ -47,6 +48,7 @@ export function SeoAudit() {
           </div>
         ))}
       </div>
+      <SocialPreview />
     </div>
   );
 }

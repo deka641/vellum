@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { rateLimit, getRateLimitStoreSize, type RateLimitResult } from "../rate-limit";
+import { describe, it, expect } from "vitest";
+import { rateLimit, getRateLimitStoreSize } from "../rate-limit";
 
 describe("rateLimit", () => {
   // Note: We can't easily reset the store between tests since it's module-level,

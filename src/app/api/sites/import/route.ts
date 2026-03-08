@@ -7,7 +7,7 @@ import { apiError } from "@/lib/api-helpers";
 import { generateId, slugify } from "@/lib/utils";
 import { sanitizeBlocks, sanitizePlainText, sanitizeImageSrc } from "@/lib/sanitize";
 import { parseBody, importSiteSchema, validateBlockHierarchy } from "@/lib/validations";
-import { logger } from "@/lib/logger";
+
 
 export async function POST(req: Request) {
   try {
@@ -65,6 +65,13 @@ export async function POST(req: Request) {
         },
       });
 
+      // Pre-load all existing page slugs for the site to avoid per-page DB queries
+      const existingPages = await tx.page.findMany({
+        where: { siteId: newSite.id },
+        select: { slug: true },
+      });
+      const usedSlugs = new Set(existingPages.map((p) => p.slug));
+
       for (let i = 0; i < importData.pages.length; i++) {
         const pageData = importData.pages[i];
 
@@ -78,9 +85,16 @@ export async function POST(req: Request) {
 
         const sanitized = sanitizeBlocks(pageData.blocks);
 
-        // Ensure unique slug within site
-        let pageSlug = slugify(pageData.slug || pageData.title);
-        if (!pageSlug) pageSlug = `page-${i + 1}`;
+        // Ensure unique slug within site using in-memory set
+        let basePageSlug = slugify(pageData.slug || pageData.title);
+        if (!basePageSlug) basePageSlug = `page-${i + 1}`;
+        let pageSlug = basePageSlug;
+        let slugSuffix = 1;
+        while (usedSlugs.has(pageSlug)) {
+          pageSlug = `${basePageSlug}-${slugSuffix}`;
+          slugSuffix++;
+        }
+        usedSlugs.add(pageSlug);
 
         const page = await tx.page.create({
           data: {

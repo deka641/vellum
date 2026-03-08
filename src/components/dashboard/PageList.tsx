@@ -44,6 +44,7 @@ interface Page {
   scheduledPublishAt?: string | null;
   sortOrder?: number;
   showInNav?: boolean;
+  ogImage?: string | null;
   pageTags?: Array<{ tag: { id: string; name: string; slug: string } }>;
 }
 
@@ -116,9 +117,15 @@ function SortablePageItem({
         <GripVertical size={14} />
       </div>
       <Link href={`/editor/${page.id}`} className={styles.link}>
-        <div className={styles.icon}>
-          {page.isHomepage ? <Home size={16} /> : <FileText size={16} />}
-        </div>
+        {page.ogImage ? (
+          <div className={styles.thumbnail}>
+            <img src={page.ogImage} alt="" className={styles.thumbnailImg} />
+          </div>
+        ) : (
+          <div className={styles.icon}>
+            {page.isHomepage ? <Home size={16} /> : <FileText size={16} />}
+          </div>
+        )}
         <div className={styles.info}>
           <span className={styles.title}>{page.title}</span>
           <span className={styles.slug}>/{page.slug}</span>

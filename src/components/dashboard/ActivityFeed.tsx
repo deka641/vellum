@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { FileText, Globe, Image, Upload, Trash2, Send, Clock } from "lucide-react";
+import { FileText, Globe, Upload, Trash2, Send, Clock } from "lucide-react";
 import { formatRelativeDate } from "@/lib/utils";
 import styles from "./ActivityFeed.module.css";
 

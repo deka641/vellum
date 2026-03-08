@@ -2,10 +2,11 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Plus, FileText, ArrowLeft, Navigation2, ExternalLink, Search, Send, Trash2, RotateCcw, Clock, Tag } from "lucide-react";
+import { Plus, FileText, ArrowLeft, Navigation2, ExternalLink, Search, Send, Trash2, RotateCcw, Calendar, Tag } from "lucide-react";
 import Link from "next/link";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { PageList } from "@/components/dashboard/PageList";
+import { ContentCalendar } from "@/components/dashboard/ContentCalendar";
 import { Button } from "@/components/ui/Button/Button";
 import { Skeleton } from "@/components/ui/Skeleton/Skeleton";
 import { useToast } from "@/components/ui/Toast/Toast";
@@ -38,6 +39,7 @@ interface PageItem {
   scheduledPublishAt: string | null;
   sortOrder: number;
   showInNav: boolean;
+  ogImage?: string | null;
   pageTags?: Array<{ tag: TagItem }>;
 }
 
@@ -74,6 +76,7 @@ export default function SiteDetailPage() {
   const [statusFilter, setStatusFilter] = useState<"ALL" | "DRAFT" | "PUBLISHED">("ALL");
   const [tagFilter, setTagFilter] = useState<string>("ALL");
   const [showTrash, setShowTrash] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
   const [trashedPages, setTrashedPages] = useState<PageItem[]>([]);
   const [deletePageId, setDeletePageId] = useState<string | null>(null);
   const [permDeletePageId, setPermDeletePageId] = useState<string | null>(null);
@@ -530,12 +533,21 @@ export default function SiteDetailPage() {
               </Button>
             </a>
             <Button
+              variant={showCalendar ? "primary" : "secondary"}
+              leftIcon={<Calendar size={16} />}
+              size="sm"
+              onClick={() => { setShowCalendar(!showCalendar); setShowTrash(false); }}
+            >
+              Calendar
+            </Button>
+            <Button
               variant={showTrash ? "primary" : "secondary"}
               leftIcon={<Trash2 size={16} />}
               size="sm"
               onClick={() => {
                 const next = !showTrash;
                 setShowTrash(next);
+                setShowCalendar(false);
                 if (next) loadTrashedPages();
               }}
             >
@@ -548,7 +560,17 @@ export default function SiteDetailPage() {
         }
       />
       <div className={styles.content}>
-        {showTrash ? (
+        {showCalendar ? (
+          <ContentCalendar
+            pages={site.pages
+              .filter((p) => p.scheduledPublishAt)
+              .map((p) => ({
+                id: p.id,
+                title: p.title,
+                scheduledPublishAt: p.scheduledPublishAt!,
+              }))}
+          />
+        ) : showTrash ? (
           <div>
             <h3 className={styles.trashTitle}>
               <Trash2 size={18} />
