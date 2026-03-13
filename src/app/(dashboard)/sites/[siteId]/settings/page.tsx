@@ -38,6 +38,8 @@ export default function SiteSettingsPage() {
   const [footerSocialLinks, setFooterSocialLinks] = useState<{ platform: string; url: string }[]>([]);
   const [showBranding, setShowBranding] = useState(true);
   const [notificationEmail, setNotificationEmail] = useState("");
+  const [turnstileSiteKey, setTurnstileSiteKey] = useState("");
+  const [turnstileSecretKey, setTurnstileSecretKey] = useState("");
   const [cookieConsentEnabled, setCookieConsentEnabled] = useState(false);
   const [cookieConsentMessage, setCookieConsentMessage] = useState("");
   const [cookieConsentPrivacyUrl, setCookieConsentPrivacyUrl] = useState("");
@@ -56,6 +58,7 @@ export default function SiteSettingsPage() {
   const [redirectPermanent, setRedirectPermanent] = useState(true);
   const [addingRedirect, setAddingRedirect] = useState(false);
   const [redirectsError, setRedirectsError] = useState(false);
+  const [autoBackup, setAutoBackup] = useState(false);
   const faviconInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const ogImageInputRef = useRef<HTMLInputElement>(null);
@@ -72,8 +75,11 @@ export default function SiteSettingsPage() {
         const parsed = parseSiteTheme(site.theme);
         if (parsed) setTheme(parsed);
         setNotificationEmail(site.notificationEmail || "");
+        setTurnstileSiteKey(site.turnstileSiteKey || "");
+        setTurnstileSecretKey(site.turnstileSecretKey || "");
         setCustomHead(site.customHead || "");
         setCustomFooter(site.customFooter || "");
+        setAutoBackup(site.autoBackup === true);
         if (site.cookieConsent && typeof site.cookieConsent === "object") {
           const cc = site.cookieConsent as { enabled?: boolean; message?: string; privacyUrl?: string };
           setCookieConsentEnabled(cc.enabled === true);
@@ -241,8 +247,11 @@ export default function SiteSettingsPage() {
           logo,
           defaultOgImage,
           notificationEmail: notificationEmail.trim() || null,
+          turnstileSiteKey: turnstileSiteKey.trim() || null,
+          turnstileSecretKey: turnstileSecretKey.trim() || null,
           customHead: customHead.trim() || null,
           customFooter: customFooter.trim() || null,
+          autoBackup,
           cookieConsent: cookieConsentEnabled
             ? {
                 enabled: true,
@@ -344,6 +353,28 @@ export default function SiteSettingsPage() {
             onChange={(e) => setNotificationEmail(e.target.value)}
             placeholder="Receive form submissions at this email"
           />
+
+          <div className={styles.footerSection}>
+            <h3 className={styles.footerSectionTitle}>Spam Protection (Cloudflare Turnstile)</h3>
+            <p style={{ fontSize: "var(--text-sm)", color: "var(--color-text-secondary)", margin: "0 0 var(--space-3) 0" }}>
+              Add a CAPTCHA challenge to published forms. Get your keys from the{" "}
+              <a href="https://dash.cloudflare.com/turnstile" target="_blank" rel="noopener noreferrer" style={{ color: "var(--color-primary)" }}>
+                Cloudflare Turnstile dashboard
+              </a>.
+            </p>
+            <Input
+              label="Turnstile Site Key"
+              value={turnstileSiteKey}
+              onChange={(e) => setTurnstileSiteKey(e.target.value)}
+              placeholder="0x4AAAAAAA..."
+            />
+            <Input
+              label="Turnstile Secret Key"
+              value={turnstileSecretKey}
+              onChange={(e) => setTurnstileSecretKey(e.target.value)}
+              placeholder="0x4AAAAAAA..."
+            />
+          </div>
 
           <div className={styles.faviconSection}>
             <label className={styles.faviconLabel}>Favicon</label>
@@ -738,6 +769,14 @@ export default function SiteSettingsPage() {
         <div style={{ marginTop: "var(--space-12)", padding: "var(--space-5)", border: "1px solid var(--color-border)", borderRadius: "var(--radius-lg)" }}>
           <h3 style={{ fontSize: "var(--text-base)", fontWeight: "var(--weight-semibold)", marginBottom: "var(--space-2)" }}>Backup</h3>
           <p style={{ fontSize: "var(--text-sm)", color: "var(--color-text-secondary)", marginBottom: "var(--space-4)" }}>Export your site as a JSON backup file containing all pages, blocks, and settings.</p>
+          <label className={styles.checkboxRow} style={{ marginBottom: "var(--space-4)" }}>
+            <input
+              type="checkbox"
+              checked={autoBackup}
+              onChange={(e) => setAutoBackup(e.target.checked)}
+            />
+            <span>Enable automatic backups (keeps last 5 backups)</span>
+          </label>
           <Button
             variant="secondary"
             leftIcon={<Download size={16} />}

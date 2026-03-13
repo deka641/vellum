@@ -408,6 +408,32 @@ export default function SiteDetailPage() {
     }
   }
 
+  async function handleBulkTagAction(action: "add" | "remove", pageIds: string[], tagIds: string[]) {
+    try {
+      const res = await fetch("/api/pages/bulk-tags", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pageIds, tagIds, action }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        // Refresh site data to get updated page tags
+        const siteRes = await fetch(`/api/sites/${params.siteId}`);
+        if (siteRes.ok) {
+          setSite(await siteRes.json());
+        }
+        const label = action === "add" ? "added to" : "removed from";
+        toast(`Tags ${label} ${pageIds.length} ${pageIds.length === 1 ? "page" : "pages"} (${data.updated} ${data.updated === 1 ? "change" : "changes"})`);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast(data.error || `Failed to ${action} tags`, "error");
+      }
+    } catch {
+      toast(`Network error — could not ${action} tags`, "error");
+    }
+  }
+
   async function handleBulkAction(action: "publish" | "unpublish", pageIds: string[]) {
     try {
       const res = await fetch("/api/pages/bulk-status", {
@@ -703,6 +729,8 @@ export default function SiteDetailPage() {
               onReorder={handleReorderPages}
               onToggleNav={handleToggleNav}
               onBulkAction={handleBulkAction}
+              tags={site.tags}
+              onBulkTagAction={handleBulkTagAction}
             />
           </>
         )}

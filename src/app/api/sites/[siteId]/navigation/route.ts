@@ -62,13 +62,23 @@ export async function PATCH(
       );
     }
 
+    // Group pages by (sortOrder, showInNav) to batch into fewer updateMany calls
+    const groups = new Map<string, string[]>();
+    for (const page of parsed.data.pages) {
+      const key = `${page.sortOrder}:${page.showInNav}`;
+      const arr = groups.get(key);
+      if (arr) arr.push(page.id);
+      else groups.set(key, [page.id]);
+    }
+
     await db.$transaction(
-      parsed.data.pages.map((page) =>
-        db.page.updateMany({
-          where: { id: page.id, siteId },
-          data: { sortOrder: page.sortOrder, showInNav: page.showInNav },
-        })
-      )
+      Array.from(groups.entries()).map(([key, ids]) => {
+        const [sortStr, navStr] = key.split(":");
+        return db.page.updateMany({
+          where: { id: { in: ids }, siteId },
+          data: { sortOrder: parseInt(sortStr, 10), showInNav: navStr === "true" },
+        });
+      })
     );
 
     const updatedPages = await db.page.findMany({

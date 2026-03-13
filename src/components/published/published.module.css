@@ -1025,11 +1025,11 @@
 }
 
 :global([data-theme-mode="light"]) .snippetWrapper::before {
-  background: linear-gradient(to right, #f8f9fc, transparent);
+  background: linear-gradient(to right, var(--color-bg-secondary, #f8f9fc), transparent);
 }
 
 :global([data-theme-mode="light"]) .snippetWrapper::after {
-  background: linear-gradient(to left, #f8f9fc, transparent);
+  background: linear-gradient(to left, var(--color-bg-secondary, #f8f9fc), transparent);
 }
 
 .snippetScrollLeft::before {

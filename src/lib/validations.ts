@@ -201,6 +201,9 @@ export const updateSiteSchema = z.object({
     message: z.string().max(500).optional(),
     privacyUrl: z.string().max(2000).optional(),
   }).nullable().optional(),
+  autoBackup: z.boolean().optional(),
+  turnstileSiteKey: z.string().max(100).nullable().optional(),
+  turnstileSecretKey: z.string().max(100).nullable().optional(),
 });
 
 // --- Import ---
@@ -405,6 +408,14 @@ export const forgotPasswordSchema = z.object({
 export const resetPasswordSchema = z.object({
   token: z.string().min(1).max(200),
   password: z.string().min(8).max(200),
+});
+
+// --- Bulk Tags ---
+
+export const bulkTagsSchema = z.object({
+  pageIds: z.array(z.string()).min(1).max(100),
+  tagIds: z.array(z.string()).min(1).max(50),
+  action: z.enum(["add", "remove"]),
 });
 
 // --- Block hierarchy validation ---

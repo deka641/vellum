@@ -7,7 +7,7 @@ import { describe, it, expect } from "vitest";
  */
 
 // Extract the routing logic from middleware for testability
-function getMiddlewareAction(pathname: string, isLoggedIn: boolean): "redirect-to-sites" | "redirect-to-login" | "next" {
+function getMiddlewareAction(pathname: string, isLoggedIn: boolean): "redirect-to-dashboard" | "redirect-to-login" | "next" {
   const isAuthRoute =
     pathname.startsWith("/login") ||
     pathname.startsWith("/register") ||
@@ -15,7 +15,7 @@ function getMiddlewareAction(pathname: string, isLoggedIn: boolean): "redirect-t
     pathname.startsWith("/reset-password");
 
   const isProtectedRoute =
-    pathname === "/" ||
+    pathname === "/dashboard" ||
     pathname.startsWith("/sites") ||
     pathname.startsWith("/editor") ||
     pathname.startsWith("/media") ||
@@ -23,7 +23,7 @@ function getMiddlewareAction(pathname: string, isLoggedIn: boolean): "redirect-t
     pathname.startsWith("/settings");
 
   if (isAuthRoute && isLoggedIn) {
-    return "redirect-to-sites";
+    return "redirect-to-dashboard";
   }
 
   if (isProtectedRoute && !isLoggedIn) {
@@ -41,26 +41,26 @@ function matchesMiddleware(pathname: string): boolean {
 
 describe("middleware routing logic", () => {
   describe("auth route redirects (logged in)", () => {
-    it("redirects /login to /sites when logged in", () => {
-      expect(getMiddlewareAction("/login", true)).toBe("redirect-to-sites");
+    it("redirects /login to /dashboard when logged in", () => {
+      expect(getMiddlewareAction("/login", true)).toBe("redirect-to-dashboard");
     });
 
-    it("redirects /register to /sites when logged in", () => {
-      expect(getMiddlewareAction("/register", true)).toBe("redirect-to-sites");
+    it("redirects /register to /dashboard when logged in", () => {
+      expect(getMiddlewareAction("/register", true)).toBe("redirect-to-dashboard");
     });
 
-    it("redirects /forgot-password to /sites when logged in", () => {
-      expect(getMiddlewareAction("/forgot-password", true)).toBe("redirect-to-sites");
+    it("redirects /forgot-password to /dashboard when logged in", () => {
+      expect(getMiddlewareAction("/forgot-password", true)).toBe("redirect-to-dashboard");
     });
 
-    it("redirects /reset-password to /sites when logged in", () => {
-      expect(getMiddlewareAction("/reset-password", true)).toBe("redirect-to-sites");
+    it("redirects /reset-password to /dashboard when logged in", () => {
+      expect(getMiddlewareAction("/reset-password", true)).toBe("redirect-to-dashboard");
     });
   });
 
   describe("protected route redirects (logged out)", () => {
-    it("redirects / to /login when logged out", () => {
-      expect(getMiddlewareAction("/", false)).toBe("redirect-to-login");
+    it("redirects /dashboard to /login when logged out", () => {
+      expect(getMiddlewareAction("/dashboard", false)).toBe("redirect-to-login");
     });
 
     it("redirects /sites to /login when logged out", () => {
@@ -97,12 +97,17 @@ describe("middleware routing logic", () => {
       expect(getMiddlewareAction("/sites", true)).toBe("next");
     });
 
-    it("allows / when logged in", () => {
-      expect(getMiddlewareAction("/", true)).toBe("next");
+    it("allows /dashboard when logged in", () => {
+      expect(getMiddlewareAction("/dashboard", true)).toBe("next");
     });
 
     it("allows /editor when logged in", () => {
       expect(getMiddlewareAction("/editor/page123", true)).toBe("next");
+    });
+
+    it("allows / regardless of auth (landing page)", () => {
+      expect(getMiddlewareAction("/", false)).toBe("next");
+      expect(getMiddlewareAction("/", true)).toBe("next");
     });
 
     it("allows unknown routes regardless of auth", () => {
@@ -119,6 +124,7 @@ describe("middleware matcher pattern", () => {
   });
 
   it("matches dashboard routes", () => {
+    expect(matchesMiddleware("/dashboard")).toBe(true);
     expect(matchesMiddleware("/sites")).toBe(true);
     expect(matchesMiddleware("/editor/abc")).toBe(true);
     expect(matchesMiddleware("/media")).toBe(true);

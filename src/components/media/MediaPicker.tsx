@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/Dialog/Dialog";
 import { MediaGrid } from "./MediaGrid";
 import { MediaUploader } from "./MediaUploader";
+import { Skeleton } from "@/components/ui/Skeleton/Skeleton";
 import styles from "./media.module.css";
 
 interface MediaItem {
@@ -53,7 +54,11 @@ export function MediaPicker({ open, onOpenChange, onSelect }: MediaPickerProps) 
           }
         />
         {loading ? (
-          <p className={styles.loadingText}>Loading...</p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px", padding: "8px 0" }}>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} width="100%" height={100} />
+            ))}
+          </div>
         ) : (
           <MediaGrid
             items={items}

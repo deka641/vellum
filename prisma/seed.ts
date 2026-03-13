@@ -1584,7 +1584,7 @@ export default async function ProjectPage({ params }: Props) {
     },
     {
       type: "button",
-      content: { text: "View Open Positions", url: "#", variant: "primary" },
+      content: { text: "View Open Positions", url: "/s/atlas-studio/contact", variant: "primary" },
       settings: { align: "center" },
     },
   ];

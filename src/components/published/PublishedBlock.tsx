@@ -14,6 +14,7 @@ interface PublishedBlockProps {
   block: BlockData;
   pageId?: string;
   allBlocks?: BlockData[];
+  turnstileSiteKey?: string;
 }
 
 function buildBlockStyle(settings: Record<string, unknown>): CSSProperties {
@@ -34,7 +35,7 @@ function buildBlockStyle(settings: Record<string, unknown>): CSSProperties {
   return style;
 }
 
-export function PublishedBlock({ block, pageId, allBlocks }: PublishedBlockProps) {
+export function PublishedBlock({ block, pageId, allBlocks, turnstileSiteKey }: PublishedBlockProps) {
   const { type, content, settings } = block;
 
   // Block visibility toggle
@@ -107,6 +108,9 @@ export function PublishedBlock({ block, pageId, allBlocks }: PublishedBlockProps
         : safeSrc.startsWith("/uploads/") && /\.(jpe?g|png)$/i.test(safeSrc)
           ? `${safeSrc}.webp`
           : null;
+      const mediumSrc = typeof content.mediumUrl === "string" && content.mediumUrl
+        ? content.mediumUrl
+        : null;
       const imgTag = (
         <img
           src={safeSrc}
@@ -116,6 +120,7 @@ export function PublishedBlock({ block, pageId, allBlocks }: PublishedBlockProps
           decoding="async"
           {...(typeof content.width === "number" && content.width > 0 ? { width: content.width } : {})}
           {...(typeof content.height === "number" && content.height > 0 ? { height: content.height } : {})}
+          {...(mediumSrc ? { srcSet: `${mediumSrc} 768w, ${safeSrc} 1920w`, sizes: "(max-width: 768px) 100vw, 1080px" } : {})}
           style={{
             borderRadius: settings.rounded ? "var(--radius-lg)" : undefined,
             boxShadow: settings.shadow ? "var(--shadow-lg)" : undefined,
@@ -226,7 +231,7 @@ export function PublishedBlock({ block, pageId, allBlocks }: PublishedBlockProps
           {columns.map((col, i) => (
             <div key={i} className={styles.column}>
               {col.blocks?.map((b: BlockData) => (
-                <PublishedBlock key={b.id} block={b} pageId={pageId} />
+                <PublishedBlock key={b.id} block={b} pageId={pageId} turnstileSiteKey={turnstileSiteKey} />
               ))}
             </div>
           ))}
@@ -296,6 +301,7 @@ export function PublishedBlock({ block, pageId, allBlocks }: PublishedBlockProps
             fields={fields}
             submitText={submitText}
             successMessage={successMessage}
+            turnstileSiteKey={turnstileSiteKey}
           />
         );
       }

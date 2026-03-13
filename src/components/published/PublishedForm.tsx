@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, type FormEvent } from "react";
+import { useState, useRef, useEffect, type FormEvent } from "react";
 import styles from "./published.module.css";
 
 interface FormField {
@@ -24,16 +24,32 @@ interface PublishedFormProps {
   fields: FormField[];
   submitText: string;
   successMessage: string;
+  turnstileSiteKey?: string;
 }
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export function PublishedForm({ blockId, pageId, fields, submitText, successMessage }: PublishedFormProps) {
+export function PublishedForm({ blockId, pageId, fields, submitText, successMessage, turnstileSiteKey }: PublishedFormProps) {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const formRef = useRef<HTMLFormElement>(null);
+  const turnstileRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!turnstileSiteKey) return;
+    // Load Turnstile script if not already present
+    const scriptId = "cf-turnstile-script";
+    if (!document.getElementById(scriptId)) {
+      const script = document.createElement("script");
+      script.id = scriptId;
+      script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+    }
+  }, [turnstileSiteKey]);
 
   function validateFields(formData: FormData): Record<string, string> {
     const errors: Record<string, string> = {};
@@ -142,11 +158,21 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
 
     const honeypotValue = formData.get("website_url")?.toString() || "";
 
+    // Get Turnstile token if configured
+    const turnstileToken = turnstileSiteKey
+      ? formData.get("cf-turnstile-response")?.toString() || ""
+      : undefined;
+
     try {
       const res = await fetch(`/api/forms/${blockId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data, pageId, _hp: honeypotValue }),
+        body: JSON.stringify({
+          data,
+          pageId,
+          _hp: honeypotValue,
+          ...(turnstileToken !== undefined && { "cf-turnstile-response": turnstileToken }),
+        }),
       });
 
       if (res.ok) {
@@ -355,6 +381,14 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
         </div>
       ))}
       {error && <p role="alert" style={{ color: "var(--color-error)", fontSize: "var(--text-sm)" }}>{error}</p>}
+      {turnstileSiteKey && (
+        <div
+          ref={turnstileRef}
+          className="cf-turnstile"
+          data-sitekey={turnstileSiteKey}
+          style={{ marginBottom: "var(--space-3)" }}
+        />
+      )}
       <button type="submit" className={styles.formSubmit} disabled={submitting}>
         {submitting ? (
           <>

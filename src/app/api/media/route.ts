@@ -3,7 +3,7 @@ import { revalidateTag } from "next/cache";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { saveUploadedFile, UnsafeFileTypeError } from "@/lib/upload";
-import { getImageDimensions, optimizeImage, generateWebpVariant } from "@/lib/image";
+import { getImageDimensions, optimizeImage, generateWebpVariant, generateMediumVariant } from "@/lib/image";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { apiError } from "@/lib/api-helpers";
 import { logger } from "@/lib/logger";
@@ -129,6 +129,7 @@ export async function POST(req: Request) {
       let width: number | null = null;
       let height: number | null = null;
       let webpUrl: string | null = null;
+      let mediumUrl: string | null = null;
       if (mimeType.startsWith("image/")) {
         await optimizeImage(filename);
         const dims = await getImageDimensions(filename);
@@ -139,6 +140,10 @@ export async function POST(req: Request) {
         const webpFilename = await generateWebpVariant(filename);
         if (webpFilename) {
           webpUrl = `/uploads/${webpFilename}`;
+        }
+        const mediumFilename = await generateMediumVariant(filename);
+        if (mediumFilename) {
+          mediumUrl = `/uploads/${mediumFilename}`;
         }
       }
 
@@ -151,6 +156,7 @@ export async function POST(req: Request) {
           height,
           url,
           webpUrl,
+          mediumUrl,
           folder,
           userId: session.user.id,
         },

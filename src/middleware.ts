@@ -7,7 +7,7 @@ export default auth((req) => {
 
   const isAuthRoute = pathname.startsWith("/login") || pathname.startsWith("/register") || pathname.startsWith("/forgot-password") || pathname.startsWith("/reset-password");
   const isProtectedRoute =
-    pathname === "/" ||
+    pathname === "/dashboard" ||
     pathname.startsWith("/sites") ||
     pathname.startsWith("/editor") ||
     pathname.startsWith("/media") ||
@@ -15,7 +15,7 @@ export default auth((req) => {
     pathname.startsWith("/settings");
 
   if (isAuthRoute && isLoggedIn) {
-    return NextResponse.redirect(new URL("/sites", req.nextUrl));
+    return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
   }
 
   if (isProtectedRoute && !isLoggedIn) {

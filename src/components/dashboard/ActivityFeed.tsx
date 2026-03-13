@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { FileText, Globe, Upload, Trash2, Send, Clock } from "lucide-react";
 import { formatRelativeDate } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/Skeleton/Skeleton";
 import styles from "./ActivityFeed.module.css";
 
 interface Activity {
@@ -40,7 +41,17 @@ export function ActivityFeed() {
     return (
       <div className={styles.feed}>
         <h3 className={styles.title}>Recent Activity</h3>
-        <div className={styles.loading}>Loading...</div>
+        <div className={styles.list}>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className={styles.item}>
+              <div className={styles.iconWrap}><Skeleton width={14} height={14} rounded /></div>
+              <div className={styles.content}>
+                <Skeleton width={i % 2 === 0 ? "70%" : "55%"} height={12} />
+                <Skeleton width={60} height={10} />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -49,7 +60,11 @@ export function ActivityFeed() {
     return (
       <div className={styles.feed}>
         <h3 className={styles.title}>Recent Activity</h3>
-        <p className={styles.empty}>No activity yet. Start creating content!</p>
+        <div className={styles.empty}>
+          <Clock size={32} />
+          <p>No activity yet</p>
+          <span>Your recent actions like creating pages, publishing content, and uploading media will appear here.</span>
+        </div>
       </div>
     );
   }

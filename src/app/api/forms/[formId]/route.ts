@@ -53,7 +53,7 @@ export async function POST(
     // Verify the page exists and is published
     const page = await db.page.findFirst({
       where: { id: pageId, status: "PUBLISHED" },
-      include: { site: { select: { id: true, name: true, notificationEmail: true } } },
+      include: { site: { select: { id: true, name: true, notificationEmail: true, turnstileSiteKey: true, turnstileSecretKey: true } } },
     });
 
     if (!page) {
@@ -61,6 +61,42 @@ export async function POST(
         { error: "Page not found" },
         { status: 404 }
       );
+    }
+
+    // Verify Cloudflare Turnstile CAPTCHA if configured
+    if (page.site?.turnstileSecretKey) {
+      const turnstileResponse = (body as Record<string, unknown>)["cf-turnstile-response"];
+      if (!turnstileResponse || typeof turnstileResponse !== "string") {
+        return NextResponse.json(
+          { error: "CAPTCHA verification failed" },
+          { status: 403 }
+        );
+      }
+
+      try {
+        const verifyRes = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            secret: page.site.turnstileSecretKey,
+            response: turnstileResponse,
+            remoteip: ip,
+          }),
+        });
+        const verifyData = await verifyRes.json() as { success: boolean };
+        if (!verifyData.success) {
+          return NextResponse.json(
+            { error: "CAPTCHA verification failed" },
+            { status: 403 }
+          );
+        }
+      } catch (err) {
+        logger.warn("turnstile", "Turnstile verification request failed", err);
+        return NextResponse.json(
+          { error: "CAPTCHA verification failed" },
+          { status: 403 }
+        );
+      }
     }
 
     // Verify the block exists on this page and is a form block

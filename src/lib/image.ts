@@ -43,6 +43,32 @@ export async function generateWebpVariant(
   }
 }
 
+const MEDIUM_ELIGIBLE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp"]);
+
+export async function generateMediumVariant(
+  filename: string
+): Promise<string | null> {
+  try {
+    const ext = path.extname(filename).toLowerCase();
+    if (!MEDIUM_ELIGIBLE_EXTENSIONS.has(ext)) {
+      return null;
+    }
+
+    const filepath = path.join(UPLOAD_DIR, filename);
+    const mediumFilename = `med-${filename}`;
+    const mediumPath = path.join(UPLOAD_DIR, mediumFilename);
+
+    await sharp(filepath)
+      .resize(768, undefined, { fit: "inside", withoutEnlargement: true })
+      .toFile(mediumPath);
+
+    return mediumFilename;
+  } catch (error) {
+    logger.warn("image", `generateMediumVariant failed for ${filename}:`, error);
+    return null;
+  }
+}
+
 export async function optimizeImage(filename: string): Promise<void> {
   try {
     const filepath = path.join(UPLOAD_DIR, filename);

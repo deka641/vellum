@@ -64,6 +64,15 @@ export async function POST(
       );
     }
 
+    // Safety check: cap total block count to prevent DoS via oversized sites
+    const totalBlocks = sourceSite.pages.reduce((sum, p) => sum + p.blocks.length, 0);
+    if (totalBlocks > 10000) {
+      return NextResponse.json(
+        { error: "Site has too many blocks to duplicate (max 10,000)" },
+        { status: 400 }
+      );
+    }
+
     const newName = parsed.data.name || `${sourceSite.name} (Copy)`;
 
     // Generate slug with P2002 retry loop
@@ -96,35 +105,43 @@ export async function POST(
             },
           });
 
-          // Duplicate all pages with blocks
-          for (const page of sourceSite.pages) {
-            // Build block ID map for remapping parentId references
+          // Batch-create all pages first, then batch-create all blocks
+          // Pre-generate page IDs and block ID mappings
+          const pageEntries = sourceSite.pages.map((page) => {
+            const newPageId = generateId();
             const idMap = new Map<string, string>();
-            const newBlocks = page.blocks.map((block) => {
-              const newId = generateId();
-              idMap.set(block.id, newId);
-              return { ...block, newId };
+            const mappedBlocks = page.blocks.map((block) => {
+              const newBlockId = generateId();
+              idMap.set(block.id, newBlockId);
+              return { ...block, newBlockId };
             });
+            return { page, newPageId, idMap, mappedBlocks };
+          });
 
-            const newPage = await tx.page.create({
-              data: {
-                title: page.title,
-                slug: page.slug,
-                description: page.description,
-                metaTitle: page.metaTitle,
-                ogImage: page.ogImage,
-                noindex: page.noindex,
-                status: "DRAFT",
-                isHomepage: page.isHomepage,
-                showInNav: page.showInNav,
-                sortOrder: page.sortOrder,
-                siteId: site.id,
-              },
-            });
+          // Batch create all pages
+          await tx.page.createMany({
+            data: pageEntries.map(({ page, newPageId }) => ({
+              id: newPageId,
+              title: page.title,
+              slug: page.slug,
+              description: page.description,
+              metaTitle: page.metaTitle,
+              ogImage: page.ogImage,
+              noindex: page.noindex,
+              status: "DRAFT" as const,
+              isHomepage: page.isHomepage,
+              showInNav: page.showInNav,
+              sortOrder: page.sortOrder,
+              siteId: site.id,
+            })),
+          });
 
-            if (newBlocks.length > 0) {
+          // Collect all blocks across all pages and batch create
+          const allBlockData: Prisma.BlockCreateManyInput[] = [];
+          for (const { newPageId, idMap, mappedBlocks } of pageEntries) {
+            if (mappedBlocks.length > 0) {
               const sanitizedBlocks = sanitizeBlocks(
-                newBlocks.map((b) => ({
+                mappedBlocks.map((b) => ({
                   type: b.type,
                   content: b.content as Record<string, unknown>,
                   settings: b.settings as Record<string, unknown>,
@@ -132,18 +149,23 @@ export async function POST(
                 }))
               );
 
-              await tx.block.createMany({
-                data: newBlocks.map((b, i) => ({
-                  id: b.newId,
+              for (let i = 0; i < mappedBlocks.length; i++) {
+                const b = mappedBlocks[i];
+                allBlockData.push({
+                  id: b.newBlockId,
                   type: sanitizedBlocks[i].type,
                   content: sanitizedBlocks[i].content as Prisma.InputJsonValue,
                   settings: (sanitizedBlocks[i].settings || {}) as Prisma.InputJsonValue,
                   sortOrder: b.sortOrder,
-                  pageId: newPage.id,
+                  pageId: newPageId,
                   parentId: b.parentId ? (idMap.get(b.parentId) || null) : null,
-                })),
-              });
+                });
+              }
             }
+          }
+
+          if (allBlockData.length > 0) {
+            await tx.block.createMany({ data: allBlockData });
           }
 
           return site;

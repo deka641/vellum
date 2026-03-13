@@ -286,6 +286,7 @@ export default async function PublicSitePage({ params }: Props) {
         siteSlug={siteSlug}
         publishedAt={page.publishedAt}
         updatedAt={page.updatedAt}
+        turnstileSiteKey={site.turnstileSiteKey ?? undefined}
       />
       <SocialShareBar
         title={page.title}

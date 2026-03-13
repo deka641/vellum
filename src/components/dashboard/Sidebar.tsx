@@ -25,7 +25,7 @@ interface SidebarProps {
 }
 
 const navItems = [
-  { href: "/", label: "Home", icon: Home, exact: true },
+  { href: "/dashboard", label: "Home", icon: Home, exact: true },
   { href: "/sites", label: "Sites", icon: Globe },
   { href: "/media", label: "Media", icon: Image },
   { href: "/templates", label: "Templates", icon: LayoutTemplate },

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
-import { MoreHorizontal, Trash2, FileText, Home, ExternalLink, Pencil, Globe, GlobeLock, Copy, Clock, GripVertical, Eye, EyeOff, X } from "lucide-react";
+import { MoreHorizontal, Trash2, FileText, Home, ExternalLink, Pencil, Globe, GlobeLock, Copy, Clock, GripVertical, Eye, EyeOff, X, Tag, Plus, Minus } from "lucide-react";
 import { Badge } from "@/components/ui/Badge/Badge";
 import { IconButton } from "@/components/ui/IconButton/IconButton";
 import {
@@ -48,6 +48,12 @@ interface Page {
   pageTags?: Array<{ tag: { id: string; name: string; slug: string } }>;
 }
 
+interface TagItem {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 interface PageListProps {
   pages: Page[];
   siteSlug: string;
@@ -58,6 +64,8 @@ interface PageListProps {
   onReorder?: (pages: Page[]) => void;
   onToggleNav?: (id: string) => void;
   onBulkAction?: (action: "publish" | "unpublish", pageIds: string[]) => Promise<void>;
+  tags?: TagItem[];
+  onBulkTagAction?: (action: "add" | "remove", pageIds: string[], tagIds: string[]) => Promise<void>;
 }
 
 function SortablePageItem({
@@ -234,9 +242,12 @@ function SortablePageItem({
   );
 }
 
-export function PageList({ pages, siteSlug, onDelete, onPublish, onUnpublish, onDuplicate, onReorder, onToggleNav, onBulkAction }: PageListProps) {
+export function PageList({ pages, siteSlug, onDelete, onPublish, onUnpublish, onDuplicate, onReorder, onToggleNav, onBulkAction, tags, onBulkTagAction }: PageListProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [tagMenuOpen, setTagMenuOpen] = useState(false);
+  const [tagMenuMode, setTagMenuMode] = useState<"add" | "remove">("add");
+  const tagMenuRef = useRef<HTMLDivElement>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -298,6 +309,29 @@ export function PageList({ pages, siteSlug, onDelete, onPublish, onUnpublish, on
     }
   }, [onBulkAction, selectedIds]);
 
+  const handleBulkTagSelect = useCallback(async (tagId: string) => {
+    if (!onBulkTagAction || selectedIds.size === 0) return;
+    setBulkLoading(true);
+    setTagMenuOpen(false);
+    try {
+      await onBulkTagAction(tagMenuMode, Array.from(selectedIds), [tagId]);
+    } finally {
+      setBulkLoading(false);
+    }
+  }, [onBulkTagAction, selectedIds, tagMenuMode]);
+
+  // Close tag menu on click outside
+  useEffect(() => {
+    if (!tagMenuOpen) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (tagMenuRef.current && !tagMenuRef.current.contains(e.target as Node)) {
+        setTagMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [tagMenuOpen]);
+
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over || active.id === over.id || !onReorder) return;
@@ -347,6 +381,50 @@ export function PageList({ pages, siteSlug, onDelete, onPublish, onUnpublish, on
             >
               Unpublish
             </Button>
+            {tags && tags.length > 0 && onBulkTagAction && (
+              <div className={styles.tagMenuWrap} ref={tagMenuRef}>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  leftIcon={<Tag size={14} />}
+                  onClick={() => setTagMenuOpen(!tagMenuOpen)}
+                  disabled={bulkLoading}
+                >
+                  Tags
+                </Button>
+                {tagMenuOpen && (
+                  <div className={styles.tagMenu}>
+                    <div className={styles.tagMenuTabs}>
+                      <button
+                        className={`${styles.tagMenuTab} ${tagMenuMode === "add" ? styles.tagMenuTabActive : ""}`}
+                        onClick={() => setTagMenuMode("add")}
+                      >
+                        <Plus size={12} />
+                        Add tags
+                      </button>
+                      <button
+                        className={`${styles.tagMenuTab} ${tagMenuMode === "remove" ? styles.tagMenuTabActive : ""}`}
+                        onClick={() => setTagMenuMode("remove")}
+                      >
+                        <Minus size={12} />
+                        Remove tags
+                      </button>
+                    </div>
+                    <div className={styles.tagMenuList}>
+                      {tags.map((tag) => (
+                        <button
+                          key={tag.id}
+                          className={styles.tagMenuItem}
+                          onClick={() => handleBulkTagSelect(tag.id)}
+                        >
+                          {tag.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
             <Button
               size="sm"
               variant="ghost"

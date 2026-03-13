@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog/ConfirmDialog";
 import { useToast } from "@/components/ui/Toast/Toast";
 import { formatDate } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/Skeleton/Skeleton";
 import styles from "./submissions.module.css";
 
 interface Submission {
@@ -273,8 +274,10 @@ export function SubmissionsClient({ siteId, pages }: SubmissionsClientProps) {
       )}
 
       {loading ? (
-        <div className={styles.empty}>
-          <p>Loading...</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px", padding: "16px 0" }}>
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} width="100%" height={48} />
+          ))}
         </div>
       ) : submissions.length === 0 ? (
         <div className={styles.empty}>

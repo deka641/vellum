@@ -26,6 +26,7 @@
   --color-warning:       #D97706;
   --color-warning-light: #FFFBEB;
   --color-error:         #DC2626;
+  --color-error-rgb:     220, 38, 38;
   --color-error-light:   #FEF2F2;
 
   /* === Typography === */

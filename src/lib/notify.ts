@@ -94,10 +94,19 @@ function buildEmailHtml(notification: SubmissionNotification): string {
         </div>
       </div>
       <div style="padding: 16px 24px; background-color: #f9fafb; border-top: 1px solid #e5e7eb;">
-        <p style="margin: 0; font-size: 12px; color: #9ca3af; text-align: center;">Sent by Vellum CMS</p>
+        <p style="margin: 0; font-size: 12px; color: #6b7280; text-align: center;">Sent by Vellum CMS</p>
       </div>
     </div>
   </div>
+  <style>
+    @media only screen and (max-width: 480px) {
+      table { width: 100% !important; }
+      td { display: block !important; width: 100% !important; padding: 6px 12px !important; }
+      th { display: none !important; }
+      td:first-child { font-weight: 600; color: #6b7280; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; padding-bottom: 2px !important; border-bottom: none !important; }
+      td:last-child { padding-top: 0 !important; }
+    }
+  </style>
 </body>
 </html>`;
 }

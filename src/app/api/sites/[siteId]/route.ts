@@ -20,6 +20,9 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const rl = rateLimit(`sites-read:${session.user.id}`, "read");
+    if (!rl.success) return rateLimitResponse(rl);
+
     const { siteId } = await params;
 
     const site = await db.site.findFirst({
@@ -100,6 +103,9 @@ export async function PATCH(
         ...(parsed.data.customHead !== undefined && { customHead: parsed.data.customHead }),
         ...(parsed.data.customFooter !== undefined && { customFooter: parsed.data.customFooter }),
         ...(parsed.data.cookieConsent !== undefined && { cookieConsent: parsed.data.cookieConsent ? (parsed.data.cookieConsent as Prisma.InputJsonValue) : Prisma.JsonNull }),
+        ...(parsed.data.autoBackup !== undefined && { autoBackup: parsed.data.autoBackup }),
+        ...(parsed.data.turnstileSiteKey !== undefined && { turnstileSiteKey: parsed.data.turnstileSiteKey }),
+        ...(parsed.data.turnstileSecretKey !== undefined && { turnstileSecretKey: parsed.data.turnstileSecretKey }),
       },
     });
 

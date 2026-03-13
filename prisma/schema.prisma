@@ -26,13 +26,16 @@ model Site {
   description       String?
   favicon           String?
   logo              String?
-  notificationEmail String?
-  defaultOgImage    String?
-  theme             Json       @default("{}")
+  notificationEmail  String?
+  defaultOgImage     String?
+  turnstileSiteKey   String?
+  turnstileSecretKey String?
+  theme              Json       @default("{}")
   footer            Json       @default("{}")
   customHead        String?    @db.Text
   customFooter      String?    @db.Text
   cookieConsent     Json?
+  autoBackup        Boolean    @default(false)
   userId            String
   user              User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   pages             Page[]
@@ -162,6 +165,7 @@ model Media {
   height    Int?
   url       String
   webpUrl   String?
+  mediumUrl String?
   alt       String?
   folder    String?
   userId    String

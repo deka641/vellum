@@ -1,86 +1,12 @@
 import { db } from "@/lib/db";
 import { getBaseUrl } from "@/lib/url";
-import { sanitizeRichHtml } from "@/lib/sanitize";
+import {
+  escapeXml,
+  extractDescription,
+  buildContentHtml,
+} from "@/lib/rss-helpers";
 
 export const revalidate = 3600;
-
-function escapeXml(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
-}
-
-function stripHtmlTags(html: string): string {
-  return html.replace(/<[^>]*>/g, "").trim();
-}
-
-function extractDescription(
-  blocks: Array<{ type: string; content: Record<string, unknown> }>,
-  maxLen = 300
-): string {
-  for (const block of blocks) {
-    if (block.type === "text" && typeof block.content.html === "string") {
-      const text = stripHtmlTags(block.content.html);
-      if (text && text !== "Start writing...") {
-        return text.length > maxLen ? text.slice(0, maxLen - 1) + "\u2026" : text;
-      }
-    }
-  }
-  return "";
-}
-
-function buildContentHtml(
-  blocks: Array<{ type: string; content: Record<string, unknown> }>
-): string {
-  const parts: string[] = [];
-  for (const block of blocks) {
-    switch (block.type) {
-      case "heading": {
-        const level = (block.content.level || 2) as number;
-        const html = block.content.html as string | undefined;
-        const text = block.content.text as string;
-        if (html) {
-          parts.push(`<h${level}>${sanitizeRichHtml(html)}</h${level}>`);
-        } else if (text) {
-          parts.push(`<h${level}>${escapeXml(text)}</h${level}>`);
-        }
-        break;
-      }
-      case "text": {
-        const html = block.content.html as string;
-        if (html && html !== "<p>Start writing...</p>" && html !== "<p></p>") {
-          parts.push(sanitizeRichHtml(html));
-        }
-        break;
-      }
-      case "image": {
-        const src = block.content.src as string;
-        const alt = (block.content.alt as string) || "";
-        if (src) {
-          parts.push(`<img src="${escapeXml(src)}" alt="${escapeXml(alt)}" />`);
-        }
-        break;
-      }
-      case "quote": {
-        const html = block.content.html as string | undefined;
-        const text = block.content.text as string;
-        if (html) {
-          parts.push(`<blockquote>${sanitizeRichHtml(html)}</blockquote>`);
-        } else if (text) {
-          parts.push(`<blockquote><p>${escapeXml(text)}</p></blockquote>`);
-        }
-        break;
-      }
-      case "divider":
-        parts.push("<hr />");
-        break;
-    }
-  }
-  return parts.join("\n");
-}
 
 export async function GET(
   _req: Request,
@@ -139,7 +65,7 @@ export async function GET(
         .map((pt) => `\n      <category>${escapeXml(pt.tag.name)}</category>`)
         .join("");
 
-      const contentHtml = buildContentHtml(blockData);
+      const contentHtml = buildContentHtml(blockData, baseUrl);
       const contentEncoded = contentHtml
         ? `\n      <content:encoded><![CDATA[${contentHtml}]]></content:encoded>`
         : "";

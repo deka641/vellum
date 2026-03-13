@@ -18,6 +18,7 @@ interface PublishedPageProps {
   siteSlug?: string;
   publishedAt?: Date | string | null;
   updatedAt?: Date | string | null;
+  turnstileSiteKey?: string;
 }
 
 function stripHtml(html: string): string {
@@ -56,7 +57,7 @@ function formatPublishedDate(date: Date | string): string {
   return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 }
 
-export function PublishedPage({ title, blocks, pageId, tags, siteSlug, publishedAt, updatedAt }: PublishedPageProps) {
+export function PublishedPage({ title, blocks, pageId, tags, siteSlug, publishedAt, updatedAt, turnstileSiteKey }: PublishedPageProps) {
   const hasH1Block = blocks.some(
     (b) => !b.parentId && b.type === "heading" && (b.content as Record<string, unknown>).level === 1
   );
@@ -109,7 +110,7 @@ export function PublishedPage({ title, blocks, pageId, tags, siteSlug, published
         )}
         {blocks.filter(b => !b.parentId).map((block, i) => (
           <ScrollReveal key={block.id} delay={Math.min(i * 50, 200)}>
-            <SafePublishedBlock block={block} pageId={pageId} allBlocks={blocks} />
+            <SafePublishedBlock block={block} pageId={pageId} allBlocks={blocks} turnstileSiteKey={turnstileSiteKey} />
           </ScrollReveal>
         ))}
       </div>
