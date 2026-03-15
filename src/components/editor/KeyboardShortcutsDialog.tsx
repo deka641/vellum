@@ -37,6 +37,7 @@ function getShortcutGroups(): ShortcutGroup[] {
         { label: "Save", keys: [mod, "S"] },
         { label: "Undo", keys: [mod, "Z"] },
         { label: "Redo", keys: [mod, "Shift", "Z"] },
+        { label: "Add block", keys: ["/"] },
         { label: "Keyboard shortcuts", keys: ["?"] },
       ],
     },

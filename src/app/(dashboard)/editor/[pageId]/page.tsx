@@ -50,6 +50,7 @@ export default function EditorPage() {
   }, []);
   const { setPage, addBlock, isDirty, pageSlug } = useEditorStore();
   const { save, forceSave } = useAutosave();
+  const [addBlockMenuRequested, setAddBlockMenuRequested] = useState(false);
 
   const loadPage = useCallback(async () => {
     setLoading(true);
@@ -179,6 +180,18 @@ export default function EditorPage() {
       }
       if (e.key === "Escape") {
         useEditorStore.getState().clearSelection();
+      }
+      if (e.key === "/" && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        const target = e.target as HTMLElement;
+        const isEditing =
+          target.isContentEditable ||
+          target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.closest(".tiptap");
+        if (!isEditing) {
+          e.preventDefault();
+          setAddBlockMenuRequested(true);
+        }
       }
       if (e.key === "Delete" || e.key === "Backspace") {
         const target = e.target as HTMLElement;
@@ -362,6 +375,8 @@ export default function EditorPage() {
         <EditorSidebar
           mobileOpen={sidebarOpen}
           onMobileToggle={() => setSidebarOpen((o) => !o)}
+          activateAddBlock={addBlockMenuRequested}
+          onAddBlockActivated={() => setAddBlockMenuRequested(false)}
         />
         {sidebarOpen && (
           <div

@@ -1767,4 +1767,20 @@ details[open] > .accordionBody > .accordionBodyInner {
   .formBlock {
     break-inside: avoid;
   }
+
+  .tableContainer {
+    overflow: visible;
+  }
+
+  .table {
+    width: 100%;
+    max-width: 100%;
+    font-size: 10pt;
+    page-break-inside: avoid;
+  }
+
+  .tableScrollContainer::before,
+  .tableScrollContainer::after {
+    display: none;
+  }
 }

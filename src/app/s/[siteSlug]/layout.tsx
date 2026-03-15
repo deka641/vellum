@@ -52,8 +52,9 @@ export default async function PublishedSiteLayout({ params, children }: Props) {
       <style>{`html{scroll-behavior:smooth}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}`}</style>
       <ReadingProgress />
       <a href="#main-content" className={styles.skipLink}>Skip to content</a>
-      {site.favicon && <link rel="icon" href={sanitizeImageSrc(site.favicon)} />}
+      <link rel="icon" href={site.favicon ? sanitizeImageSrc(site.favicon) : "/favicon.ico"} />
       <link rel="alternate" type="application/rss+xml" title={`${site.name} RSS Feed`} href={`/s/${site.slug}/feed.xml`} />
+      <link rel="search" type="application/opensearchdescription+xml" title={site.name} href={`/s/${site.slug}/opensearch.xml`} />
       {fontPreset?.googleFontsUrl && (
         <>
           <link rel="preconnect" href="https://fonts.googleapis.com" />

@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
-import sanitize from "sanitize-html";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { rateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 import { apiError } from "@/lib/api-helpers";
+import { sanitizePlainText } from "@/lib/sanitize";
 import { parseBody, formSubmissionSchema } from "@/lib/validations";
 import { notifyFormSubmission } from "@/lib/notify";
 import { logger } from "@/lib/logger";
@@ -127,10 +127,7 @@ export async function POST(
     // Sanitize all values
     const sanitizedData: Record<string, string> = {};
     for (const [key, value] of Object.entries(parsed.data.data)) {
-      sanitizedData[key] = sanitize(value, {
-        allowedTags: [],
-        allowedAttributes: {},
-      });
+      sanitizedData[key] = sanitizePlainText(value);
     }
 
     const submission = await db.formSubmission.create({

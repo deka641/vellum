@@ -938,6 +938,58 @@ describe("sanitizeBlocks", () => {
       expect(c.text).not.toContain("script");
       expect(c.attribution).not.toContain("script");
     });
+
+    it("sanitizes rich HTML in quote html field", () => {
+      const blocks = [
+        {
+          type: "quote",
+          content: {
+            html: "<p><strong>Wise words</strong></p>",
+            text: "Wise words",
+          },
+          settings: {},
+        },
+      ];
+      const result = sanitizeBlocks(blocks);
+      const c = result[0].content as Record<string, unknown>;
+      expect(c.html).toContain("<strong>Wise words</strong>");
+      expect(c.html).toContain("<p>");
+    });
+
+    it("strips script tags from quote html field", () => {
+      const blocks = [
+        {
+          type: "quote",
+          content: {
+            html: '<p>ok</p><script>alert("xss")</script>',
+            text: "ok",
+          },
+          settings: {},
+        },
+      ];
+      const result = sanitizeBlocks(blocks);
+      const c = result[0].content as Record<string, unknown>;
+      expect(c.html).not.toContain("script");
+      expect(c.html).toContain("<p>ok</p>");
+    });
+
+    it("strips img/iframe tags from quote html field", () => {
+      const blocks = [
+        {
+          type: "quote",
+          content: {
+            html: '<p>quote</p><img src="x" onerror="alert(1)"><iframe src="evil.com"></iframe>',
+            text: "quote",
+          },
+          settings: {},
+        },
+      ];
+      const result = sanitizeBlocks(blocks);
+      const c = result[0].content as Record<string, unknown>;
+      expect(c.html).not.toContain("<img");
+      expect(c.html).not.toContain("<iframe");
+      expect(c.html).toContain("<p>quote</p>");
+    });
   });
 
   describe("form blocks", () => {

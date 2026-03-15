@@ -256,8 +256,17 @@
   100% { transform: scale(1); box-shadow: none; }
 }
 
+.justInserted {
+  animation: blockInsertHighlight 600ms ease-out;
+}
+
+@keyframes blockInsertHighlight {
+  0% { background-color: var(--color-accent-light); }
+  100% { background-color: transparent; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .entering, .exiting, .settled {
+  .entering, .exiting, .settled, .justInserted {
     animation-duration: 0ms;
   }
 }

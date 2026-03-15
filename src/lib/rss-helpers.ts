@@ -105,9 +105,9 @@ export function buildContentHtml(
           let html = "<table>";
           if (caption) html += `<caption>${escapeXml(caption)}</caption>`;
           const [header, ...body] = rows;
-          html += `<thead><tr>${header.map((c) => `<th>${escapeXml(c)}</th>`).join("")}</tr></thead>`;
+          html += `<thead><tr>${header.map((c) => `<th>${sanitizeRichHtml(c)}</th>`).join("")}</tr></thead>`;
           if (body.length > 0) {
-            html += `<tbody>${body.map((row) => `<tr>${row.map((c) => `<td>${escapeXml(c)}</td>`).join("")}</tr>`).join("")}</tbody>`;
+            html += `<tbody>${body.map((row) => `<tr>${row.map((c) => `<td>${sanitizeRichHtml(c)}</td>`).join("")}</tr>`).join("")}</tbody>`;
           }
           html += "</table>";
           parts.push(html);
@@ -128,7 +128,7 @@ export function buildContentHtml(
           let html = "<dl>";
           for (const item of items) {
             html += `<dt><strong>${escapeXml(item.question)}</strong></dt>`;
-            html += `<dd>${escapeXml(item.answer)}</dd>`;
+            html += `<dd>${sanitizeRichHtml(item.answer)}</dd>`;
           }
           html += "</dl>";
           parts.push(html);

@@ -14,9 +14,11 @@ type Tab = "add" | "settings" | "history";
 interface EditorSidebarProps {
   mobileOpen?: boolean;
   onMobileToggle?: () => void;
+  activateAddBlock?: boolean;
+  onAddBlockActivated?: () => void;
 }
 
-export function EditorSidebar({ mobileOpen, onMobileToggle }: EditorSidebarProps) {
+export function EditorSidebar({ mobileOpen, onMobileToggle, activateAddBlock, onAddBlockActivated }: EditorSidebarProps) {
   const [activeTab, setActiveTab] = useState<Tab>("add");
   const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
   const addBlock = useEditorStore((s) => s.addBlock);
@@ -33,6 +35,19 @@ export function EditorSidebar({ mobileOpen, onMobileToggle }: EditorSidebarProps
       setActiveTab("settings");
     }
   }, [selectedBlockId]);
+
+  // Activate Add Block tab when requested via keyboard shortcut
+  useEffect(() => {
+    if (activateAddBlock) {
+      setActiveTab("add");
+      onAddBlockActivated?.();
+      // Focus the search input after tab switch
+      requestAnimationFrame(() => {
+        const searchInput = document.querySelector<HTMLInputElement>('#tabpanel-add input[type="text"]');
+        searchInput?.focus();
+      });
+    }
+  }, [activateAddBlock, onAddBlockActivated]);
 
   return (
     <>

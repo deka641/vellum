@@ -78,6 +78,7 @@ export async function POST(req: Request) {
             ogImage: page.ogImage,
             noindex: page.noindex,
             blocks: page.blocks.map((block) => ({
+              id: block.id,
               type: block.type,
               content: block.content,
               settings: block.settings,

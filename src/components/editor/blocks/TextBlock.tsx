@@ -19,12 +19,14 @@ interface TextBlockProps {
 export function TextBlock({ id, content, settings }: TextBlockProps) {
   const updateBlockContent = useEditorStore((s) => s.updateBlockContent);
   const isLocalUpdate = useRef(false);
+  const editorReady = useRef(false);
   const [focused, setFocused] = useState(false);
 
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
         heading: false,
+        link: false,
       }),
       LinkExtension.configure({
         openOnClick: false,
@@ -51,6 +53,11 @@ export function TextBlock({ id, content, settings }: TextBlockProps) {
   // Sync store changes (e.g. undo/redo) back to TipTap
   useEffect(() => {
     if (!editor || editor.isDestroyed) return;
+    // Skip first sync — editor was already created with correct content
+    if (!editorReady.current) {
+      editorReady.current = true;
+      return;
+    }
     if (isLocalUpdate.current) {
       isLocalUpdate.current = false;
       return;

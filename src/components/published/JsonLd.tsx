@@ -145,6 +145,56 @@ export function FaqJsonLd({ items }: FaqJsonLdProps) {
   );
 }
 
+interface ArticleJsonLdProps {
+  title: string;
+  description?: string | null;
+  url: string;
+  datePublished: Date;
+  dateModified?: Date | null;
+  ogImage?: string | null;
+  siteName: string;
+  isBlogPost?: boolean;
+}
+
+export function ArticleJsonLd({
+  title,
+  description,
+  url,
+  datePublished,
+  dateModified,
+  ogImage,
+  siteName,
+  isBlogPost,
+}: ArticleJsonLdProps) {
+  const data: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": isBlogPost ? "BlogPosting" : "Article",
+    headline: title,
+    url,
+    datePublished: datePublished.toISOString(),
+    publisher: {
+      "@type": "Organization",
+      name: siteName,
+    },
+  };
+  if (description) {
+    data.description = description;
+  }
+  if (dateModified) {
+    data.dateModified = dateModified.toISOString();
+  }
+  if (ogImage) {
+    data.image = ogImage;
+  }
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: safeJsonLd(data) }}
+    />
+  );
+}
+
 interface ContactPageJsonLdProps {
   name: string;
   url: string;

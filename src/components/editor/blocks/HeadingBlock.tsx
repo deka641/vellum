@@ -52,6 +52,7 @@ const TextNode = Node.create({
 export function HeadingBlock({ id, content, settings }: HeadingBlockProps) {
   const updateBlockContent = useEditorStore((s) => s.updateBlockContent);
   const isLocalEdit = useRef(false);
+  const editorReady = useRef(false);
   const [focused, setFocused] = useState(false);
 
   // Check for skipped heading levels
@@ -88,6 +89,8 @@ export function HeadingBlock({ id, content, settings }: HeadingBlockProps) {
         hardBreak: false,
         dropcursor: false,
         gapcursor: false,
+        link: false,
+        trailingNode: false,
       }),
       LinkExtension.configure({
         openOnClick: false,
@@ -114,6 +117,11 @@ export function HeadingBlock({ id, content, settings }: HeadingBlockProps) {
   // Sync store changes (e.g. undo/redo) back to TipTap
   useEffect(() => {
     if (!editor || editor.isDestroyed) return;
+    // Skip first sync — editor was already created with correct content
+    if (!editorReady.current) {
+      editorReady.current = true;
+      return;
+    }
     if (isLocalEdit.current) {
       isLocalEdit.current = false;
       return;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import {
   DndContext,
   closestCenter,
@@ -67,6 +67,22 @@ export function EditorCanvas({ onAddBlock }: EditorCanvasProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploadingBlocks, setUploadingBlocks] = useState<Set<string>>(new Set());
+  const prevBlockCountRef = useRef(blocks.length);
+  const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
+
+  // Scroll to newly added block
+  useEffect(() => {
+    if (blocks.length > prevBlockCountRef.current && selectedBlockId) {
+      requestAnimationFrame(() => {
+        const el = document.querySelector(`[data-block-id="${selectedBlockId}"]`);
+        if (el) {
+          const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+          el.scrollIntoView({ behavior: prefersReducedMotion ? "instant" : "smooth", block: "center" });
+        }
+      });
+    }
+    prevBlockCountRef.current = blocks.length;
+  }, [blocks.length, selectedBlockId]);
   const shouldReduceMotion = useReducedMotion();
   const motion_ = shouldReduceMotion ? blockMotionReduced : blockMotion;
   const { toast } = useToast();

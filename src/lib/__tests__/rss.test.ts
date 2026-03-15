@@ -456,7 +456,38 @@ describe("buildContentHtml", () => {
         { type: "table", content: { rows: [["A & B"]] } },
       ];
       const result = buildContentHtml(blocks, baseUrl);
-      expect(result).toContain("<th>A &amp; B</th>");
+      expect(result).toContain("A &amp; B");
+    });
+
+    it("renders rich HTML in table cells", () => {
+      const blocks = [
+        {
+          type: "table",
+          content: {
+            rows: [
+              ["<strong>Header</strong>"],
+              ["<em>italic</em> text"],
+            ],
+          },
+        },
+      ];
+      const result = buildContentHtml(blocks, baseUrl);
+      expect(result).toContain("<th><strong>Header</strong></th>");
+      expect(result).toContain("<td><em>italic</em> text</td>");
+    });
+
+    it("strips dangerous tags from table cells", () => {
+      const blocks = [
+        {
+          type: "table",
+          content: {
+            rows: [["<script>alert(1)</script>safe"]],
+          },
+        },
+      ];
+      const result = buildContentHtml(blocks, baseUrl);
+      expect(result).not.toContain("<script>");
+      expect(result).toContain("safe");
     });
   });
 
@@ -517,18 +548,44 @@ describe("buildContentHtml", () => {
       expect(result).toContain("</dl>");
     });
 
-    it("escapes special characters in questions and answers", () => {
+    it("escapes special characters in questions", () => {
       const blocks = [
         {
           type: "accordion",
           content: {
-            items: [{ question: "A & B?", answer: "C < D" }],
+            items: [{ question: "A & B?", answer: "plain text" }],
           },
         },
       ];
       const result = buildContentHtml(blocks, baseUrl);
       expect(result).toContain("A &amp; B?");
-      expect(result).toContain("C &lt; D");
+    });
+
+    it("renders rich HTML in accordion answers", () => {
+      const blocks = [
+        {
+          type: "accordion",
+          content: {
+            items: [{ question: "Q1", answer: "<p><strong>Bold</strong> answer</p>" }],
+          },
+        },
+      ];
+      const result = buildContentHtml(blocks, baseUrl);
+      expect(result).toContain("<dd><p><strong>Bold</strong> answer</p></dd>");
+    });
+
+    it("strips dangerous tags from accordion answers", () => {
+      const blocks = [
+        {
+          type: "accordion",
+          content: {
+            items: [{ question: "Q", answer: '<script>alert("xss")</script>safe' }],
+          },
+        },
+      ];
+      const result = buildContentHtml(blocks, baseUrl);
+      expect(result).not.toContain("<script>");
+      expect(result).toContain("safe");
     });
 
     it("skips accordion with no items", () => {

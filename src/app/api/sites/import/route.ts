@@ -7,6 +7,7 @@ import { apiError } from "@/lib/api-helpers";
 import { generateId, slugify } from "@/lib/utils";
 import { sanitizeBlocks, sanitizePlainText, sanitizeImageSrc } from "@/lib/sanitize";
 import { parseBody, importSiteSchema, validateBlockHierarchy } from "@/lib/validations";
+import { logger } from "@/lib/logger";
 
 
 export async function POST(req: Request) {
@@ -125,6 +126,14 @@ export async function POST(req: Request) {
             const origId = originalBlocks[bi].id;
             if (origId) {
               idMap.set(origId, newBlockIds[bi]);
+            }
+          }
+
+          // Warn if any parentId references cannot be resolved
+          for (let bi = 0; bi < originalBlocks.length; bi++) {
+            const parentId = originalBlocks[bi].parentId;
+            if (parentId && !idMap.has(parentId)) {
+              logger.warn("site-import", `Block at index ${bi} in page "${pageData.title}" has unresolvable parentId "${parentId}" — setting to null`);
             }
           }
 

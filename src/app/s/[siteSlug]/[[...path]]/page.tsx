@@ -4,7 +4,7 @@ import { type Metadata } from "next";
 import { db } from "@/lib/db";
 import { getBaseUrl, buildPageUrl } from "@/lib/url";
 import { PublishedPage } from "@/components/published/PublishedPage";
-import { WebPageJsonLd, BreadcrumbJsonLd, FaqJsonLd, ContactPageJsonLd } from "@/components/published/JsonLd";
+import { WebPageJsonLd, BreadcrumbJsonLd, FaqJsonLd, ContactPageJsonLd, ArticleJsonLd } from "@/components/published/JsonLd";
 import { Breadcrumbs } from "@/components/published/Breadcrumbs";
 import { PageNavigation } from "@/components/published/PageNavigation";
 import { SocialShareBar } from "@/components/published/SocialShareBar";
@@ -260,6 +260,16 @@ export default async function PublicSitePage({ params }: Props) {
   const faqItems = extractFaqItems(blockData);
   const pageHasForm = hasFormBlock(blockData);
 
+  // Article JSON-LD for non-homepage content pages with >100 words
+  const wordCount = blockData.reduce((count, b) => {
+    if (b.type === "text" && typeof b.content.html === "string") {
+      return count + stripHtmlTags(b.content.html).split(/\s+/).filter(Boolean).length;
+    }
+    return count;
+  }, 0);
+  const hasBlogTag = page.pageTags.some((pt) => pt.tag.slug === "blog" || pt.tag.name.toLowerCase() === "blog");
+  const showArticleJsonLd = !page.isHomepage && page.publishedAt && wordCount > 100;
+
   return (
     <>
       <WebPageJsonLd
@@ -273,6 +283,18 @@ export default async function PublicSitePage({ params }: Props) {
       <BreadcrumbJsonLd items={breadcrumbItems} />
       {faqItems.length > 0 && <FaqJsonLd items={faqItems} />}
       {pageHasForm && <ContactPageJsonLd name={page.title} url={canonical} />}
+      {showArticleJsonLd && (
+        <ArticleJsonLd
+          title={page.title}
+          description={page.description}
+          url={canonical}
+          datePublished={page.publishedAt!}
+          dateModified={page.updatedAt}
+          ogImage={page.ogImage || findFirstImageSrc(blockData) || (site.defaultOgImage as string | null)}
+          siteName={site.name}
+          isBlogPost={hasBlogTag}
+        />
+      )}
       <Breadcrumbs
         siteName={site.name}
         siteHref={homeHref}

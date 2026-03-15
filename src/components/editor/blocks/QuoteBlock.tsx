@@ -20,6 +20,7 @@ export function QuoteBlock({ id, content, settings }: QuoteBlockProps) {
   const updateBlockContent = useEditorStore((s) => s.updateBlockContent);
   const variant = content.style || "default";
   const isLocalEdit = useRef(false);
+  const editorReady = useRef(false);
   const [focused, setFocused] = useState(false);
 
   const editor = useEditor({
@@ -33,6 +34,7 @@ export function QuoteBlock({ id, content, settings }: QuoteBlockProps) {
         horizontalRule: false,
         code: false,
         listItem: false,
+        link: false,
       }),
       LinkExtension.configure({
         openOnClick: false,
@@ -61,6 +63,11 @@ export function QuoteBlock({ id, content, settings }: QuoteBlockProps) {
   // Sync store changes (e.g. undo/redo) back to TipTap
   useEffect(() => {
     if (!editor || editor.isDestroyed) return;
+    // Skip first sync — editor was already created with correct content
+    if (!editorReady.current) {
+      editorReady.current = true;
+      return;
+    }
     if (isLocalEdit.current) {
       isLocalEdit.current = false;
       return;

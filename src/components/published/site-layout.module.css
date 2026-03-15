@@ -134,6 +134,13 @@
   background: var(--color-bg-tertiary);
 }
 
+@media (hover: none), (pointer: coarse) {
+  .searchButton {
+    width: 44px;
+    height: 44px;
+  }
+}
+
 .desktopNav {
   display: flex;
   align-items: center;

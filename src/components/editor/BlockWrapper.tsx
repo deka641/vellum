@@ -56,11 +56,16 @@ export const BlockWrapper = memo(function BlockWrapper({ id, children, onMultiSe
 
   // Enter animation: start with isEntering true, clear after a frame to trigger CSS animation
   const [isEntering, setIsEntering] = useState(true);
+  const [justInserted, setJustInserted] = useState(true);
   useEffect(() => {
     const raf = requestAnimationFrame(() => {
       setIsEntering(false);
     });
     return () => cancelAnimationFrame(raf);
+  }, []);
+  useEffect(() => {
+    const timer = setTimeout(() => setJustInserted(false), 600);
+    return () => clearTimeout(timer);
   }, []);
 
   const {
@@ -185,6 +190,7 @@ export const BlockWrapper = memo(function BlockWrapper({ id, children, onMultiSe
     <div
       ref={setNodeRef}
       style={style}
+      data-block-id={id}
       className={cn(
         styles.wrapper,
         isSelected && multiSelectCount <= 1 && styles.selected,
@@ -193,7 +199,8 @@ export const BlockWrapper = memo(function BlockWrapper({ id, children, onMultiSe
         isHidden && styles.hidden,
         isEntering && styles.entering,
         isExiting && styles.exiting,
-        isSettled && styles.settled
+        isSettled && styles.settled,
+        justInserted && styles.justInserted
       )}
       onClick={handleClick}
       role="region"

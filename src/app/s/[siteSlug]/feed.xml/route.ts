@@ -87,7 +87,10 @@ export async function GET(
     <link>${escapeXml(siteUrl)}</link>
     <description>${escapeXml(site.description || `${site.name} — Published with Vellum`)}</description>
     <language>en</language>
-    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+    <lastBuildDate>${(pages[0]?.publishedAt || new Date()).toUTCString()}</lastBuildDate>
+    <generator>Vellum CMS</generator>
+    <docs>https://www.rssboard.org/rss-specification</docs>
+    <ttl>60</ttl>
     <atom:link href="${escapeXml(feedUrl)}" rel="self" type="application/rss+xml"/>
 ${items}
   </channel>

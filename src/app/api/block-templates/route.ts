@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { apiError } from "@/lib/api-helpers";
 import { parseBody, blockTypeEnum } from "@/lib/validations";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
-import { sanitizePlainText } from "@/lib/sanitize";
+import { sanitizePlainText, sanitizeBlocks } from "@/lib/sanitize";
 import { logger } from "@/lib/logger";
 import { revalidateTag } from "next/cache";
 import type { Prisma } from "@prisma/client";
@@ -64,12 +64,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
 
-    const { type, content, settings } = parsed.data;
+    const { type, settings } = parsed.data;
     const name = sanitizePlainText(parsed.data.name);
 
     if (!name) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }
+
+    // Sanitize block content through the same pipeline as regular blocks
+    const [sanitized] = sanitizeBlocks([{ type, content: parsed.data.content, settings }]);
+    const sanitizedContent = sanitized.content;
 
     const userId = session.user.id;
 
@@ -77,7 +81,7 @@ export async function POST(req: Request) {
       data: {
         name,
         type,
-        content: content as unknown as Prisma.InputJsonValue,
+        content: sanitizedContent as unknown as Prisma.InputJsonValue,
         settings: settings as unknown as Prisma.InputJsonValue,
         userId,
       },
