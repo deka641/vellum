@@ -60,6 +60,9 @@ model Page {
   showInNav          Boolean          @default(true)
   sortOrder          Int              @default(0)
   scheduledPublishAt DateTime?
+  previewToken       String?
+  editingBy          String?
+  editingAt          DateTime?
   siteId             String
   site               Site             @relation(fields: [siteId], references: [id], onDelete: Cascade)
   blocks             Block[]
@@ -78,6 +81,7 @@ model Page {
   @@index([siteId, deletedAt])
   @@index([siteId, status, deletedAt])
   @@index([scheduledPublishAt, status])
+  @@index([previewToken])
 }
 
 enum PageStatus {

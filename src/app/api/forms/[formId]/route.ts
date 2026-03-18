@@ -53,7 +53,7 @@ export async function POST(
     // Verify the page exists and is published
     const page = await db.page.findFirst({
       where: { id: pageId, status: "PUBLISHED" },
-      include: { site: { select: { id: true, name: true, notificationEmail: true, turnstileSiteKey: true, turnstileSecretKey: true } } },
+      include: { site: { select: { id: true, name: true, slug: true, notificationEmail: true, turnstileSiteKey: true, turnstileSecretKey: true } } },
     });
 
     if (!page) {
@@ -140,11 +140,17 @@ export async function POST(
 
     // Send notification email if configured
     if (page.site?.notificationEmail) {
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+      const pageUrl = page.isHomepage
+        ? `${baseUrl}/s/${page.site.slug}`
+        : `${baseUrl}/s/${page.site.slug}/${page.slug}`;
       notifyFormSubmission({
         to: page.site.notificationEmail,
         siteName: page.site.name,
         siteId: page.site.id,
         pageTitle: page.title,
+        pageUrl,
+        submittedAt: new Date(),
         data: sanitizedData,
       }).catch((err) => logger.warn("form-notification", "Failed to send notification", err));
     }

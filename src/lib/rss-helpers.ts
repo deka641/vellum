@@ -14,10 +14,11 @@ export function stripHtmlTags(html: string): string {
 }
 
 export function extractDescription(
-  blocks: Array<{ type: string; content: Record<string, unknown> }>,
+  blocks: Array<{ type: string; content: Record<string, unknown>; settings?: Record<string, unknown> }>,
   maxLen = 300
 ): string {
   for (const block of blocks) {
+    if (block.settings?.hidden) continue;
     if (block.type === "text" && typeof block.content.html === "string") {
       const text = stripHtmlTags(block.content.html);
       if (text && text !== "Start writing...") {
@@ -34,11 +35,12 @@ export function resolveUrl(url: string, baseUrl: string): string {
 }
 
 export function buildContentHtml(
-  blocks: Array<{ type: string; content: Record<string, unknown> }>,
+  blocks: Array<{ type: string; content: Record<string, unknown>; settings?: Record<string, unknown> }>,
   baseUrl: string
 ): string {
   const parts: string[] = [];
   for (const block of blocks) {
+    if (block.settings?.hidden) continue;
     switch (block.type) {
       case "heading": {
         const level = (block.content.level || 2) as number;

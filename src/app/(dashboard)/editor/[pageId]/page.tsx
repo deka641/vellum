@@ -37,6 +37,7 @@ export default function EditorPage() {
   const [scheduledPublishAt, setScheduledPublishAt] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [publishDialogOpen, setPublishDialogOpen] = useState(false);
+  const [editingByOther, setEditingByOther] = useState<string | null>(null);
 
   // Track tablet breakpoint and auto-close sidebar on tablet
   useEffect(() => {
@@ -178,6 +179,30 @@ export default function EditorPage() {
           }
         }
       }
+      // Block type conversion: Ctrl/Cmd+Shift+1-4 for headings, 0 for text, Q for quote
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey) {
+        const target = e.target as HTMLElement;
+        const isEditing =
+          target.isContentEditable ||
+          target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.closest(".tiptap");
+        if (!isEditing) {
+          const state = useEditorStore.getState();
+          if (state.selectedBlockId && state.selectedBlockIds.size <= 1) {
+            const block = state.blocks.find((b) => b.id === state.selectedBlockId);
+            const convertible = block && ["heading", "text", "quote"].includes(block.type);
+            if (convertible) {
+              if (e.key === "1") { e.preventDefault(); state.convertBlock(state.selectedBlockId, "heading"); state.updateBlockContent(state.selectedBlockId, { level: 1 }); }
+              else if (e.key === "2") { e.preventDefault(); state.convertBlock(state.selectedBlockId, "heading"); state.updateBlockContent(state.selectedBlockId, { level: 2 }); }
+              else if (e.key === "3") { e.preventDefault(); state.convertBlock(state.selectedBlockId, "heading"); state.updateBlockContent(state.selectedBlockId, { level: 3 }); }
+              else if (e.key === "4") { e.preventDefault(); state.convertBlock(state.selectedBlockId, "heading"); state.updateBlockContent(state.selectedBlockId, { level: 4 }); }
+              else if (e.key === "0") { e.preventDefault(); state.convertBlock(state.selectedBlockId, "text"); }
+              else if (e.key.toLowerCase() === "q") { e.preventDefault(); state.convertBlock(state.selectedBlockId, "quote"); }
+            }
+          }
+        }
+      }
       if (e.key === "Escape") {
         useEditorStore.getState().clearSelection();
       }
@@ -220,6 +245,37 @@ export default function EditorPage() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [save]);
+
+  // Editing awareness: heartbeat every 30s, release on unload
+  useEffect(() => {
+    if (loading || loadError) return;
+    let active = true;
+    async function heartbeat() {
+      try {
+        const res = await fetch(`/api/pages/${params.pageId}/editing`, { method: "POST" });
+        if (res.ok && active) {
+          const data = await res.json();
+          setEditingByOther(data.editing ? (data.editingBy || "another user") : null);
+        }
+      } catch {
+        // Ignore heartbeat failures
+      }
+    }
+    heartbeat();
+    const interval = setInterval(heartbeat, 30_000);
+
+    const releaseEditing = () => {
+      navigator.sendBeacon(`/api/pages/${params.pageId}/editing`);
+    };
+    window.addEventListener("beforeunload", releaseEditing);
+    return () => {
+      active = false;
+      clearInterval(interval);
+      window.removeEventListener("beforeunload", releaseEditing);
+      // Release lock on navigation
+      fetch(`/api/pages/${params.pageId}/editing`, { method: "DELETE" }).catch(() => {});
+    };
+  }, [loading, loadError, params.pageId]);
 
   // Warn before closing tab with unsaved changes
   useEffect(() => {
@@ -370,6 +426,19 @@ export default function EditorPage() {
         onSidebarToggle={() => setSidebarOpen((o) => !o)}
       />
       <ConflictBanner onForceSave={forceSave} />
+      {editingByOther && (
+        <div style={{
+          background: "var(--color-warning-light, #fef3c7)",
+          color: "var(--color-warning-dark, #92400e)",
+          padding: "8px 16px",
+          fontSize: "14px",
+          textAlign: "center",
+          borderBottom: "1px solid var(--color-warning, #f59e0b)",
+        }}>
+          <AlertCircle size={14} style={{ display: "inline", verticalAlign: "middle", marginRight: 6 }} />
+          Another user is currently editing this page. Your changes may conflict.
+        </div>
+      )}
       <div className={styles.body}>
         <EditorCanvas onAddBlock={() => addBlock("text")} />
         <EditorSidebar

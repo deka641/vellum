@@ -259,6 +259,7 @@ export const createPageSchema = z.object({
   siteId: z.string().min(1),
   templateBlocks: z.array(templateBlockSchema).optional(),
   sourcePageId: z.string().min(1).optional(),
+  sourceSiteId: z.string().min(1).optional(),
 });
 
 export const updatePageSchema = z.object({

@@ -82,6 +82,9 @@ export default function SiteDetailPage() {
   const [permDeletePageId, setPermDeletePageId] = useState<string | null>(null);
   const [fetchError, setFetchError] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [crossSiteSources, setCrossSiteSources] = useState<Array<{ id: string; name: string; pages: Array<{ id: string; title: string }> }>>([]);
+  const [selectedSourcePageId, setSelectedSourcePageId] = useState<string | null>(null);
+  const [selectedSourceSiteId, setSelectedSourceSiteId] = useState<string | null>(null);
   const [contentSearchResults, setContentSearchResults] = useState<Array<{
     pageId: string;
     pageTitle: string;
@@ -128,6 +131,23 @@ export default function SiteDetailPage() {
     setShowNewPage(true);
     setNewPageTitle("");
     setSelectedTemplateId(null);
+    setSelectedSourcePageId(null);
+    setSelectedSourceSiteId(null);
+    // Load other sites for cross-site copy
+    fetch("/api/sites")
+      .then((res) => res.ok ? res.json() : [])
+      .then((sites: Array<{ id: string; name: string }>) => {
+        const otherSites = sites.filter((s) => s.id !== params.siteId);
+        if (otherSites.length === 0) { setCrossSiteSources([]); return; }
+        Promise.all(
+          otherSites.map(async (s) => {
+            const res = await fetch(`/api/pages?siteId=${s.id}`);
+            const pages = res.ok ? await res.json() : [];
+            return { id: s.id, name: s.name, pages: pages.map((p: { id: string; title: string }) => ({ id: p.id, title: p.title })) };
+          })
+        ).then(setCrossSiteSources).catch(() => setCrossSiteSources([]));
+      })
+      .catch(() => setCrossSiteSources([]));
   }
 
   async function handleCreatePage() {
@@ -140,7 +160,10 @@ export default function SiteDetailPage() {
         title: newPageTitle,
         siteId: params.siteId,
       };
-      if (selectedTemplate && selectedTemplate.blocks.length > 0) {
+      if (selectedSourcePageId && selectedSourceSiteId) {
+        body.sourcePageId = selectedSourcePageId;
+        body.sourceSiteId = selectedSourceSiteId;
+      } else if (selectedTemplate && selectedTemplate.blocks.length > 0) {
         body.templateBlocks = selectedTemplate.blocks;
       }
 
@@ -787,6 +810,30 @@ export default function SiteDetailPage() {
               </div>
             );
           })()}
+          {crossSiteSources.length > 0 && (
+            <div className={styles.templateSection}>
+              <div className={styles.templateLabel}>Copy from another site</div>
+              <div className={styles.templateGrid}>
+                {crossSiteSources.map((source) =>
+                  source.pages.map((p) => (
+                    <div
+                      key={p.id}
+                      className={`${styles.templateCard} ${selectedSourcePageId === p.id ? styles.templateCardSelected : ""}`}
+                      onClick={() => {
+                        setSelectedSourcePageId(p.id);
+                        setSelectedSourceSiteId(source.id);
+                        setSelectedTemplateId(null);
+                        if (!newPageTitle.trim()) setNewPageTitle(p.title);
+                      }}
+                    >
+                      <span className={styles.templateCardName}>{p.title}</span>
+                      <span className={styles.templateCardDesc}>{source.name}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
           <DialogFooter>
             <Button variant="secondary" onClick={() => setShowNewPage(false)}>
               Cancel

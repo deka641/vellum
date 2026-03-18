@@ -34,7 +34,7 @@ export async function GET(
       blocks: {
         where: { parentId: null },
         orderBy: { sortOrder: "asc" },
-        select: { type: true, content: true },
+        select: { type: true, content: true, settings: true },
       },
       pageTags: {
         include: { tag: { select: { name: true } } },
@@ -53,6 +53,7 @@ export async function GET(
       const blockData = page.blocks.map((b) => ({
         type: b.type,
         content: b.content as Record<string, unknown>,
+        settings: b.settings as Record<string, unknown> | undefined,
       }));
       const description =
         page.description || extractDescription(blockData);

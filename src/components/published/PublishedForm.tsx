@@ -56,7 +56,7 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
     for (const field of fields) {
       const value = formData.get(field.id)?.toString()?.trim() || "";
 
-      if (field.required && !value && field.type !== "checkbox") {
+      if (field.required && !value) {
         errors[field.id] = "This field is required";
         continue;
       }
@@ -301,17 +301,25 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
         );
       case "checkbox":
         return (
-          <div className={styles.formCheckboxField}>
-            <label className={styles.formCheckboxLabel}>
-              <input
-                type="checkbox"
-                id={field.id}
-                name={field.id}
-                value="yes"
-              />
-              {field.placeholder || "Yes"}
-            </label>
-          </div>
+          <>
+            <div className={styles.formCheckboxField}>
+              <label className={styles.formCheckboxLabel}>
+                <input
+                  type="checkbox"
+                  id={field.id}
+                  name={field.id}
+                  value="yes"
+                  required={field.required}
+                  aria-required={field.required || undefined}
+                  aria-invalid={hasError || undefined}
+                  aria-describedby={hasError ? errorId : undefined}
+                  onChange={() => clearFieldError(field.id)}
+                />
+                {field.placeholder || "Yes"}
+              </label>
+            </div>
+            {hasError && <span id={errorId} className={styles.formError} role="alert">{fieldErrors[field.id]}</span>}
+          </>
         );
       default:
         return (

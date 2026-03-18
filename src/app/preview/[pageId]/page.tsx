@@ -1,25 +1,42 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
-import { requireAuth } from "@/lib/auth-helpers";
+import { getCurrentUser } from "@/lib/auth-helpers";
 import { parseSiteTheme, generateThemeVariables, FONT_PRESETS } from "@/lib/theme";
 import { PublishedPage } from "@/components/published/PublishedPage";
 import type { BlockType, BlockData } from "@/types/blocks";
 
 interface Props {
   params: Promise<{ pageId: string }>;
+  searchParams: Promise<{ token?: string }>;
 }
 
-export default async function PreviewPage({ params }: Props) {
-  const user = await requireAuth();
+export default async function PreviewPage({ params, searchParams }: Props) {
   const { pageId } = await params;
+  const { token } = await searchParams;
 
-  const page = await db.page.findFirst({
-    where: { id: pageId, deletedAt: null, site: { userId: user.id } },
-    include: {
-      blocks: { orderBy: { sortOrder: "asc" } },
-      site: { select: { theme: true } },
-    },
-  });
+  let page;
+
+  if (token) {
+    // Token-based preview: no auth required, validate token
+    page = await db.page.findFirst({
+      where: { id: pageId, deletedAt: null, previewToken: token },
+      include: {
+        blocks: { orderBy: { sortOrder: "asc" } },
+        site: { select: { theme: true } },
+      },
+    });
+  } else {
+    // Authenticated preview: require login
+    const user = await getCurrentUser();
+    if (!user) notFound();
+    page = await db.page.findFirst({
+      where: { id: pageId, deletedAt: null, site: { userId: user.id } },
+      include: {
+        blocks: { orderBy: { sortOrder: "asc" } },
+        site: { select: { theme: true } },
+      },
+    });
+  }
 
   if (!page) notFound();
 

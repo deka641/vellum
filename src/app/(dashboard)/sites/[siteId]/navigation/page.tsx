@@ -20,7 +20,7 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Eye, EyeOff, ArrowLeft, Home, Navigation2 } from "lucide-react";
+import { GripVertical, Eye, EyeOff, ArrowLeft, Home, Navigation2, AlertCircle, RefreshCw } from "lucide-react";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { Button } from "@/components/ui/Button/Button";
 import { Badge } from "@/components/ui/Badge/Badge";
@@ -98,13 +98,19 @@ export default function NavigationSettingsPage() {
   const [originalPages, setOriginalPages] = useState<PageItem[]>([]);
   const [siteName, setSiteName] = useState("");
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const siteId = params.siteId as string;
 
-  useEffect(() => {
+  const loadNavigation = useCallback(() => {
+    setLoading(true);
+    setFetchError(false);
     fetch(`/api/sites/${siteId}`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load");
+        return res.json();
+      })
       .then((site) => {
         setSiteName(site.name);
         const sorted = (site.pages || []).sort(
@@ -113,8 +119,13 @@ export default function NavigationSettingsPage() {
         setPages(sorted);
         setOriginalPages(sorted);
       })
+      .catch(() => setFetchError(true))
       .finally(() => setLoading(false));
   }, [siteId]);
+
+  useEffect(() => {
+    loadNavigation();
+  }, [loadNavigation]);
 
   const isDirty = useCallback(() => {
     if (pages.length !== originalPages.length) return true;
@@ -192,6 +203,19 @@ export default function NavigationSettingsPage() {
         <div className={styles.content}>
           <Skeleton height={20} width={200} />
           <Skeleton height={300} />
+        </div>
+      </>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <>
+        <Topbar title="Navigation" />
+        <div className={styles.content} style={{ textAlign: "center", padding: "48px 24px" }}>
+          <AlertCircle size={32} style={{ color: "var(--color-error)", marginBottom: 12 }} />
+          <p style={{ color: "var(--color-text-secondary)", marginBottom: 16 }}>Failed to load navigation settings.</p>
+          <Button onClick={loadNavigation} leftIcon={<RefreshCw size={16} />}>Try again</Button>
         </div>
       </>
     );

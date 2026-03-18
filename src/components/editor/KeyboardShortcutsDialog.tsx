@@ -54,6 +54,17 @@ function getShortcutGroups(): ShortcutGroup[] {
       ],
     },
     {
+      title: "Block conversion",
+      shortcuts: [
+        { label: "Convert to H1", keys: [mod, "Shift", "1"] },
+        { label: "Convert to H2", keys: [mod, "Shift", "2"] },
+        { label: "Convert to H3", keys: [mod, "Shift", "3"] },
+        { label: "Convert to H4", keys: [mod, "Shift", "4"] },
+        { label: "Convert to text", keys: [mod, "Shift", "0"] },
+        { label: "Convert to quote", keys: [mod, "Shift", "Q"] },
+      ],
+    },
+    {
       title: "Text formatting",
       shortcuts: [
         { label: "Bold", keys: [mod, "B"] },

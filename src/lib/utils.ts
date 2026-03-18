@@ -55,3 +55,10 @@ export function formatFileSize(bytes: number): string {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
 }
+
+export function truncateAtWord(text: string, max = 16): string {
+  if (text.length <= max) return text;
+  const truncated = text.slice(0, max);
+  const lastSpace = truncated.lastIndexOf(" ");
+  return lastSpace > max / 2 ? truncated.slice(0, lastSpace) : truncated;
+}

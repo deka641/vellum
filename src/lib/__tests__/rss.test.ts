@@ -707,4 +707,55 @@ describe("buildContentHtml", () => {
       expect(parts[1]).toBe("<hr />");
     });
   });
+
+  // --- hidden blocks ---
+  describe("hidden blocks", () => {
+    it("skips blocks with hidden setting", () => {
+      const blocks = [
+        { type: "heading", content: { level: 1, text: "Visible" }, settings: {} },
+        { type: "text", content: { html: "<p>Hidden content</p>" }, settings: { hidden: true } },
+        { type: "text", content: { html: "<p>Also visible</p>" }, settings: {} },
+      ];
+      const result = buildContentHtml(blocks, baseUrl);
+      expect(result).toContain("Visible");
+      expect(result).not.toContain("Hidden content");
+      expect(result).toContain("Also visible");
+    });
+
+    it("skips hidden blocks without settings object", () => {
+      const blocks = [
+        { type: "heading", content: { level: 2, text: "Shown" } },
+      ];
+      const result = buildContentHtml(blocks, baseUrl);
+      expect(result).toContain("Shown");
+    });
+
+    it("includes blocks with hidden: false", () => {
+      const blocks = [
+        { type: "text", content: { html: "<p>Not hidden</p>" }, settings: { hidden: false } },
+      ];
+      const result = buildContentHtml(blocks, baseUrl);
+      expect(result).toContain("Not hidden");
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// extractDescription — hidden block filtering
+// ---------------------------------------------------------------------------
+describe("extractDescription hidden blocks", () => {
+  it("skips hidden text blocks", () => {
+    const blocks = [
+      { type: "text", content: { html: "<p>Hidden paragraph</p>" }, settings: { hidden: true } },
+      { type: "text", content: { html: "<p>Visible paragraph</p>" }, settings: {} },
+    ];
+    expect(extractDescription(blocks)).toBe("Visible paragraph");
+  });
+
+  it("returns empty when all text blocks are hidden", () => {
+    const blocks = [
+      { type: "text", content: { html: "<p>Secret</p>" }, settings: { hidden: true } },
+    ];
+    expect(extractDescription(blocks)).toBe("");
+  });
 });

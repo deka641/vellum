@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Eye, ExternalLink, Save, Undo2, Redo2, Loader2, AlertCircle, AlertTriangle, Monitor, Tablet, Smartphone, Check, MoreHorizontal, Clock, CalendarClock, X, PanelRight, Copy } from "lucide-react";
+import { ArrowLeft, Eye, ExternalLink, Save, Undo2, Redo2, Loader2, AlertCircle, AlertTriangle, Monitor, Tablet, Smartphone, Check, MoreHorizontal, Clock, CalendarClock, X, PanelRight, Copy, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/Button/Button";
 import { IconButton } from "@/components/ui/IconButton/IconButton";
 import { Badge } from "@/components/ui/Badge/Badge";
@@ -155,6 +155,8 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, schedu
   const router = useRouter();
   const { pageTitle, pageSlug, setPageTitle, isDirty, isSaving, saveError, conflict, undo, redo, previewMode, setPreviewMode, lastSavedAt } =
     useEditorStore();
+  const canUndo = useEditorStore((s) => s.historyIndex > 0);
+  const canRedo = useEditorStore((s) => s.historyIndex < s.history.length - 1);
   const { save } = useAutosave();
   const { toast } = useToast();
   const hasConflict = conflict !== null;
@@ -202,6 +204,23 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, schedu
       setScheduleLoading(false);
     }
   }, [scheduleDate, onSchedule]);
+
+  const handleSharePreview = useCallback(async () => {
+    try {
+      const { pageId } = useEditorStore.getState();
+      const res = await fetch(`/api/pages/${pageId}/preview-token`, { method: "POST" });
+      if (!res.ok) {
+        toast("Failed to generate preview link", "error");
+        return;
+      }
+      const { token } = await res.json();
+      const url = `${window.location.origin}/preview/${pageId}?token=${token}`;
+      await navigator.clipboard.writeText(url);
+      toast("Preview link copied to clipboard");
+    } catch {
+      toast("Failed to generate preview link", "error");
+    }
+  }, [toast]);
 
   const handleDuplicate = useCallback(async () => {
     if (duplicating) return;
@@ -310,8 +329,8 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, schedu
 
         {/* Desktop-only secondary actions */}
         <div className={styles.desktopOnly}>
-          <IconButton icon={<Undo2 />} label="Undo (Ctrl+Z)" onClick={undo} />
-          <IconButton icon={<Redo2 />} label="Redo (Ctrl+Shift+Z)" onClick={redo} />
+          <IconButton icon={<Undo2 />} label="Undo (Ctrl+Z)" onClick={undo} disabled={!canUndo} />
+          <IconButton icon={<Redo2 />} label="Redo (Ctrl+Shift+Z)" onClick={redo} disabled={!canRedo} />
           <KeyboardShortcutsDialog />
           <div className={styles.divider} />
           <div className={styles.previewToggle}>
@@ -362,6 +381,11 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, schedu
               }}
             />
           )}
+          <IconButton
+            icon={<Share2 />}
+            label="Share preview link"
+            onClick={handleSharePreview}
+          />
           <SaveAsTemplateDialog />
         </div>
 
@@ -372,11 +396,11 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, schedu
               <IconButton icon={<MoreHorizontal />} label="More actions" />
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              <DropdownMenuItem onClick={undo}>
+              <DropdownMenuItem onClick={undo} disabled={!canUndo}>
                 <Undo2 size={16} />
                 Undo
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={redo}>
+              <DropdownMenuItem onClick={redo} disabled={!canRedo}>
                 <Redo2 size={16} />
                 Redo
               </DropdownMenuItem>
@@ -414,6 +438,10 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, schedu
               <DropdownMenuItem onClick={handleDuplicate} disabled={duplicating}>
                 <Copy size={16} />
                 {duplicating ? "Duplicating…" : "Duplicate page"}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSharePreview}>
+                <Share2 size={16} />
+                Share preview link
               </DropdownMenuItem>
               {scheduledPublishAt && (
                 <>

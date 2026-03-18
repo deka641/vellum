@@ -68,7 +68,7 @@ export async function POST(req: Request) {
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
-    const { title: rawTitle, siteId, templateBlocks, sourcePageId } = parsed.data;
+    const { title: rawTitle, siteId, templateBlocks, sourcePageId, sourceSiteId } = parsed.data;
     const title = sanitizePlainText(rawTitle) || rawTitle;
 
     if (templateBlocks) {
@@ -112,8 +112,12 @@ export async function POST(req: Request) {
 
           if (sourcePageId) {
             // Server-side page duplication: clone blocks from source page
+            // When sourceSiteId is provided, allow cross-site duplication from another owned site
+            const sourceWhere = sourceSiteId
+              ? { id: sourcePageId, siteId: sourceSiteId, site: { userId: session.user!.id! } }
+              : { id: sourcePageId, site: { userId: session.user!.id! } };
             const sourcePage = await tx.page.findFirst({
-              where: { id: sourcePageId, site: { userId: session.user!.id! } },
+              where: sourceWhere,
               include: { blocks: { orderBy: { sortOrder: "asc" } } },
             });
 

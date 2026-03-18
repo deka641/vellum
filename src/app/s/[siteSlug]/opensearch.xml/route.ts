@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { getBaseUrl } from "@/lib/url";
 import { escapeXml } from "@/lib/rss-helpers";
+import { truncateAtWord } from "@/lib/utils";
 
 export async function GET(
   _req: Request,
@@ -25,7 +26,7 @@ export async function GET(
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
-  <ShortName>${escapeXml(site.name.slice(0, 16))}</ShortName>
+  <ShortName>${escapeXml(truncateAtWord(site.name, 16))}</ShortName>
   <Description>Search ${escapeXml(site.name)}</Description>
   <Url type="text/html" template="${escapeXml(siteUrl)}?q={searchTerms}"/>
   <Image width="16" height="16" type="image/x-icon">${escapeXml(faviconUrl)}</Image>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Menu } from "lucide-react";
 import { Sidebar } from "@/components/dashboard/Sidebar";
+import { GlobalSearch } from "@/components/dashboard/GlobalSearch";
 import styles from "./dashboard.module.css";
 
 interface DashboardShellProps {
@@ -35,6 +36,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
             <Menu size={24} />
           </button>
           <span className={styles.mobileTitle}>Vellum</span>
+          <GlobalSearch />
         </div>
         {children}
       </main>

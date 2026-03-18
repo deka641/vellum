@@ -7,6 +7,8 @@ export interface SubmissionNotification {
   siteName: string;
   siteId?: string;
   pageTitle: string;
+  pageUrl?: string;
+  submittedAt?: Date;
   data: Record<string, string>;
 }
 
@@ -77,7 +79,9 @@ function buildEmailHtml(notification: SubmissionNotification): string {
         <p style="margin: 0 0 4px; font-size: 14px; color: #6b7280;">Site</p>
         <p style="margin: 0 0 16px; font-size: 16px; font-weight: 600; color: #111827;">${escapeHtml(notification.siteName)}</p>
         <p style="margin: 0 0 4px; font-size: 14px; color: #6b7280;">Page</p>
-        <p style="margin: 0 0 20px; font-size: 16px; font-weight: 600; color: #111827;">${escapeHtml(notification.pageTitle)}</p>
+        <p style="margin: 0 0 16px; font-size: 16px; font-weight: 600; color: #111827;">${notification.pageUrl ? `<a href="${escapeHtml(notification.pageUrl)}" style="color: #111827; text-decoration: underline;">${escapeHtml(notification.pageTitle)}</a>` : escapeHtml(notification.pageTitle)}</p>
+        <p style="margin: 0 0 4px; font-size: 14px; color: #6b7280;">Submitted</p>
+        <p style="margin: 0 0 20px; font-size: 16px; font-weight: 600; color: #111827;">${new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" }).format(notification.submittedAt || new Date())}</p>
         <table style="width: 100%; border-collapse: collapse; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 14px;">
           <thead>
             <tr style="background-color: #f9fafb;">
@@ -152,7 +156,7 @@ export async function notifyFormSubmission(notification: SubmissionNotification)
       to: notification.to,
       subject: `New submission: ${notification.pageTitle} — ${notification.siteName}`,
       html: buildEmailHtml(notification),
-      text: `New form submission on "${notification.siteName}" - "${notification.pageTitle}"\n\n${fields}`,
+      text: `New form submission on "${notification.siteName}" - "${notification.pageTitle}"\nSubmitted: ${new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" }).format(notification.submittedAt || new Date())}${notification.pageUrl ? `\nPage: ${notification.pageUrl}` : ""}\n\n${fields}`,
     });
 
     logger.info(

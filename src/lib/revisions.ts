@@ -34,34 +34,28 @@ export async function prunePageRevisions(
 
 /**
  * Prune revisions for multiple pages in batch.
- * Uses groupBy to find pages exceeding the limit, then prunes each.
+ * Uses a single SQL query with ROW_NUMBER() to delete excess revisions
+ * across all pages at once — O(1) queries instead of O(N).
  */
 export async function prunePageRevisionsBatch(
   tx: TransactionClient,
   pageIds: string[],
   maxRevisions = 20
 ) {
-  const revisionCounts = await tx.pageRevision.groupBy({
-    by: ["pageId"],
-    where: { pageId: { in: pageIds } },
-    _count: true,
-  });
-
-  const pagesToPrune = revisionCounts.filter((rc) => rc._count > maxRevisions);
-  for (const rc of pagesToPrune) {
-    const excessCount = rc._count - maxRevisions;
-    const oldest = await tx.pageRevision.findMany({
-      where: { pageId: rc.pageId },
-      orderBy: { createdAt: "asc" },
-      take: excessCount,
-      select: { id: true },
-    });
-    if (oldest.length > 0) {
-      await tx.pageRevision.deleteMany({
-        where: { id: { in: oldest.map((r) => r.id) } },
-      });
-    }
-  }
+  if (pageIds.length === 0) return;
+  await tx.$executeRaw`
+    DELETE FROM "PageRevision"
+    WHERE "id" IN (
+      SELECT "id" FROM (
+        SELECT "id", ROW_NUMBER() OVER (
+          PARTITION BY "pageId" ORDER BY "createdAt" DESC
+        ) AS rn
+        FROM "PageRevision"
+        WHERE "pageId" = ANY(${pageIds})
+      ) ranked
+      WHERE rn > ${maxRevisions}
+    )
+  `;
 }
 
 /**
