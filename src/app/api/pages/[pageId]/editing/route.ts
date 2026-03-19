@@ -45,11 +45,13 @@ export async function POST(
       });
     }
 
-    // Claim or refresh the lock
-    await db.page.update({
-      where: { id: pageId },
-      data: { editingBy: session.user.id, editingAt: now },
-    });
+    // Claim or refresh the lock — use raw SQL to avoid triggering
+    // Prisma's @updatedAt, which would cause false 409 conflicts in autosave
+    await db.$executeRaw`
+      UPDATE "Page"
+      SET "editingBy" = ${session.user.id}, "editingAt" = ${now}
+      WHERE "id" = ${pageId}
+    `;
 
     return NextResponse.json({ editing: false });
   } catch (error) {
@@ -67,13 +69,18 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const rl = rateLimit(`editing-delete:${session.user.id}`, "mutation");
+    if (!rl.success) return rateLimitResponse(rl);
+
     const { pageId } = await params;
 
-    // Release lock only if we own it
-    await db.page.updateMany({
-      where: { id: pageId, editingBy: session.user.id },
-      data: { editingBy: null, editingAt: null },
-    });
+    // Release lock only if we own it — use raw SQL to avoid triggering
+    // Prisma's @updatedAt, which would cause false 409 conflicts in autosave
+    await db.$executeRaw`
+      UPDATE "Page"
+      SET "editingBy" = NULL, "editingAt" = NULL
+      WHERE "id" = ${pageId} AND "editingBy" = ${session.user.id}
+    `;
 
     return NextResponse.json({ success: true });
   } catch (error) {

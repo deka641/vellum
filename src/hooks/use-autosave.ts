@@ -120,6 +120,7 @@ export function useAutosave() {
           currentState.setBlocksDirty(false);
         }
         currentState.setSaveError(null);
+        currentState.setSaveErrorType(null);
         retryCountRef.current = 0;
         isSavingRef.current = false;
         currentState.setSaving(false);
@@ -127,13 +128,22 @@ export function useAutosave() {
       } catch (err) {
         const message = err instanceof Error ? err.message : "Save failed";
 
+        // Categorize the error type
+        const lowerMsg = message.toLowerCase();
+        const errorType: "network" | "server" =
+          err instanceof TypeError || lowerMsg.includes("fetch") || lowerMsg.includes("network")
+            ? "network"
+            : "server";
+
         if (attempt < MAX_RETRIES - 1) {
           const delay = Math.min(BASE_DELAY * Math.pow(2, attempt), 30000);
           toast(`Save failed, retrying... (${attempt + 2}/${MAX_RETRIES})`, "info");
           await new Promise((resolve) => setTimeout(resolve, delay));
         } else {
           toast(`Unable to save: ${message}`, "error");
-          useEditorStore.getState().setSaveError(message);
+          const store = useEditorStore.getState();
+          store.setSaveError(message);
+          store.setSaveErrorType(errorType);
         }
       }
     }

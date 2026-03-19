@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { LayoutTemplate, Trash2, Plus, RefreshCw, Eye, Pencil, Copy, Search } from "lucide-react";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { Card } from "@/components/ui/Card/Card";
@@ -20,6 +19,7 @@ import {
   DialogClose,
 } from "@/components/ui/Dialog/Dialog";
 import { TemplatePreview } from "@/components/dashboard/TemplatePreview";
+import { EmptyState } from "@/components/dashboard/EmptyState";
 import styles from "./templates.module.css";
 
 interface Template {
@@ -295,16 +295,13 @@ export default function TemplatesPage() {
             </Button>
           </div>
         ) : templates.length === 0 ? (
-          <div className={styles.empty}>
-            <div className={styles.emptyIconCircle}>
-              <LayoutTemplate size={28} strokeWidth={1.5} />
-            </div>
-            <h3>No templates yet</h3>
-            <p>Save your page designs as templates from the editor, or create a site to get started</p>
-            <Link href="/sites/new">
-              <Button leftIcon={<Plus size={16} />}>Create a site</Button>
-            </Link>
-          </div>
+          <EmptyState
+            icon={<LayoutTemplate size={28} strokeWidth={1.5} />}
+            title="No templates yet"
+            description="Templates are saved from the editor. Create a site and build pages, then save your designs as reusable templates."
+            actionLabel="Create a site"
+            actionHref="/sites/new"
+          />
         ) : (
           <>
             <div className={styles.toolbar}>

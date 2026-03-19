@@ -284,4 +284,61 @@ describe("notifyFormSubmission (with SMTP)", () => {
       expect.any(Error)
     );
   });
+
+  it("sends HTML with table-based layout for Outlook compatibility", async () => {
+    const nodemailer = await import("nodemailer");
+    const sendMail = vi.fn().mockResolvedValue({ messageId: "test-tbl" });
+    vi.mocked(nodemailer.default.createTransport).mockReturnValue({
+      sendMail,
+    } as ReturnType<typeof nodemailer.default.createTransport>);
+
+    const notifyFormSubmission = await importFresh();
+    await notifyFormSubmission(makeNotification());
+
+    const htmlArg = sendMail.mock.calls[0][0].html as string;
+    expect(htmlArg).toContain("<table");
+    // Outer wrapper should be a table, not a div
+    expect(htmlArg).toContain('cellpadding="0"');
+    expect(htmlArg).toContain('cellspacing="0"');
+  });
+
+  it("includes Outlook conditional comments in HTML", async () => {
+    const nodemailer = await import("nodemailer");
+    const sendMail = vi.fn().mockResolvedValue({ messageId: "test-mso" });
+    vi.mocked(nodemailer.default.createTransport).mockReturnValue({
+      sendMail,
+    } as ReturnType<typeof nodemailer.default.createTransport>);
+
+    const notifyFormSubmission = await importFresh();
+    await notifyFormSubmission(makeNotification());
+
+    const htmlArg = sendMail.mock.calls[0][0].html as string;
+    expect(htmlArg).toContain("<!--[if mso]>");
+    expect(htmlArg).toContain("<![endif]-->");
+  });
+
+  it("includes both HTML and plain text versions in sendMail call", async () => {
+    const nodemailer = await import("nodemailer");
+    const sendMail = vi.fn().mockResolvedValue({ messageId: "test-multi" });
+    vi.mocked(nodemailer.default.createTransport).mockReturnValue({
+      sendMail,
+    } as ReturnType<typeof nodemailer.default.createTransport>);
+
+    const notifyFormSubmission = await importFresh();
+    await notifyFormSubmission(
+      makeNotification({ siteName: "Dual Site", pageTitle: "Dual Page" })
+    );
+
+    expect(sendMail).toHaveBeenCalledTimes(1);
+    const mailOptions = sendMail.mock.calls[0][0];
+    // HTML version present and contains structured markup
+    expect(mailOptions.html).toBeDefined();
+    expect(typeof mailOptions.html).toBe("string");
+    expect(mailOptions.html).toContain("New Form Submission");
+    // Plain text version present and contains submission details
+    expect(mailOptions.text).toBeDefined();
+    expect(typeof mailOptions.text).toBe("string");
+    expect(mailOptions.text).toContain("Dual Site");
+    expect(mailOptions.text).toContain("Dual Page");
+  });
 });

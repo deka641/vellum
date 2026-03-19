@@ -191,6 +191,7 @@ export const BlockWrapper = memo(function BlockWrapper({ id, children, onMultiSe
       ref={setNodeRef}
       style={style}
       data-block-id={id}
+      tabIndex={0}
       className={cn(
         styles.wrapper,
         isSelected && multiSelectCount <= 1 && styles.selected,
@@ -203,8 +204,9 @@ export const BlockWrapper = memo(function BlockWrapper({ id, children, onMultiSe
         justInserted && styles.justInserted
       )}
       onClick={handleClick}
-      role="region"
-      aria-label={blockLabel}
+      role="option"
+      aria-selected={isSelected || isMultiSelected}
+      aria-label={`${blockLabel}, position ${blockIndex + 1} of ${blockCount}`}
     >
       <div className={styles.toolbar}>
         <button

@@ -71,7 +71,7 @@ export async function revalidatePublishedPages(
   }>
 ) {
   const results = await Promise.allSettled(
-    pages.map((page) => {
+    pages.map(async (page) => {
       const siteSlug = page.site.slug;
       if (page.isHomepage) {
         revalidatePath(`/s/${siteSlug}`);
@@ -79,7 +79,6 @@ export async function revalidatePublishedPages(
         revalidatePath(`/s/${siteSlug}/${page.slug}`);
       }
       revalidatePath(`/s/${siteSlug}`, "layout");
-      return Promise.resolve();
     })
   );
 

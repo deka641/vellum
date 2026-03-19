@@ -25,6 +25,7 @@ interface EditorState {
   blocksDirty: boolean;
   isSaving: boolean;
   saveError: string | null;
+  saveErrorType: "network" | "conflict" | "server" | null;
   pageId: string | null;
   pageTitle: string;
   pageDescription: string | null;
@@ -57,6 +58,7 @@ interface EditorState {
   setBlocksDirty: (dirty: boolean) => void;
   setSaving: (saving: boolean) => void;
   setSaveError: (error: string | null) => void;
+  setSaveErrorType: (errorType: "network" | "conflict" | "server" | null) => void;
   setPageTitle: (title: string) => void;
   setPageDescription: (description: string | null) => void;
   setPageSlug: (slug: string) => void;
@@ -147,6 +149,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   blocksDirty: false,
   isSaving: false,
   saveError: null,
+  saveErrorType: null,
   pageId: null,
   pageTitle: "",
   pageDescription: null,
@@ -183,6 +186,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       isDirty: false,
       blocksDirty: false,
       saveError: null,
+      saveErrorType: null,
       lastSavedAt: updatedAt,
       conflict: null,
       history: [{ blocks: structuredClone(blocks) }],
@@ -312,7 +316,8 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   setDirty: (dirty) => set({ isDirty: dirty, ...(dirty ? { saveError: null } : {}) }),
   setBlocksDirty: (dirty) => set({ blocksDirty: dirty }),
   setSaving: (saving) => set({ isSaving: saving }),
-  setSaveError: (error) => set({ saveError: error }),
+  setSaveError: (error) => set({ saveError: error, ...(error === null ? { saveErrorType: null } : {}) }),
+  setSaveErrorType: (errorType) => set({ saveErrorType: errorType }),
   setPageTitle: (title) => set({ pageTitle: title, isDirty: true, blocksDirty: true, saveError: null }),
   setPageDescription: (description) => set({ pageDescription: description, isDirty: true, saveError: null }),
   setPageSlug: (slug) => set({ pageSlug: slug, isDirty: true, saveError: null }),

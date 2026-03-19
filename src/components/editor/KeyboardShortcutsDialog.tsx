@@ -49,6 +49,8 @@ function getShortcutGroups(): ShortcutGroup[] {
         { label: "Duplicate block", keys: [mod, "D"] },
         { label: "Delete block", keys: ["Delete / Backspace"] },
         { label: "Deselect block", keys: ["Escape"] },
+        { label: "Select previous block", keys: ["\u2191"] },
+        { label: "Select next block", keys: ["\u2193"] },
         { label: "Move block up", keys: ["Alt", "\u2191"] },
         { label: "Move block down", keys: ["Alt", "\u2193"] },
       ],

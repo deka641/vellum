@@ -59,7 +59,8 @@ model Page {
   isHomepage         Boolean          @default(false)
   showInNav          Boolean          @default(true)
   sortOrder          Int              @default(0)
-  scheduledPublishAt DateTime?
+  scheduledPublishAt   DateTime?
+  scheduledUnpublishAt DateTime?
   previewToken       String?
   editingBy          String?
   editingAt          DateTime?

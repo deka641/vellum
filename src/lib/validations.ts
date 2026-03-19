@@ -228,6 +228,17 @@ const importPageSchema = z.object({
   })).max(500).optional().default([]),
 });
 
+const importTagSchema = z.object({
+  name: z.string().min(1).max(100),
+  slug: z.string().min(1).max(200),
+});
+
+const importRedirectSchema = z.object({
+  fromPath: z.string().min(1).max(500),
+  toPath: z.string().min(1).max(500),
+  permanent: z.boolean().optional().default(true),
+});
+
 export const importSiteSchema = z.object({
   version: z.number().int().min(1),
   site: z.object({
@@ -240,8 +251,19 @@ export const importSiteSchema = z.object({
     customFooter: z.string().max(10000).nullable().optional(),
     notificationEmail: z.string().max(500).nullable().optional(),
     favicon: z.string().max(2000).nullable().optional(),
+    defaultOgImage: z.string().max(2000).nullable().optional(),
+    cookieConsent: z.object({
+      enabled: z.boolean(),
+      message: z.string().max(500).optional(),
+      privacyUrl: z.string().max(2000).optional(),
+    }).nullable().optional(),
+    autoBackup: z.boolean().optional(),
   }),
-  pages: z.array(importPageSchema).max(200),
+  pages: z.array(importPageSchema.extend({
+    tags: z.array(z.string().min(1).max(200)).optional(),
+  })).max(200),
+  tags: z.array(importTagSchema).max(200).optional(),
+  redirects: z.array(importRedirectSchema).max(500).optional(),
 });
 
 // --- Pages ---
@@ -287,6 +309,20 @@ export const updatePageSchema = z.object({
       return true;
     },
     { message: "Scheduled date must be a valid ISO date, not in the past, and at most 1 year in the future" }
+  ),
+  scheduledUnpublishAt: z.string().nullable().optional().refine(
+    (val) => {
+      if (!val) return true;
+      const date = new Date(val);
+      if (isNaN(date.getTime())) return false;
+      const now = new Date();
+      if (date.getTime() < now.getTime() - 60_000) return false;
+      const oneYear = new Date(now);
+      oneYear.setFullYear(oneYear.getFullYear() + 1);
+      if (date.getTime() > oneYear.getTime()) return false;
+      return true;
+    },
+    { message: "Scheduled unpublish date must be a valid ISO date, not in the past, and at most 1 year in the future" }
   ),
 });
 

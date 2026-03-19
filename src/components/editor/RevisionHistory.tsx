@@ -6,6 +6,13 @@ import { useEditorStore } from "@/stores/editor-store";
 import { Skeleton } from "@/components/ui/Skeleton/Skeleton";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog/ConfirmDialog";
 import { Button } from "@/components/ui/Button/Button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/Dropdown/Dropdown";
+import { useToast } from "@/components/ui/Toast/Toast";
 import type { EditorBlock } from "@/types/blocks";
 import styles from "./RevisionHistory.module.css";
 
@@ -105,10 +112,13 @@ export function RevisionHistory({ pageId }: RevisionHistoryProps) {
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [restoring, setRestoring] = useState(false);
   const [confirmRevisionId, setConfirmRevisionId] = useState<string | null>(null);
+  const [confirmMode, setConfirmMode] = useState<"all" | "blocks" | "title">("all");
   const [diffRevisionId, setDiffRevisionId] = useState<string | null>(null);
   const [diffBlocks, setDiffBlocks] = useState<DiffBlock[] | null>(null);
   const [diffLoading, setDiffLoading] = useState(false);
+  const [diffError, setDiffError] = useState<string | null>(null);
 
+  const { toast } = useToast();
   const currentBlocks = useEditorStore((s) => s.blocks);
   const setBlocks = useEditorStore((s) => s.setBlocks);
   const setPageTitle = useEditorStore((s) => s.setPageTitle);
@@ -144,7 +154,11 @@ export function RevisionHistory({ pageId }: RevisionHistoryProps) {
     try {
       const res = await fetch(
         `/api/pages/${pageId}/revisions/${confirmRevisionId}/restore`,
-        { method: "POST" }
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fields: confirmMode === "all" ? undefined : [confirmMode] }),
+        }
       );
       if (!res.ok) {
         throw new Error("Failed to restore revision");
@@ -152,23 +166,29 @@ export function RevisionHistory({ pageId }: RevisionHistoryProps) {
       const data = await res.json();
 
       // Update the editor store with restored data
-      const blocks: EditorBlock[] = data.blocks.map((b: Record<string, unknown>) => ({
-        id: b.id,
-        type: b.type,
-        content: b.content,
-        settings: b.settings || {},
-        parentId: b.parentId || null,
-      }));
-
-      setBlocks(blocks);
-      setPageTitle(data.title);
+      if (confirmMode === "all" || confirmMode === "blocks") {
+        const blocks: EditorBlock[] = data.blocks.map((b: Record<string, unknown>) => ({
+          id: b.id,
+          type: b.type,
+          content: b.content,
+          settings: b.settings || {},
+          parentId: b.parentId || null,
+        }));
+        setBlocks(blocks);
+      }
+      if (confirmMode === "all" || confirmMode === "title") {
+        setPageTitle(data.title);
+      }
       setDirty(true);
       setBlocksDirty(true);
+      toast("Revision restored successfully");
     } catch (err) {
       console.error("Failed to restore revision:", err);
+      toast("Failed to restore revision. Please try again.", "error");
     } finally {
       setRestoring(false);
       setConfirmRevisionId(null);
+      setConfirmMode("all");
     }
   }
 
@@ -189,6 +209,7 @@ export function RevisionHistory({ pageId }: RevisionHistoryProps) {
       // Fallback: fetch revision detail
     }
     // For now, fetch the revision blocks via the revisions API
+    setDiffError(null);
     try {
       const res = await fetch(`/api/pages/${pageId}/revisions`);
       if (!res.ok) throw new Error("Failed");
@@ -199,6 +220,7 @@ export function RevisionHistory({ pageId }: RevisionHistoryProps) {
       }
     } catch {
       setDiffBlocks(null);
+      setDiffError("Failed to load revision data for comparison");
     } finally {
       setDiffLoading(false);
     }
@@ -261,14 +283,28 @@ export function RevisionHistory({ pageId }: RevisionHistoryProps) {
                 >
                   {diffRevisionId === rev.id ? <X size={12} /> : <GitCompare size={12} />}
                 </button>
-                <button
-                  className={styles.restoreButton}
-                  onClick={() => setConfirmRevisionId(rev.id)}
-                  disabled={restoring}
-                >
-                  <RotateCcw size={12} />
-                  {" "}Restore
-                </button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className={styles.restoreButton}
+                      disabled={restoring}
+                    >
+                      <RotateCcw size={12} />
+                      {" "}Restore
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem onClick={() => { setConfirmMode("all"); setConfirmRevisionId(rev.id); }}>
+                      Restore all
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { setConfirmMode("blocks"); setConfirmRevisionId(rev.id); }}>
+                      Restore blocks only
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { setConfirmMode("title"); setConfirmRevisionId(rev.id); }}>
+                      Restore title only
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
             {diffRevisionId === rev.id && diffBlocks && (
@@ -291,6 +327,11 @@ export function RevisionHistory({ pageId }: RevisionHistoryProps) {
                 )}
               </div>
             )}
+            {diffRevisionId === rev.id && diffError && !diffLoading && (
+              <div className={styles.diffPanel}>
+                <div className={styles.diffEmpty}>{diffError}</div>
+              </div>
+            )}
             {diffRevisionId === rev.id && diffLoading && (
               <div className={styles.diffPanel}>
                 <Skeleton height={60} />
@@ -305,8 +346,13 @@ export function RevisionHistory({ pageId }: RevisionHistoryProps) {
         onOpenChange={(open) => {
           if (!open) setConfirmRevisionId(null);
         }}
-        title="Restore revision?"
-        description="This will replace the current page content with the selected revision. Any unsaved changes will be lost."
+        title={`Restore ${confirmMode === "all" ? "revision" : confirmMode === "blocks" ? "blocks only" : "title only"}?`}
+        description={confirmMode === "all"
+          ? "This will replace the current page content with the selected revision. Any unsaved changes will be lost."
+          : confirmMode === "blocks"
+            ? "This will replace the current blocks with blocks from the selected revision. The page title will not be changed."
+            : "This will replace the current page title with the title from the selected revision. Blocks will not be changed."
+        }
         confirmLabel="Restore"
         variant="default"
         onConfirm={handleRestore}

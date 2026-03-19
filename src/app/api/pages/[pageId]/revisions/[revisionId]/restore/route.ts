@@ -10,7 +10,7 @@ import { sanitizeBlocks } from "@/lib/sanitize";
 import type { Prisma } from "@prisma/client";
 
 export async function POST(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ pageId: string; revisionId: string }> }
 ) {
   try {
@@ -25,10 +25,27 @@ export async function POST(
     const { pageId, revisionId } = await params;
     const userId = session.user.id;
 
+    // Parse optional body for selective restore
+    let restoreFields: string[] | undefined;
+    try {
+      const body = await req.json();
+      if (body?.fields && Array.isArray(body.fields)) {
+        const validFields = body.fields.filter((f: unknown) => f === "blocks" || f === "title");
+        if (validFields.length > 0) {
+          restoreFields = validFields;
+        }
+      }
+    } catch {
+      // No body or invalid JSON — restore everything (backwards-compatible)
+    }
+
+    const restoreBlocks = !restoreFields || restoreFields.includes("blocks");
+    const restoreTitle = !restoreFields || restoreFields.includes("title");
+
     const result = await db.$transaction(async (tx) => {
       const page = await tx.page.findFirst({
         where: { id: pageId, deletedAt: null, site: { userId } },
-        select: { id: true },
+        select: { id: true, title: true },
       });
 
       if (!page) {
@@ -51,41 +68,43 @@ export async function POST(
         parentId?: string | null;
       }>;
 
-      // Validate block hierarchy before restoring (rules may have changed since revision was created)
-      const hierarchy = validateBlockHierarchy(
-        revisionBlocks as Array<{ type: string; content: Record<string, unknown> }>
-      );
-      if (!hierarchy.valid) {
-        return { status: 400 as const, error: `Invalid revision data: ${hierarchy.error}` };
+      if (restoreBlocks) {
+        // Validate block hierarchy before restoring (rules may have changed since revision was created)
+        const hierarchy = validateBlockHierarchy(
+          revisionBlocks as Array<{ type: string; content: Record<string, unknown> }>
+        );
+        if (!hierarchy.valid) {
+          return { status: 400 as const, error: `Invalid revision data: ${hierarchy.error}` };
+        }
+
+        // Sanitize blocks before writing
+        const cleanBlocks = sanitizeBlocks(
+          revisionBlocks as Array<{ type: string; content: Record<string, unknown> }>
+        );
+
+        // Delete all current blocks
+        await tx.block.deleteMany({ where: { pageId } });
+
+        // Create blocks from the revision
+        if (cleanBlocks.length > 0) {
+          await tx.block.createMany({
+            data: cleanBlocks.map((block, i) => ({
+              id: block.id as string,
+              type: block.type,
+              content: block.content as Prisma.InputJsonValue,
+              settings: (block.settings || {}) as Prisma.InputJsonValue,
+              sortOrder: i,
+              pageId,
+              parentId: block.parentId || null,
+            })),
+          });
+        }
       }
 
-      // Sanitize blocks before writing
-      const cleanBlocks = sanitizeBlocks(
-        revisionBlocks as Array<{ type: string; content: Record<string, unknown> }>
-      );
-
-      // Delete all current blocks
-      await tx.block.deleteMany({ where: { pageId } });
-
-      // Create blocks from the revision
-      if (cleanBlocks.length > 0) {
-        await tx.block.createMany({
-          data: cleanBlocks.map((block, i) => ({
-            id: block.id as string,
-            type: block.type,
-            content: block.content as Prisma.InputJsonValue,
-            settings: (block.settings || {}) as Prisma.InputJsonValue,
-            sortOrder: i,
-            pageId,
-            parentId: block.parentId || null,
-          })),
-        });
-      }
-
-      // Update page title
+      // Update page title if restoring title
       const updated = await tx.page.update({
         where: { id: pageId },
-        data: { title: revision.title },
+        data: restoreTitle ? { title: revision.title } : { updatedAt: new Date() },
         include: { blocks: { orderBy: { sortOrder: "asc" } } },
       });
 

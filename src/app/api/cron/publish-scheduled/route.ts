@@ -118,7 +118,50 @@ export async function POST(req: Request) {
 
     logger.info("cron", `Scheduled publishing complete: ${publishedCount}/${pagesToPublish.length} pages published`);
 
-    return NextResponse.json({ published: publishedCount });
+    // --- Scheduled unpublish ---
+    let unpublishedCount = 0;
+    try {
+      const pagesToUnpublish = await db.page.findMany({
+        where: {
+          status: "PUBLISHED",
+          deletedAt: null,
+          scheduledUnpublishAt: {
+            not: null,
+            lte: now,
+          },
+        },
+        include: {
+          site: { select: { slug: true } },
+        },
+      });
+
+      if (pagesToUnpublish.length > 0) {
+        const unpublishIds = pagesToUnpublish.map((p) => p.id);
+
+        await db.page.updateMany({
+          where: { id: { in: unpublishIds } },
+          data: {
+            status: "DRAFT",
+            publishedAt: null,
+            scheduledUnpublishAt: null,
+          },
+        });
+
+        await revalidatePublishedPages(pagesToUnpublish);
+        revalidateTag("dashboard", { expire: 0 });
+
+        unpublishedCount = pagesToUnpublish.length;
+        for (const page of pagesToUnpublish) {
+          logger.info("cron", `Unpublished scheduled page: ${page.id} (${page.title})`);
+        }
+
+        logger.info("cron", `Scheduled unpublishing complete: ${unpublishedCount} pages unpublished`);
+      }
+    } catch (err) {
+      logger.error("cron", "Scheduled unpublishing failed:", err);
+    }
+
+    return NextResponse.json({ published: publishedCount, unpublished: unpublishedCount });
   } catch (error) {
     return apiError("POST /api/cron/publish-scheduled", error);
   }

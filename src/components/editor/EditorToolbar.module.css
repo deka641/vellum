@@ -211,6 +211,12 @@
   line-height: 1.4;
 }
 
+.scheduleSeparator {
+  height: 1px;
+  background: var(--color-border);
+  margin: var(--space-2) 0;
+}
+
 /* Sidebar toggle button — hidden on desktop, visible on tablet */
 .sidebarToggle {
   display: none;

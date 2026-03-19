@@ -57,7 +57,7 @@ function buildEmailHtml(notification: SubmissionNotification): string {
       ([key, value]) =>
         `<tr>
           <td style="padding: 8px 12px; border-bottom: 1px solid #e5e7eb; font-weight: 600; color: #374151; white-space: nowrap; vertical-align: top;">${escapeHtml(key)}</td>
-          <td style="padding: 8px 12px; border-bottom: 1px solid #e5e7eb; color: #1f2937; word-break: break-word;">${escapeHtml(value)}</td>
+          <td style="padding: 8px 12px; border-bottom: 1px solid #e5e7eb; color: #1f2937; word-wrap: break-word; overflow-wrap: break-word;">${escapeHtml(value)}</td>
         </tr>`
     )
     .join("\n");
@@ -67,41 +67,57 @@ function buildEmailHtml(notification: SubmissionNotification): string {
     : `${baseUrl}/sites`;
 
   return `<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><!--[if mso]><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml><![endif]--></head>
 <body style="margin: 0; padding: 0; background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-  <div style="max-width: 600px; margin: 0 auto; padding: 24px;">
-    <div style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-      <div style="background-color: #1f2937; padding: 20px 24px;">
-        <h1 style="margin: 0; font-size: 18px; font-weight: 600; color: #ffffff;">New Form Submission</h1>
-      </div>
-      <div style="padding: 24px;">
-        <p style="margin: 0 0 4px; font-size: 14px; color: #6b7280;">Site</p>
-        <p style="margin: 0 0 16px; font-size: 16px; font-weight: 600; color: #111827;">${escapeHtml(notification.siteName)}</p>
-        <p style="margin: 0 0 4px; font-size: 14px; color: #6b7280;">Page</p>
-        <p style="margin: 0 0 16px; font-size: 16px; font-weight: 600; color: #111827;">${notification.pageUrl ? `<a href="${escapeHtml(notification.pageUrl)}" style="color: #111827; text-decoration: underline;">${escapeHtml(notification.pageTitle)}</a>` : escapeHtml(notification.pageTitle)}</p>
-        <p style="margin: 0 0 4px; font-size: 14px; color: #6b7280;">Submitted</p>
-        <p style="margin: 0 0 20px; font-size: 16px; font-weight: 600; color: #111827;">${new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" }).format(notification.submittedAt || new Date())}</p>
-        <table style="width: 100%; border-collapse: collapse; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 14px;">
-          <thead>
-            <tr style="background-color: #f9fafb;">
-              <th style="padding: 10px 12px; text-align: left; font-size: 12px; text-transform: uppercase; color: #6b7280; letter-spacing: 0.05em;">Field</th>
-              <th style="padding: 10px 12px; text-align: left; font-size: 12px; text-transform: uppercase; color: #6b7280; letter-spacing: 0.05em;">Value</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${fieldRows}
-          </tbody>
+  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #f3f4f6;">
+    <tr>
+      <td align="center" style="padding: 24px;">
+        <!--[if mso]><table width="600" cellpadding="0" cellspacing="0"><tr><td><![endif]-->
+        <table cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width: 600px; background-color: #ffffff; border: 1px solid #e5e7eb;">
+          <tr>
+            <td style="background-color: #1f2937; padding: 20px 24px;">
+              <h1 style="margin: 0; font-size: 18px; font-weight: 600; color: #ffffff;">New Form Submission</h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 24px;">
+              <p style="margin: 0 0 4px; font-size: 14px; color: #6b7280;">Site</p>
+              <p style="margin: 0 0 16px; font-size: 16px; font-weight: 600; color: #111827;">${escapeHtml(notification.siteName)}</p>
+              <p style="margin: 0 0 4px; font-size: 14px; color: #6b7280;">Page</p>
+              <p style="margin: 0 0 16px; font-size: 16px; font-weight: 600; color: #111827;">${notification.pageUrl ? `<a href="${escapeHtml(notification.pageUrl)}" style="color: #111827; text-decoration: underline;">${escapeHtml(notification.pageTitle)}</a>` : escapeHtml(notification.pageTitle)}</p>
+              <p style="margin: 0 0 4px; font-size: 14px; color: #6b7280;">Submitted</p>
+              <p style="margin: 0 0 20px; font-size: 16px; font-weight: 600; color: #111827;">${new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" }).format(notification.submittedAt || new Date())}</p>
+              <table style="width: 100%; border-collapse: collapse; border: 1px solid #e5e7eb; font-size: 14px;">
+                <thead>
+                  <tr style="background-color: #f9fafb;">
+                    <th style="padding: 10px 12px; text-align: left; font-size: 12px; text-transform: uppercase; color: #6b7280; letter-spacing: 0.05em;">Field</th>
+                    <th style="padding: 10px 12px; text-align: left; font-size: 12px; text-transform: uppercase; color: #6b7280; letter-spacing: 0.05em;">Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${fieldRows}
+                </tbody>
+              </table>
+              <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top: 24px;">
+                <tr>
+                  <td align="center">
+                    <a href="${escapeHtml(submissionsUrl)}" style="display: inline-block; padding: 10px 24px; background-color: #1f2937; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: 500;">View All Submissions</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 16px 24px; background-color: #f9fafb; border-top: 1px solid #e5e7eb;">
+              <p style="margin: 0; font-size: 12px; color: #6b7280; text-align: center;">Sent by Vellum CMS</p>
+            </td>
+          </tr>
         </table>
-        <div style="margin-top: 24px; text-align: center;">
-          <a href="${escapeHtml(submissionsUrl)}" style="display: inline-block; padding: 10px 24px; background-color: #1f2937; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: 500;">View All Submissions</a>
-        </div>
-      </div>
-      <div style="padding: 16px 24px; background-color: #f9fafb; border-top: 1px solid #e5e7eb;">
-        <p style="margin: 0; font-size: 12px; color: #6b7280; text-align: center;">Sent by Vellum CMS</p>
-      </div>
-    </div>
-  </div>
+        <!--[if mso]></td></tr></table><![endif]-->
+      </td>
+    </tr>
+  </table>
   <style>
     @media only screen and (max-width: 480px) {
       table { width: 100% !important; }

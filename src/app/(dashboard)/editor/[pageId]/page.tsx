@@ -35,6 +35,7 @@ export default function EditorPage() {
   const [isHomepage, setIsHomepage] = useState(false);
   const [pageStatus, setPageStatus] = useState<"DRAFT" | "PUBLISHED">("DRAFT");
   const [scheduledPublishAt, setScheduledPublishAt] = useState<string | null>(null);
+  const [scheduledUnpublishAt, setScheduledUnpublishAt] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [publishDialogOpen, setPublishDialogOpen] = useState(false);
   const [editingByOther, setEditingByOther] = useState<string | null>(null);
@@ -52,6 +53,7 @@ export default function EditorPage() {
   const { setPage, addBlock, isDirty, pageSlug } = useEditorStore();
   const { save, forceSave } = useAutosave();
   const [addBlockMenuRequested, setAddBlockMenuRequested] = useState(false);
+  const [insertAtIndex, setInsertAtIndex] = useState<number | undefined>(undefined);
 
   const loadPage = useCallback(async () => {
     setLoading(true);
@@ -69,6 +71,7 @@ export default function EditorPage() {
       setIsHomepage(data.isHomepage);
       setPageStatus(data.status);
       setScheduledPublishAt(data.scheduledPublishAt ?? null);
+      setScheduledUnpublishAt(data.scheduledUnpublishAt ?? null);
 
       const blocks: EditorBlock[] = data.blocks.map(
         (b: { id: string; type: string; content: unknown; settings: unknown; parentId: string | null }) => ({
@@ -179,6 +182,50 @@ export default function EditorPage() {
           }
         }
       }
+      // Arrow key block navigation (no modifier keys)
+      if ((e.key === "ArrowUp" || e.key === "ArrowDown") && !e.altKey && !e.metaKey && !e.ctrlKey && !e.shiftKey) {
+        const target = e.target as HTMLElement;
+        const isEditing =
+          target.isContentEditable ||
+          target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.closest(".tiptap");
+        if (!isEditing) {
+          const state = useEditorStore.getState();
+          const topBlocks = state.blocks;
+          if (topBlocks.length === 0) return;
+
+          e.preventDefault();
+          let nextIndex: number;
+
+          if (!state.selectedBlockId) {
+            // No block selected: ArrowDown selects first, ArrowUp selects last
+            nextIndex = e.key === "ArrowDown" ? 0 : topBlocks.length - 1;
+          } else {
+            const currentIndex = topBlocks.findIndex((b) => b.id === state.selectedBlockId);
+            if (currentIndex === -1) {
+              nextIndex = 0;
+            } else if (e.key === "ArrowDown") {
+              nextIndex = currentIndex < topBlocks.length - 1 ? currentIndex + 1 : currentIndex;
+            } else {
+              nextIndex = currentIndex > 0 ? currentIndex - 1 : currentIndex;
+            }
+          }
+
+          const nextBlock = topBlocks[nextIndex];
+          state.selectBlock(nextBlock.id);
+
+          // Focus the block element and scroll it into view
+          requestAnimationFrame(() => {
+            const el = document.querySelector(`[data-block-id="${nextBlock.id}"]`) as HTMLElement | null;
+            if (el) {
+              el.focus({ preventScroll: true });
+              const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+              el.scrollIntoView({ behavior: prefersReducedMotion ? "instant" : "smooth", block: "nearest" });
+            }
+          });
+        }
+      }
       // Block type conversion: Ctrl/Cmd+Shift+1-4 for headings, 0 for text, Q for quote
       if ((e.metaKey || e.ctrlKey) && e.shiftKey) {
         const target = e.target as HTMLElement;
@@ -215,6 +262,17 @@ export default function EditorPage() {
           target.closest(".tiptap");
         if (!isEditing) {
           e.preventDefault();
+          const state = useEditorStore.getState();
+          if (state.selectedBlockId) {
+            const loc = findBlockLocation(state.blocks, state.selectedBlockId);
+            if (loc && loc.level === "top") {
+              setInsertAtIndex(loc.index + 1);
+            } else {
+              setInsertAtIndex(undefined);
+            }
+          } else {
+            setInsertAtIndex(undefined);
+          }
           setAddBlockMenuRequested(true);
         }
       }
@@ -358,6 +416,24 @@ export default function EditorPage() {
     }
   }, [params.pageId, toast]);
 
+  const handleCancelUnpublishSchedule = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/pages/${params.pageId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scheduledUnpublishAt: null }),
+      });
+      if (res.ok) {
+        setScheduledUnpublishAt(null);
+        toast("Unpublish schedule cancelled");
+      } else {
+        toast("Failed to cancel unpublish schedule", "error");
+      }
+    } catch {
+      toast("Something went wrong", "error");
+    }
+  }, [params.pageId, toast]);
+
   if (loading) {
     return (
       <div className={styles.loadingContainer}>
@@ -419,9 +495,11 @@ export default function EditorPage() {
         isHomepage={isHomepage}
         pageStatus={pageStatus}
         scheduledPublishAt={scheduledPublishAt}
+        scheduledUnpublishAt={scheduledUnpublishAt}
         onPublish={handlePublish}
         onSchedule={handleSchedule}
         onCancelSchedule={handleCancelSchedule}
+        onCancelUnpublishSchedule={handleCancelUnpublishSchedule}
         sidebarOpen={sidebarOpen}
         onSidebarToggle={() => setSidebarOpen((o) => !o)}
       />
@@ -445,7 +523,8 @@ export default function EditorPage() {
           mobileOpen={sidebarOpen}
           onMobileToggle={() => setSidebarOpen((o) => !o)}
           activateAddBlock={addBlockMenuRequested}
-          onAddBlockActivated={() => setAddBlockMenuRequested(false)}
+          onAddBlockActivated={() => { setAddBlockMenuRequested(false); }}
+          insertAtIndex={insertAtIndex}
         />
         {sidebarOpen && (
           <div

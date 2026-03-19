@@ -100,6 +100,11 @@ export async function PATCH(
     if (parsed.data.metaTitle !== undefined) updateData.metaTitle = parsed.data.metaTitle ? sanitizePlainText(parsed.data.metaTitle) : parsed.data.metaTitle;
     if (parsed.data.ogImage !== undefined) updateData.ogImage = parsed.data.ogImage ? sanitizeImageSrc(parsed.data.ogImage) : parsed.data.ogImage;
     if (parsed.data.noindex !== undefined) updateData.noindex = parsed.data.noindex;
+    if (parsed.data.scheduledUnpublishAt !== undefined) {
+      updateData.scheduledUnpublishAt = parsed.data.scheduledUnpublishAt
+        ? new Date(parsed.data.scheduledUnpublishAt)
+        : null;
+    }
 
     if (parsed.data.slug !== undefined) {
       if (page.isHomepage) {

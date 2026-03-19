@@ -17,6 +17,9 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const rl = rateLimit(`blocks-read:${session.user.id}`, "read");
+    if (!rl.success) return rateLimitResponse(rl);
+
     const { pageId } = await params;
 
     const page = await db.page.findFirst({

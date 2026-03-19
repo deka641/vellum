@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Eye, ExternalLink, Save, Undo2, Redo2, Loader2, AlertCircle, AlertTriangle, Monitor, Tablet, Smartphone, Check, MoreHorizontal, Clock, CalendarClock, X, PanelRight, Copy, Share2 } from "lucide-react";
+import { ArrowLeft, Eye, ExternalLink, Save, Undo2, Redo2, Loader2, AlertCircle, AlertTriangle, Monitor, Tablet, Smartphone, Check, MoreHorizontal, Clock, CalendarClock, CalendarX2, X, PanelRight, Copy, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/Button/Button";
 import { IconButton } from "@/components/ui/IconButton/IconButton";
 import { Badge } from "@/components/ui/Badge/Badge";
@@ -144,16 +144,18 @@ interface EditorToolbarProps {
   isHomepage: boolean;
   pageStatus: "DRAFT" | "PUBLISHED";
   scheduledPublishAt: string | null;
+  scheduledUnpublishAt: string | null;
   onPublish: () => void;
   onSchedule: (scheduledAt: string) => void;
   onCancelSchedule: () => void;
+  onCancelUnpublishSchedule: () => void;
   sidebarOpen?: boolean;
   onSidebarToggle?: () => void;
 }
 
-export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, scheduledPublishAt, onPublish, onSchedule, onCancelSchedule, sidebarOpen, onSidebarToggle }: EditorToolbarProps) {
+export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, scheduledPublishAt, scheduledUnpublishAt, onPublish, onSchedule, onCancelSchedule, onCancelUnpublishSchedule, sidebarOpen, onSidebarToggle }: EditorToolbarProps) {
   const router = useRouter();
-  const { pageTitle, pageSlug, setPageTitle, isDirty, isSaving, saveError, conflict, undo, redo, previewMode, setPreviewMode, lastSavedAt } =
+  const { pageTitle, pageSlug, setPageTitle, isDirty, isSaving, saveError, saveErrorType, conflict, undo, redo, previewMode, setPreviewMode, lastSavedAt } =
     useEditorStore();
   const canUndo = useEditorStore((s) => s.historyIndex > 0);
   const canRedo = useEditorStore((s) => s.historyIndex < s.history.length - 1);
@@ -163,6 +165,7 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, schedu
   const relativeTime = useRelativeTime(lastSavedAt);
   const [duplicating, setDuplicating] = useState(false);
   const countdown = useCountdown(scheduledPublishAt);
+  const unpublishCountdown = useCountdown(scheduledUnpublishAt);
 
   const [showAutoSaving, setShowAutoSaving] = useState(false);
 
@@ -178,6 +181,8 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, schedu
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [scheduleDate, setScheduleDate] = useState("");
   const [scheduleLoading, setScheduleLoading] = useState(false);
+  const [unpublishDate, setUnpublishDate] = useState("");
+  const [unpublishLoading, setUnpublishLoading] = useState(false);
   const scheduleRef = useRef<HTMLDivElement>(null);
 
   // Close schedule dropdown on outside click
@@ -204,6 +209,32 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, schedu
       setScheduleLoading(false);
     }
   }, [scheduleDate, onSchedule]);
+
+  const handleUnpublishScheduleSubmit = useCallback(async () => {
+    if (!unpublishDate) return;
+    setUnpublishLoading(true);
+    try {
+      const { pageId } = useEditorStore.getState();
+      const isoDate = new Date(unpublishDate).toISOString();
+      const res = await fetch(`/api/pages/${pageId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scheduledUnpublishAt: isoDate }),
+      });
+      if (!res.ok) {
+        toast("Failed to schedule unpublish", "error");
+        return;
+      }
+      toast("Auto-unpublish scheduled");
+      setUnpublishDate("");
+      setScheduleOpen(false);
+      router.refresh();
+    } catch {
+      toast("Failed to schedule unpublish", "error");
+    } finally {
+      setUnpublishLoading(false);
+    }
+  }, [unpublishDate, toast, router]);
 
   const handleSharePreview = useCallback(async () => {
     try {
@@ -280,6 +311,12 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, schedu
             Scheduled {formatScheduledDate(scheduledPublishAt)}{countdown ? ` — ${countdown}` : ""}
           </Badge>
         )}
+        {scheduledUnpublishAt && (
+          <Badge variant="default" dot>
+            <CalendarX2 size={10} />
+            Auto-unpublish {formatScheduledDate(scheduledUnpublishAt)}{unpublishCountdown ? ` — ${unpublishCountdown}` : ""}
+          </Badge>
+        )}
       </div>
       <div className={styles.right}>
         {hasConflict && (
@@ -302,7 +339,9 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, schedu
             aria-label="Save failed, click to retry"
           >
             <AlertCircle size={14} />
-            Save failed — click to retry
+            {saveErrorType === "network"
+              ? "Connection lost \u2014 click to retry"
+              : "Save failed \u2014 click to retry"}
           </button>
         )}
         {!hasConflict && !isSaving && !saveError && isDirty && (
@@ -452,6 +491,15 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, schedu
                   </DropdownMenuItem>
                 </>
               )}
+              {scheduledUnpublishAt && (
+                <>
+                  {!scheduledPublishAt && <DropdownMenuSeparator />}
+                  <DropdownMenuItem onClick={onCancelUnpublishSchedule}>
+                    <CalendarX2 size={16} />
+                    Cancel unpublish
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -556,6 +604,75 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, schedu
                     {scheduleLoading ? "Scheduling..." : "Schedule publish"}
                   </Button>
                 </div>
+              )}
+              {pageStatus === "PUBLISHED" && (
+                <>
+                  <div className={styles.scheduleSeparator} />
+                  <div className={styles.scheduleContent}>
+                    {scheduledUnpublishAt ? (
+                      <>
+                        <div className={styles.scheduleInfo}>
+                          <CalendarX2 size={14} />
+                          <span>Auto-unpublish {formatScheduledDate(scheduledUnpublishAt)}</span>
+                        </div>
+                        <div className={styles.scheduleActions}>
+                          <Button size="sm" variant="secondary" onClick={() => {
+                            setUnpublishDate(toLocalDatetimeValue(scheduledUnpublishAt));
+                          }}>
+                            Change
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => {
+                            onCancelUnpublishSchedule();
+                            setScheduleOpen(false);
+                          }}>
+                            <X size={14} />
+                            Cancel unpublish
+                          </Button>
+                        </div>
+                        {unpublishDate && (
+                          <div className={styles.scheduleForm}>
+                            <input
+                              type="datetime-local"
+                              className={styles.scheduleDateInput}
+                              value={unpublishDate}
+                              onChange={(e) => setUnpublishDate(e.target.value)}
+                              min={getMinDatetimeLocal()}
+                            />
+                            <div className={styles.scheduleTimezone}>
+                              Your timezone: {getUserTimezone() || "Unknown"}
+                              {unpublishDate && (
+                                <> — unpublishes {formatRelativeCountdown(unpublishDate)}</>
+                              )}
+                            </div>
+                            <Button size="sm" onClick={handleUnpublishScheduleSubmit} disabled={unpublishLoading || !unpublishDate}>
+                              {unpublishLoading ? "Updating..." : "Update unpublish"}
+                            </Button>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <div className={styles.scheduleLabel}>Auto-unpublish</div>
+                        <input
+                          type="datetime-local"
+                          className={styles.scheduleDateInput}
+                          value={unpublishDate}
+                          onChange={(e) => setUnpublishDate(e.target.value)}
+                          min={getMinDatetimeLocal()}
+                        />
+                        <div className={styles.scheduleTimezone}>
+                          Your timezone: {getUserTimezone() || "Unknown"}
+                          {unpublishDate && (
+                            <> — unpublishes {formatRelativeCountdown(unpublishDate)}</>
+                          )}
+                        </div>
+                        <Button size="sm" onClick={handleUnpublishScheduleSubmit} disabled={unpublishLoading || !unpublishDate}>
+                          {unpublishLoading ? "Scheduling..." : "Schedule unpublish"}
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </>
               )}
             </div>
           )}

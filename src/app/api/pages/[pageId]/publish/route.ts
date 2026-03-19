@@ -164,6 +164,24 @@ export async function DELETE(
     // Check if this is a cancel-schedule request
     const url = new URL(req.url);
     const cancelSchedule = url.searchParams.get("cancelSchedule") === "true";
+    const cancelUnpublishSchedule = url.searchParams.get("cancelUnpublishSchedule") === "true";
+
+    if (cancelUnpublishSchedule) {
+      const updated = await db.page.update({
+        where: { id: pageId },
+        data: {
+          scheduledUnpublishAt: null,
+        },
+      });
+
+      logger.info("publish", `Unpublish schedule cancelled for page ${pageId}`);
+      revalidateTag("dashboard", { expire: 0 });
+
+      return NextResponse.json({
+        ...updated,
+        scheduledUnpublishAt: null,
+      });
+    }
 
     if (cancelSchedule) {
       const updated = await db.page.update({
@@ -189,6 +207,7 @@ export async function DELETE(
         status: "DRAFT",
         publishedAt: null,
         scheduledPublishAt: null, // Clear any schedule when unpublishing
+        scheduledUnpublishAt: null, // Clear any unpublish schedule
       },
     });
 

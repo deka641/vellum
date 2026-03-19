@@ -295,6 +295,7 @@ export function EditorCanvas({ onAddBlock }: EditorCanvasProps) {
               items={blocks.map((b) => b.id)}
               strategy={verticalListSortingStrategy}
             >
+              <div role="listbox" aria-label="Page blocks" aria-orientation="vertical">
               <AnimatePresence initial={false} mode="popLayout">
                 {blocks.map((block, index) => (
                   <motion.div
@@ -323,6 +324,7 @@ export function EditorCanvas({ onAddBlock }: EditorCanvasProps) {
                   </motion.div>
                 ))}
               </AnimatePresence>
+              </div>
             </SortableContext>
             <DragOverlay dropAnimation={null}>
               {activeBlock ? (

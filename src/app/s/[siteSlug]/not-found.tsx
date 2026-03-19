@@ -12,6 +12,8 @@ export default function SiteNotFound() {
 
   return (
     <div className={styles.container}>
+      <title>Page not found</title>
+      <meta name="robots" content="noindex, nofollow" />
       <p className={styles.errorCode} aria-hidden="true">
         404
       </p>

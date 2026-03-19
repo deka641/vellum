@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Image as ImageIcon, Search, CheckSquare, Trash2, ChevronLeft, ChevronRight, AlertCircle, RefreshCw, FolderOpen, Plus, Folder } from "lucide-react";
+import { Search, CheckSquare, Trash2, ChevronLeft, ChevronRight, AlertCircle, RefreshCw, FolderOpen, Plus, Folder, Upload } from "lucide-react";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { MediaGrid } from "@/components/media/MediaGrid";
 import { MediaUploader } from "@/components/media/MediaUploader";
 import { Skeleton } from "@/components/ui/Skeleton/Skeleton";
 import { Button } from "@/components/ui/Button/Button";
+import { EmptyState } from "@/components/dashboard/EmptyState";
 import { useToast } from "@/components/ui/Toast/Toast";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog/ConfirmDialog";
 import styles from "./media-page.module.css";
@@ -284,13 +285,16 @@ export default function MediaPage() {
             </Button>
           </div>
         ) : total === 0 && !debouncedSearch && typeFilter === "all" ? (
-          <div className={styles.empty}>
-            <div className={styles.emptyIconCircle}>
-              <ImageIcon size={28} strokeWidth={1.5} />
-            </div>
-            <h3>No media yet</h3>
-            <p>Upload images, videos, and documents to use across your sites</p>
-          </div>
+          <EmptyState
+            icon={<Upload size={28} strokeWidth={1.5} />}
+            title="No media yet"
+            description="Upload images, videos, and documents to use across your sites"
+            actionLabel="Upload your first file"
+            onAction={() => {
+              const input = document.querySelector<HTMLInputElement>('input[type="file"]');
+              input?.click();
+            }}
+          />
         ) : (
           <>
             <div className={styles.filterBar}>

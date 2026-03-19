@@ -27,8 +27,11 @@ export async function GET(
           orderBy: { sortOrder: "asc" },
           include: {
             blocks: { orderBy: { sortOrder: "asc" } },
+            pageTags: { include: { tag: { select: { slug: true } } } },
           },
         },
+        tags: { select: { name: true, slug: true } },
+        redirects: { select: { fromPath: true, toPath: true, permanent: true } },
       },
     });
 
@@ -37,7 +40,7 @@ export async function GET(
     }
 
     const exportData = {
-      version: 1,
+      version: 2,
       exportedAt: new Date().toISOString(),
       site: {
         name: site.name,
@@ -49,7 +52,19 @@ export async function GET(
         customFooter: site.customFooter,
         notificationEmail: site.notificationEmail,
         favicon: site.favicon,
+        defaultOgImage: site.defaultOgImage,
+        cookieConsent: site.cookieConsent,
+        autoBackup: site.autoBackup,
       },
+      tags: site.tags.map((tag) => ({
+        name: tag.name,
+        slug: tag.slug,
+      })),
+      redirects: site.redirects.map((r) => ({
+        fromPath: r.fromPath,
+        toPath: r.toPath,
+        permanent: r.permanent,
+      })),
       pages: site.pages.map((page) => ({
         title: page.title,
         slug: page.slug,
@@ -61,6 +76,7 @@ export async function GET(
         metaTitle: page.metaTitle,
         ogImage: page.ogImage,
         noindex: page.noindex,
+        tags: page.pageTags.map((pt) => pt.tag.slug),
         blocks: page.blocks.map((block) => ({
           id: block.id,
           type: block.type,

@@ -8,6 +8,7 @@ import { generateId, slugify } from "@/lib/utils";
 import { sanitizeBlocks, sanitizePlainText, sanitizeImageSrc } from "@/lib/sanitize";
 import { parseBody, importSiteSchema, validateBlockHierarchy } from "@/lib/validations";
 import { logger } from "@/lib/logger";
+import type { Prisma } from "@prisma/client";
 
 
 export async function POST(req: Request) {
@@ -62,9 +63,50 @@ export async function POST(req: Request) {
           customFooter: typeof importData.site.customFooter === "string" ? importData.site.customFooter : null,
           notificationEmail: typeof importData.site.notificationEmail === "string" ? importData.site.notificationEmail : null,
           favicon: importData.site.favicon ? sanitizeImageSrc(importData.site.favicon) || null : null,
+          defaultOgImage: importData.site.defaultOgImage ? sanitizeImageSrc(importData.site.defaultOgImage) || null : null,
+          cookieConsent: importData.site.cookieConsent ? (importData.site.cookieConsent as Prisma.InputJsonValue) : undefined,
+          autoBackup: importData.site.autoBackup ?? false,
           userId,
         },
       });
+
+      // Import tags (v2+)
+      const tagSlugToId = new Map<string, string>();
+      if (importData.tags && importData.tags.length > 0) {
+        for (const tagData of importData.tags) {
+          const tagSlug = slugify(tagData.slug || tagData.name) || `tag-${tagSlugToId.size + 1}`;
+          try {
+            const tag = await tx.tag.create({
+              data: {
+                name: sanitizePlainText(tagData.name) || tagData.name,
+                slug: tagSlug,
+                siteId: newSite.id,
+              },
+            });
+            tagSlugToId.set(tagData.slug, tag.id);
+          } catch (err) {
+            logger.warn("site-import", `Failed to create tag "${tagData.name}" — may already exist`, err);
+          }
+        }
+      }
+
+      // Import redirects (v2+)
+      if (importData.redirects && importData.redirects.length > 0) {
+        const redirectData = importData.redirects.map((r) => ({
+          siteId: newSite.id,
+          fromPath: r.fromPath,
+          toPath: r.toPath,
+          permanent: r.permanent ?? true,
+        }));
+        try {
+          await tx.redirect.createMany({
+            data: redirectData,
+            skipDuplicates: true,
+          });
+        } catch (err) {
+          logger.warn("site-import", "Failed to import some redirects", err);
+        }
+      }
 
       // Pre-load all existing page slugs for the site to avoid per-page DB queries
       const existingPages = await tx.page.findMany({
@@ -148,6 +190,21 @@ export async function POST(req: Request) {
               pageId: page.id,
             })),
           });
+        }
+
+        // Create page-tag associations (v2+)
+        const pageTags = (pageData as { tags?: string[] }).tags;
+        if (pageTags && pageTags.length > 0) {
+          const pageTagData = pageTags
+            .map((tagSlug) => tagSlugToId.get(tagSlug))
+            .filter((tagId): tagId is string => tagId != null)
+            .map((tagId) => ({ pageId: page.id, tagId }));
+          if (pageTagData.length > 0) {
+            await tx.pageTag.createMany({
+              data: pageTagData,
+              skipDuplicates: true,
+            });
+          }
         }
       }
 

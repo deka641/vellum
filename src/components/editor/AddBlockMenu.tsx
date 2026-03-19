@@ -16,6 +16,7 @@ import {
   Share2,
   Search,
   ChevronDown,
+  ChevronRight,
   List,
   Table,
   Trash2,
@@ -182,6 +183,7 @@ function BlockPreview({ type }: { type: string }) {
 
 interface AddBlockMenuProps {
   onAdd: (type: BlockType, contentOverride?: Record<string, unknown>) => void;
+  insertAtIndex?: number;
 }
 
 const COLUMN_PRESETS: { label: string; widths: number[] }[] = [
@@ -211,6 +213,9 @@ export function AddBlockMenu({ onAdd }: AddBlockMenuProps) {
   const [savedTemplates, setSavedTemplates] = useState<SavedBlockTemplate[]>([]);
   const [savedLoading, setSavedLoading] = useState(false);
   const [savedFetched, setSavedFetched] = useState(false);
+  const [savedFilter, setSavedFilter] = useState("");
+  const [savedTypeFilter, setSavedTypeFilter] = useState<string>("all");
+  const [collapsedTypes, setCollapsedTypes] = useState<Set<string>>(new Set());
   const inputRef = useRef<HTMLInputElement>(null);
   const lowerFilter = filter.toLowerCase();
   const { toast } = useToast();
@@ -266,6 +271,41 @@ export function AddBlockMenu({ onAdd }: AddBlockMenuProps) {
     }
     return [...blockCategories];
   }, [activeCategory]);
+
+  const filteredSavedTemplates = useMemo(() => {
+    const lowerSavedFilter = savedFilter.toLowerCase();
+    return savedTemplates.filter((t) => {
+      if (savedTypeFilter !== "all" && t.type !== savedTypeFilter) return false;
+      if (lowerSavedFilter && !t.name.toLowerCase().includes(lowerSavedFilter)) return false;
+      return true;
+    });
+  }, [savedTemplates, savedFilter, savedTypeFilter]);
+
+  const savedTemplateTypes = useMemo(() => {
+    const types = new Set(savedTemplates.map((t) => t.type));
+    return Array.from(types).sort();
+  }, [savedTemplates]);
+
+  const savedTemplatesByType = useMemo(() => {
+    const groups: Record<string, SavedBlockTemplate[]> = {};
+    for (const t of filteredSavedTemplates) {
+      if (!groups[t.type]) groups[t.type] = [];
+      groups[t.type].push(t);
+    }
+    return groups;
+  }, [filteredSavedTemplates]);
+
+  const toggleTypeCollapsed = useCallback((type: string) => {
+    setCollapsedTypes((prev) => {
+      const next = new Set(prev);
+      if (next.has(type)) {
+        next.delete(type);
+      } else {
+        next.add(type);
+      }
+      return next;
+    });
+  }, []);
 
   // Reset active index when filter or category changes
   useEffect(() => {
@@ -391,30 +431,117 @@ export function AddBlockMenu({ onAdd }: AddBlockMenuProps) {
               <span>Use the bookmark icon on any block to save it as a template</span>
             </div>
           ) : (
-            <div className={styles.savedList}>
-              {savedTemplates.map((template) => (
-                <div key={template.id} className={styles.savedItem}>
+            <>
+              <div className={styles.savedSearchWrapper}>
+                <Search size={14} className={styles.savedSearchIcon} />
+                <input
+                  className={styles.savedSearchInput}
+                  type="text"
+                  placeholder="Filter templates..."
+                  value={savedFilter}
+                  onChange={(e) => setSavedFilter(e.target.value)}
+                />
+              </div>
+              {savedTemplateTypes.length > 1 && (
+                <div className={styles.savedTypeChips}>
                   <button
-                    className={styles.savedItemButton}
-                    onClick={() => onAdd(template.type as BlockType, template.content)}
-                    title={`Insert ${template.name}`}
+                    className={`${styles.filterChip} ${savedTypeFilter === "all" ? styles.filterChipActive : ""}`}
+                    onClick={() => setSavedTypeFilter("all")}
                   >
-                    <span className={styles.savedItemIcon}>
-                      {iconMap[blockDefinitions[template.type as BlockType]?.icon] || <Bookmark size={20} />}
-                    </span>
-                    <span className={styles.savedItemName}>{template.name}</span>
+                    All
                   </button>
-                  <button
-                    className={styles.savedItemDelete}
-                    onClick={() => handleDeleteTemplate(template.id)}
-                    title="Delete template"
-                    aria-label={`Delete template ${template.name}`}
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  {savedTemplateTypes.map((type) => (
+                    <button
+                      key={type}
+                      className={`${styles.filterChip} ${savedTypeFilter === type ? styles.filterChipActive : ""}`}
+                      onClick={() => setSavedTypeFilter(type)}
+                    >
+                      {blockDefinitions[type as BlockType]?.label || type}
+                    </button>
+                  ))}
                 </div>
-              ))}
-            </div>
+              )}
+              {filteredSavedTemplates.length === 0 ? (
+                <p className={styles.noResults}>No templates matching &ldquo;{savedFilter || savedTypeFilter}&rdquo;</p>
+              ) : savedTypeFilter !== "all" || savedTemplateTypes.length <= 1 ? (
+                <div className={styles.savedList}>
+                  {filteredSavedTemplates.map((template) => (
+                    <div key={template.id} className={styles.savedItem}>
+                      <button
+                        className={styles.savedItemButton}
+                        onClick={() => onAdd(template.type as BlockType, template.content)}
+                        title={`Insert ${template.name}`}
+                      >
+                        <span className={styles.savedItemIcon}>
+                          {iconMap[blockDefinitions[template.type as BlockType]?.icon] || <Bookmark size={20} />}
+                        </span>
+                        <span className={styles.savedItemName}>{template.name}</span>
+                        <span className={styles.savedItemTypeBadge}>
+                          {blockDefinitions[template.type as BlockType]?.label || template.type}
+                        </span>
+                      </button>
+                      <button
+                        className={styles.savedItemDelete}
+                        onClick={() => handleDeleteTemplate(template.id)}
+                        title="Delete template"
+                        aria-label={`Delete template ${template.name}`}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className={styles.savedGrouped}>
+                  {Object.entries(savedTemplatesByType).map(([type, templates]) => (
+                    <div key={type} className={styles.savedGroup}>
+                      <button
+                        className={styles.savedGroupHeader}
+                        onClick={() => toggleTypeCollapsed(type)}
+                        aria-expanded={!collapsedTypes.has(type)}
+                      >
+                        <span className={styles.savedGroupChevron}>
+                          {collapsedTypes.has(type) ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
+                        </span>
+                        <span className={styles.savedGroupLabel}>
+                          {blockDefinitions[type as BlockType]?.label || type}
+                        </span>
+                        <span className={styles.savedGroupCount}>{templates.length}</span>
+                      </button>
+                      {!collapsedTypes.has(type) && (
+                        <div className={styles.savedList}>
+                          {templates.map((template) => (
+                            <div key={template.id} className={styles.savedItem}>
+                              <button
+                                className={styles.savedItemButton}
+                                onClick={() => onAdd(template.type as BlockType, template.content)}
+                                title={`Insert ${template.name}`}
+                              >
+                                <span className={styles.savedItemIcon}>
+                                  {iconMap[blockDefinitions[template.type as BlockType]?.icon] || <Bookmark size={20} />}
+                                </span>
+                                <span className={styles.savedItemName}>{template.name}</span>
+                                <span className={styles.savedItemTypeBadge}>
+                                  {blockDefinitions[template.type as BlockType]?.label || template.type}
+                                </span>
+                              </button>
+                              <button
+                                className={styles.savedItemDelete}
+                                onClick={() => handleDeleteTemplate(template.id)}
+                                title="Delete template"
+                                aria-label={`Delete template ${template.name}`}
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
       )}

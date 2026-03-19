@@ -16,16 +16,17 @@ interface EditorSidebarProps {
   onMobileToggle?: () => void;
   activateAddBlock?: boolean;
   onAddBlockActivated?: () => void;
+  insertAtIndex?: number;
 }
 
-export function EditorSidebar({ mobileOpen, onMobileToggle, activateAddBlock, onAddBlockActivated }: EditorSidebarProps) {
+export function EditorSidebar({ mobileOpen, onMobileToggle, activateAddBlock, onAddBlockActivated, insertAtIndex }: EditorSidebarProps) {
   const [activeTab, setActiveTab] = useState<Tab>("add");
   const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
   const addBlock = useEditorStore((s) => s.addBlock);
   const pageId = useEditorStore((s) => s.pageId);
 
   function handleAddBlock(type: BlockType, contentOverride?: Record<string, unknown>) {
-    addBlock(type, undefined, contentOverride);
+    addBlock(type, insertAtIndex, contentOverride);
     setActiveTab("settings");
   }
 
@@ -96,7 +97,7 @@ export function EditorSidebar({ mobileOpen, onMobileToggle, activateAddBlock, on
         </div>
         <div className={styles.content} role="tabpanel" id={`tabpanel-${activeTab}`} aria-labelledby={`tab-${activeTab}`}>
           {activeTab === "add" && (
-            <AddBlockMenu onAdd={handleAddBlock} />
+            <AddBlockMenu onAdd={handleAddBlock} insertAtIndex={insertAtIndex} />
           )}
           {activeTab === "settings" && (
             <BlockSettings />
