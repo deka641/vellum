@@ -731,7 +731,7 @@ export default function SiteSettingsPage() {
           <details className={styles.customCodeSection}>
             <summary className={styles.customCodeSummary}>Custom Code (Advanced)</summary>
             <p className={styles.customCodeWarning}>
-              Only add code from trusted sources. Malicious scripts can compromise your site.
+              Custom code runs on every published page. Only paste code from trusted sources (e.g., analytics, fonts). Malicious scripts can steal visitor data or compromise your site.
             </p>
             <div className={styles.customCodeField}>
               <label className={styles.customCodeLabel}>Head Code</label>

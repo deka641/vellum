@@ -154,6 +154,7 @@ interface ArticleJsonLdProps {
   ogImage?: string | null;
   siteName: string;
   isBlogPost?: boolean;
+  authorName?: string | null;
 }
 
 export function ArticleJsonLd({
@@ -165,6 +166,7 @@ export function ArticleJsonLd({
   ogImage,
   siteName,
   isBlogPost,
+  authorName,
 }: ArticleJsonLdProps) {
   const data: Record<string, unknown> = {
     "@context": "https://schema.org",
@@ -172,6 +174,10 @@ export function ArticleJsonLd({
     headline: title,
     url,
     datePublished: datePublished.toISOString(),
+    author: {
+      "@type": "Person",
+      name: authorName || siteName,
+    },
     publisher: {
       "@type": "Organization",
       name: siteName,

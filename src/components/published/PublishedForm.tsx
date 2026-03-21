@@ -24,12 +24,13 @@ interface PublishedFormProps {
   fields: FormField[];
   submitText: string;
   successMessage: string;
+  successRedirectUrl?: string;
   turnstileSiteKey?: string;
 }
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export function PublishedForm({ blockId, pageId, fields, submitText, successMessage, turnstileSiteKey }: PublishedFormProps) {
+export function PublishedForm({ blockId, pageId, fields, submitText, successMessage, successRedirectUrl, turnstileSiteKey }: PublishedFormProps) {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -176,6 +177,10 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
       });
 
       if (res.ok) {
+        if (successRedirectUrl) {
+          window.location.href = successRedirectUrl;
+          return;
+        }
         setSubmitted(true);
       } else if (res.status === 429) {
         const retryAfter = res.headers.get("Retry-After");

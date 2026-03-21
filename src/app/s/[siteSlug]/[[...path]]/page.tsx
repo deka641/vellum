@@ -11,7 +11,10 @@ import { SocialShareBar } from "@/components/published/SocialShareBar";
 import type { BlockType, BlockData } from "@/types/blocks";
 
 const getSite = cache((slug: string) =>
-  db.site.findUnique({ where: { slug } })
+  db.site.findUnique({
+    where: { slug },
+    include: { user: { select: { name: true } } },
+  })
 );
 
 const getPage = cache((siteId: string, pageSlug: string) =>
@@ -293,6 +296,7 @@ export default async function PublicSitePage({ params }: Props) {
           ogImage={page.ogImage || findFirstImageSrc(blockData) || (site.defaultOgImage as string | null)}
           siteName={site.name}
           isBlogPost={hasBlogTag}
+          authorName={site.user?.name}
         />
       )}
       <Breadcrumbs

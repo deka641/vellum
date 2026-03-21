@@ -66,7 +66,7 @@ function SortableNestedBlock({
       }}
     >
       <div className={styles.nestedToolbar}>
-        <button className={styles.nestedDragHandle} {...attributes} {...listeners}>
+        <button className={styles.nestedDragHandle} {...attributes} {...listeners} aria-label="Drag to reorder">
           <GripVertical size={12} />
         </button>
         <button
@@ -75,6 +75,7 @@ function SortableNestedBlock({
             e.stopPropagation();
             removeBlockFromColumn(parentId, block.id);
           }}
+          aria-label="Remove block from column"
         >
           <Trash2 size={12} />
         </button>
@@ -241,6 +242,7 @@ export function ColumnsBlock({ id, content, settings }: ColumnsBlockProps) {
               className={`${styles.presetBtn} ${isActive ? styles.presetBtnActive : ""}`}
               onClick={(e) => { e.stopPropagation(); setWidths(preset); }}
               title={preset.join("/")}
+              aria-label={`Column layout ${preset.join("/")}`}
             >
               <PresetLabel widths={preset} />
             </button>

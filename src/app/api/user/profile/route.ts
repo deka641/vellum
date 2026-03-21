@@ -13,6 +13,9 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const rl = rateLimit(`profile-read:${session.user.id}`, "read");
+    if (!rl.success) return rateLimitResponse(rl);
+
     const user = await db.user.findUnique({
       where: { id: session.user.id },
       select: { id: true, name: true, email: true, avatarUrl: true },

@@ -74,6 +74,8 @@ export function ImageBlock({ id, content, settings }: ImageBlockProps) {
     ...(settings?.shadow && { boxShadow: "var(--shadow-lg)" }),
   };
 
+  const [imageError, setImageError] = useState(false);
+
   return (
     <div className={styles.imageWrapper}>
       <img
@@ -81,7 +83,25 @@ export function ImageBlock({ id, content, settings }: ImageBlockProps) {
         alt={content.alt || ""}
         className={styles.image}
         style={imgStyle}
+        onError={() => setImageError(true)}
+        onLoad={() => setImageError(false)}
       />
+      {imageError && (
+        <div className={styles.imageErrorOverlay}>
+          <ImageIcon size={20} />
+          <span>Image failed to load</span>
+          <button
+            className={styles.imageErrorRetry}
+            onClick={(e) => {
+              e.stopPropagation();
+              setImageError(false);
+              updateBlockContent(id, { src: content.src });
+            }}
+          >
+            Retry
+          </button>
+        </div>
+      )}
       <div className={styles.imageAltField}>
         <label className={styles.imageAltLabel} htmlFor={`alt-${id}`}>
           Alt text

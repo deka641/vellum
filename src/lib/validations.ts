@@ -70,7 +70,7 @@ const dividerContentSchema = z.object({}).passthrough();
 const columnsContentSchema = z.object({ columns: z.array(z.object({ blocks: z.array(z.lazy(() => blockSchema)).optional() }).passthrough()).optional() }).passthrough();
 const videoContentSchema = z.object({ url: z.string().optional() }).passthrough();
 const quoteContentSchema = z.object({ text: z.string().optional(), html: z.string().optional(), attribution: z.string().optional() }).passthrough();
-const formContentSchema = z.object({ fields: z.array(z.record(z.string(), z.unknown())).optional(), submitText: z.string().optional() }).passthrough();
+const formContentSchema = z.object({ fields: z.array(z.record(z.string(), z.unknown())).optional(), submitText: z.string().optional(), successRedirectUrl: z.string().max(2000).optional() }).passthrough();
 const codeContentSchema = z.object({ code: z.string().optional(), language: z.string().optional(), displayMode: z.enum(["embed", "snippet"]).optional(), snippetLanguage: z.string().max(20).optional() }).passthrough();
 const socialContentSchema = z.object({ links: z.array(z.object({ platform: z.string(), url: z.string() }).passthrough()).optional() }).passthrough();
 const accordionContentSchema = z.object({ items: z.array(z.object({ id: z.string(), title: z.string(), content: z.string() }).passthrough()).optional() }).passthrough();

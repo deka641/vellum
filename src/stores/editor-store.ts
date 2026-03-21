@@ -5,6 +5,12 @@ import { generateId } from "@/lib/utils";
 import { DISALLOWED_NESTED_TYPES, blockTypeEnum } from "@/lib/validations";
 import type { BlockType } from "@/types/blocks";
 
+/** Type-safe accessor for column block content. Returns null if block is not a columns block. */
+function getColumnsContent(block: EditorBlock): ColumnsContent | null {
+  if (block.type !== "columns") return null;
+  return block.content as ColumnsContent;
+}
+
 interface HistoryEntry {
   blocks: EditorBlock[];
 }
@@ -119,10 +125,10 @@ export function findBlockLocation(blocks: EditorBlock[], blockId: string): Block
   if (topIndex !== -1) return { level: "top", index: topIndex };
 
   for (const block of blocks) {
-    if (block.type !== "columns") continue;
-    const cols = (block.content as ColumnsContent).columns;
-    for (let ci = 0; ci < cols.length; ci++) {
-      const idx = cols[ci].blocks.findIndex((cb) => cb.id === blockId);
+    const cols = getColumnsContent(block);
+    if (!cols) continue;
+    for (let ci = 0; ci < cols.columns.length; ci++) {
+      const idx = cols.columns[ci].blocks.findIndex((cb) => cb.id === blockId);
       if (idx !== -1) return { level: "column", parentId: block.id, colIndex: ci, index: idx };
     }
   }
@@ -132,9 +138,9 @@ export function findBlockLocation(blocks: EditorBlock[], blockId: string): Block
 function cloneBlock(block: EditorBlock): EditorBlock {
   const cloned = structuredClone(block);
   cloned.id = generateId();
-  if (cloned.type === "columns") {
-    const cols = cloned.content as ColumnsContent;
-    cols.columns = cols.columns.map((col) => ({
+  const colContent = getColumnsContent(cloned);
+  if (colContent) {
+    colContent.columns = colContent.columns.map((col) => ({
       blocks: col.blocks.map(cloneBlock),
     }));
   }
@@ -377,8 +383,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
       // Search inside column children
       for (const block of state.blocks) {
-        if (block.type !== "columns") continue;
-        const cols = (block.content as ColumnsContent).columns;
+        const colContent = getColumnsContent(block);
+        if (!colContent) continue;
+        const cols = colContent.columns;
         for (let ci = 0; ci < cols.length; ci++) {
           const colBlocks = cols[ci].blocks;
           const idx = colBlocks.findIndex((cb) => cb.id === id);
@@ -474,9 +481,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         blocksToSerialize.push(block);
       }
       // Also check column children
-      if (block.type === "columns") {
-        const cols = (block.content as ColumnsContent).columns;
-        for (const col of cols) {
+      const colContent = getColumnsContent(block);
+      if (colContent) {
+        for (const col of colContent.columns) {
           for (const cb of col.blocks) {
             if (state.selectedBlockIds.has(cb.id)) {
               blocksToSerialize.push(cb);
@@ -588,8 +595,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         const newBlocks = s.blocks
           .filter((b) => !idsToRemove.has(b.id))
           .map((b) => {
-            if (b.type !== "columns") return b;
-            const cols = (b.content as ColumnsContent).columns.map((col) => ({
+            const colContent = getColumnsContent(b);
+            if (!colContent) return b;
+            const cols = colContent.columns.map((col) => ({
               blocks: col.blocks.filter((cb) => !idsToRemove.has(cb.id)),
             }));
             return { ...b, content: { columns: cols } };
@@ -664,9 +672,9 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     // Search inside columns if not found
     if (!block) {
       for (const b of state.blocks) {
-        if (b.type !== "columns") continue;
-        const cols = (b.content as ColumnsContent).columns;
-        for (const col of cols) {
+        const colContent = getColumnsContent(b);
+        if (!colContent) continue;
+        for (const col of colContent.columns) {
           const found = col.blocks.find((cb) => cb.id === id);
           if (found) { block = found; break; }
         }
@@ -744,8 +752,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       if (DISALLOWED_NESTED_TYPES.includes(type)) return state;
       const block = createBlock(type);
       const newBlocks = state.blocks.map((b) => {
-        if (b.id !== parentId || b.type !== "columns") return b;
-        const cols = structuredClone((b.content as ColumnsContent).columns);
+        if (b.id !== parentId) return b;
+        const colContent = getColumnsContent(b);
+        if (!colContent) return b;
+        const cols = structuredClone(colContent.columns);
         if (colIndex < 0 || colIndex >= cols.length) return b;
         cols[colIndex].blocks.push(block);
         return { ...b, content: { columns: cols } };
@@ -777,8 +787,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         const newExiting = new Set(state.exitingBlockIds);
         newExiting.delete(blockId);
         const newBlocks = state.blocks.map((b) => {
-          if (b.id !== parentId || b.type !== "columns") return b;
-          const cols = (b.content as ColumnsContent).columns.map((col) => ({
+          if (b.id !== parentId) return b;
+          const colContent = getColumnsContent(b);
+          if (!colContent) return b;
+          const cols = colContent.columns.map((col) => ({
             blocks: col.blocks.filter((cb) => cb.id !== blockId),
           }));
           return { ...b, content: { columns: cols } };
@@ -799,8 +811,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   updateColumnBlockContent: (parentId, blockId, content) => {
     set((state) => {
       const newBlocks = state.blocks.map((b) => {
-        if (b.id !== parentId || b.type !== "columns") return b;
-        const cols = (b.content as ColumnsContent).columns.map((col) => ({
+        if (b.id !== parentId) return b;
+        const colContent = getColumnsContent(b);
+        if (!colContent) return b;
+        const cols = colContent.columns.map((col) => ({
           blocks: col.blocks.map((cb) =>
             cb.id === blockId ? { ...cb, content: { ...cb.content, ...content } } : cb
           ),
@@ -819,8 +833,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   updateColumnBlockSettings: (parentId, blockId, settings) =>
     set((state) => {
       const newBlocks = state.blocks.map((b) => {
-        if (b.id !== parentId || b.type !== "columns") return b;
-        const cols = (b.content as ColumnsContent).columns.map((col) => ({
+        if (b.id !== parentId) return b;
+        const colContent = getColumnsContent(b);
+        if (!colContent) return b;
+        const cols = colContent.columns.map((col) => ({
           blocks: col.blocks.map((cb) =>
             cb.id === blockId ? { ...cb, settings: { ...cb.settings, ...settings } } : cb
           ),
@@ -840,8 +856,10 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     let movedBlockId: string | null = null;
     set((state) => {
       const newBlocks = state.blocks.map((b) => {
-        if (b.id !== parentId || b.type !== "columns") return b;
-        const cols = structuredClone((b.content as ColumnsContent).columns);
+        if (b.id !== parentId) return b;
+        const colContent = getColumnsContent(b);
+        if (!colContent) return b;
+        const cols = structuredClone(colContent.columns);
         if (colIndex < 0 || colIndex >= cols.length) return b;
         const colBlocks = cols[colIndex].blocks;
         if (fromIndex < 0 || fromIndex >= colBlocks.length || toIndex < 0 || toIndex >= colBlocks.length) return b;

@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/Button/Button";
 import { useEditorStore } from "@/stores/editor-store";
 import { runSeoAudit, type SeoCheck } from "@/lib/seo-audit";
-import type { ImageContent } from "@/types/blocks";
+import type { ImageContent, ColumnsContent } from "@/types/blocks";
 import styles from "./PrePublishDialog.module.css";
 
 interface PrePublishDialogProps {
@@ -41,12 +41,38 @@ export function PrePublishDialog({
   const blockWarnings = useMemo(() => {
     const warnings: string[] = [];
     const seen = new Set<string>();
+    let missingAltCount = 0;
 
-    for (const block of blocks) {
-      if (block.type === "image" && !(block.content as ImageContent).src && !seen.has("image-src")) {
+    function checkImageBlock(content: ImageContent) {
+      if (!content.src && !seen.has("image-src")) {
         warnings.push("Image block without source found");
         seen.add("image-src");
       }
+      if (content.src && !content.alt?.trim()) {
+        missingAltCount++;
+      }
+    }
+
+    for (const block of blocks) {
+      if (block.type === "image") {
+        checkImageBlock(block.content as ImageContent);
+      }
+      if (block.type === "columns") {
+        const cols = (block.content as ColumnsContent).columns;
+        for (const col of cols) {
+          for (const cb of col.blocks) {
+            if (cb.type === "image") {
+              checkImageBlock(cb.content as ImageContent);
+            }
+          }
+        }
+      }
+    }
+
+    if (missingAltCount > 0) {
+      warnings.push(
+        `${missingAltCount} image${missingAltCount > 1 ? "s" : ""} missing alt text (affects accessibility and SEO)`
+      );
     }
 
     return warnings;

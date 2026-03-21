@@ -113,13 +113,28 @@ export async function POST(
 
     // Validate submitted field names against configured form fields
     const formContent = formBlock.content as Record<string, unknown>;
-    const configuredFields = (formContent.fields || []) as Array<{ label: string }>;
+    const configuredFields = (formContent.fields || []) as Array<{ label: string; required?: boolean; type?: string }>;
     const allowedLabels = new Set(configuredFields.map((f) => f.label));
     const submittedKeys = Object.keys(parsed.data.data);
     const unknownFields = submittedKeys.filter((key) => !allowedLabels.has(key));
     if (unknownFields.length > 0) {
       return NextResponse.json(
         { error: `Unknown form fields: ${unknownFields.join(", ")}` },
+        { status: 400 }
+      );
+    }
+
+    // Validate required fields are present and non-empty
+    const requiredFields = configuredFields.filter((f) => f.required);
+    const missingRequired = requiredFields.filter((f) => {
+      const value = parsed.data.data[f.label];
+      if (value === undefined || value === null) return true;
+      if (typeof value === "string" && value.trim() === "") return true;
+      return false;
+    });
+    if (missingRequired.length > 0) {
+      return NextResponse.json(
+        { error: `Missing required fields: ${missingRequired.map((f) => f.label).join(", ")}` },
         { status: 400 }
       );
     }

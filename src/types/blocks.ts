@@ -137,6 +137,7 @@ export interface FormContent {
   fields: FormField[];
   submitText: string;
   successMessage: string;
+  successRedirectUrl?: string;
 }
 
 export type BlockContent =

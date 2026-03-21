@@ -263,7 +263,9 @@
 .image {
   width: 100%;
   height: auto;
+  min-height: 48px;
   display: block;
+  background: var(--color-surface, #f5f5f5);
   transition: transform 400ms cubic-bezier(0.16, 1, 0.3, 1),
               box-shadow 400ms cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -1742,6 +1744,10 @@ details[open] > .accordionBody > .accordionBodyInner {
    Print Styles
    ═══════════════════════════════════════════ */
 
+@page {
+  margin: 2cm;
+}
+
 @media print {
   .page {
     padding: 0;
@@ -1822,11 +1828,19 @@ details[open] > .accordionBody > .accordionBodyInner {
     color: black !important;
   }
 
+  .caption,
+  .tocLink,
+  .tableCaption {
+    color: black !important;
+  }
+
   .codeBlock {
     background: #f5f5f5 !important;
     color: black !important;
     white-space: pre-wrap !important;
     word-wrap: break-word;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
   }
 
   .codeBlock button {

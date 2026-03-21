@@ -161,6 +161,37 @@
 
 .imageWrapper {
   width: 100%;
+  position: relative;
+}
+
+.imageErrorOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  min-height: 120px;
+}
+
+.imageErrorRetry {
+  font-size: var(--text-xs);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  cursor: pointer;
+  color: var(--color-text);
+}
+
+.imageErrorRetry:hover {
+  background: var(--color-surface);
 }
 
 .image {
@@ -654,6 +685,16 @@
 .formFieldRequiredActive {
   color: var(--color-accent);
   font-weight: var(--weight-semibold);
+}
+
+.formFieldDuplicateWarning {
+  font-size: 10px;
+  font-weight: var(--weight-semibold);
+  color: var(--color-warning, #b45309);
+  background: rgba(180, 83, 9, 0.1);
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
 }
 
 .formFieldDelete {

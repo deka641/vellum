@@ -39,7 +39,7 @@ export async function POST(
       return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
 
-    // Fetch source site with all pages and blocks
+    // Fetch source site with all pages, blocks, tags, and redirects
     const sourceSite = await db.site.findFirst({
       where: { id: siteId, userId },
       include: {
@@ -47,9 +47,12 @@ export async function POST(
           where: { deletedAt: null },
           include: {
             blocks: { orderBy: { sortOrder: "asc" } },
+            pageTags: { include: { tag: true } },
           },
           orderBy: { sortOrder: "asc" },
         },
+        tags: true,
+        redirects: true,
       },
     });
 
@@ -97,13 +100,49 @@ export async function POST(
               favicon: sourceSite.favicon,
               logo: sourceSite.logo,
               notificationEmail: sourceSite.notificationEmail,
+              defaultOgImage: sourceSite.defaultOgImage,
+              autoBackup: sourceSite.autoBackup,
               theme: (sourceSite.theme || {}) as Prisma.InputJsonValue,
               footer: (sourceSite.footer || {}) as Prisma.InputJsonValue,
+              cookieConsent: sourceSite.cookieConsent ? (sourceSite.cookieConsent as Prisma.InputJsonValue) : undefined,
               customHead: sourceSite.customHead,
               customFooter: sourceSite.customFooter,
+              // Intentionally skip turnstileSiteKey/turnstileSecretKey (security-sensitive)
               userId,
             },
           });
+
+          // Duplicate tags with ID mapping
+          const tagIdMap = new Map<string, string>();
+          if (sourceSite.tags.length > 0) {
+            for (const tag of sourceSite.tags) {
+              try {
+                const newTag = await tx.tag.create({
+                  data: {
+                    name: tag.name,
+                    slug: tag.slug,
+                    siteId: site.id,
+                  },
+                });
+                tagIdMap.set(tag.id, newTag.id);
+              } catch (err) {
+                logger.warn("site-duplicate", `Failed to duplicate tag "${tag.name}"`, err);
+              }
+            }
+          }
+
+          // Duplicate redirects
+          if (sourceSite.redirects.length > 0) {
+            await tx.redirect.createMany({
+              data: sourceSite.redirects.map((r) => ({
+                siteId: site.id,
+                fromPath: r.fromPath,
+                toPath: r.toPath,
+                permanent: r.permanent,
+              })),
+              skipDuplicates: true,
+            });
+          }
 
           // Batch-create all pages first, then batch-create all blocks
           // Pre-generate page IDs and block ID mappings
@@ -166,6 +205,22 @@ export async function POST(
 
           if (allBlockData.length > 0) {
             await tx.block.createMany({ data: allBlockData });
+          }
+
+          // Duplicate page-tag associations
+          if (tagIdMap.size > 0) {
+            const allPageTagData: Prisma.PageTagCreateManyInput[] = [];
+            for (const { page, newPageId } of pageEntries) {
+              for (const pt of page.pageTags) {
+                const newTagId = tagIdMap.get(pt.tagId);
+                if (newTagId) {
+                  allPageTagData.push({ pageId: newPageId, tagId: newTagId });
+                }
+              }
+            }
+            if (allPageTagData.length > 0) {
+              await tx.pageTag.createMany({ data: allPageTagData, skipDuplicates: true });
+            }
           }
 
           return site;

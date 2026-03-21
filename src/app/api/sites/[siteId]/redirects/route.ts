@@ -75,7 +75,39 @@ export async function POST(
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    // Check if fromPath matches an existing page slug (warn but don't block)
+    // Prevent self-redirect
+    if (parsed.data.fromPath === parsed.data.toPath) {
+      return NextResponse.json(
+        { error: "Redirect cannot point to itself" },
+        { status: 400 }
+      );
+    }
+
+    // Detect redirect loops
+    const existingRedirects = await db.redirect.findMany({
+      where: { siteId },
+      select: { fromPath: true, toPath: true },
+    });
+    const redirectMap = new Map<string, string>();
+    for (const r of existingRedirects) {
+      if (r.fromPath !== parsed.data.fromPath) {
+        redirectMap.set(r.fromPath, r.toPath);
+      }
+    }
+    redirectMap.set(parsed.data.fromPath, parsed.data.toPath);
+    const visited = new Set<string>();
+    let current = parsed.data.toPath;
+    while (redirectMap.has(current)) {
+      if (visited.has(current)) {
+        return NextResponse.json(
+          { error: "This redirect would create a loop" },
+          { status: 400 }
+        );
+      }
+      visited.add(current);
+      current = redirectMap.get(current)!;
+    }
+
     const redirect = await db.redirect.upsert({
       where: {
         siteId_fromPath: {

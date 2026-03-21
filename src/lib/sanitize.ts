@@ -294,6 +294,9 @@ function sanitizeBlockContent(block: BlockLike): BlockLike {
       if (typeof content.successMessage === "string") {
         content.successMessage = sanitize(content.successMessage, { allowedTags: [], allowedAttributes: {} });
       }
+      if (typeof content.successRedirectUrl === "string") {
+        content.successRedirectUrl = sanitizeUrl(content.successRedirectUrl);
+      }
       break;
 
     case "code":

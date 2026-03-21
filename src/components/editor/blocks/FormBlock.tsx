@@ -14,7 +14,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Plus, Trash2, GripVertical, ChevronDown, ChevronUp } from "lucide-react";
 import { useEditorStore } from "@/stores/editor-store";
 import { generateId } from "@/lib/utils";
@@ -73,11 +73,31 @@ export function FormBlock({ id, content }: FormBlockProps) {
     updateBlockContent(id, { fields: newFields });
   }
 
+  const duplicateLabels = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const f of fields) {
+      const key = f.label.toLowerCase().trim();
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+    return new Set(
+      Array.from(counts.entries())
+        .filter(([, count]) => count > 1)
+        .map(([label]) => label)
+    );
+  }, [fields]);
+
   function addField() {
+    const existingLabels = new Set(fields.map((f) => f.label));
+    let label = "New field";
+    let counter = 2;
+    while (existingLabels.has(label)) {
+      label = `New field ${counter}`;
+      counter++;
+    }
     const newField: FormField = {
       id: generateId(),
       type: "text",
-      label: "New field",
+      label,
       required: false,
     };
     updateBlockContent(id, { fields: [...fields, newField] });
@@ -155,6 +175,9 @@ export function FormBlock({ id, content }: FormBlockProps) {
                   placeholder="Field label"
                   onClick={(e) => e.stopPropagation()}
                 />
+                {duplicateLabels.has(field.label.toLowerCase().trim()) && (
+                  <span className={styles.formFieldDuplicateWarning} title="Duplicate field labels cause data loss in submissions">Duplicate</span>
+                )}
                 <select
                   className={styles.formFieldType}
                   value={field.type}
@@ -343,6 +366,13 @@ export function FormBlock({ id, content }: FormBlockProps) {
           value={content.successMessage || ""}
           onChange={(e) => updateBlockContent(id, { successMessage: e.target.value })}
           placeholder="Success message"
+          onClick={(e) => e.stopPropagation()}
+        />
+        <input
+          className={styles.formSettingsInput}
+          value={content.successRedirectUrl || ""}
+          onChange={(e) => updateBlockContent(id, { successRedirectUrl: e.target.value })}
+          placeholder="Redirect URL after submission (optional)"
           onClick={(e) => e.stopPropagation()}
         />
       </div>

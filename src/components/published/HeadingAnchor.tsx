@@ -5,9 +5,10 @@ import styles from "./published.module.css";
 
 interface HeadingAnchorProps {
   id: string;
+  text?: string;
 }
 
-export function HeadingAnchor({ id }: HeadingAnchorProps) {
+export function HeadingAnchor({ id, text }: HeadingAnchorProps) {
   const [copied, setCopied] = useState(false);
 
   const handleClick = useCallback(
@@ -30,7 +31,7 @@ export function HeadingAnchor({ id }: HeadingAnchorProps) {
       href={`#${id}`}
       className={styles.headingAnchor}
       onClick={handleClick}
-      aria-label={copied ? "Link copied" : "Copy link to this section"}
+      aria-label={copied ? "Link copied" : `Copy link to: ${text || "this section"}`}
     >
       {copied ? "\u2713" : "#"}
     </a>

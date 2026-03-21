@@ -62,7 +62,7 @@ export function PublishedBlock({ block, pageId, allBlocks, turnstileSiteKey }: P
             data-level={level}
           >
             <span dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(headingHtml) }} />
-            <HeadingAnchor id={headingId} />
+            <HeadingAnchor id={headingId} text={text} />
           </Tag>
         );
       }
@@ -74,7 +74,7 @@ export function PublishedBlock({ block, pageId, allBlocks, turnstileSiteKey }: P
           data-level={level}
         >
           {text}
-          <HeadingAnchor id={headingId} />
+          <HeadingAnchor id={headingId} text={text} />
         </Tag>
       );
     }
@@ -293,6 +293,7 @@ export function PublishedBlock({ block, pageId, allBlocks, turnstileSiteKey }: P
       }>;
       const submitText = (content.submitText as string) || "Submit";
       const successMessage = (content.successMessage as string) || "Thank you! Your submission has been received.";
+      const successRedirectUrl = typeof content.successRedirectUrl === "string" ? sanitizeUrl(content.successRedirectUrl) : undefined;
       if (pageId) {
         return (
           <PublishedForm
@@ -301,6 +302,7 @@ export function PublishedBlock({ block, pageId, allBlocks, turnstileSiteKey }: P
             fields={fields}
             submitText={submitText}
             successMessage={successMessage}
+            successRedirectUrl={successRedirectUrl !== "#" ? successRedirectUrl : undefined}
             turnstileSiteKey={turnstileSiteKey}
           />
         );
