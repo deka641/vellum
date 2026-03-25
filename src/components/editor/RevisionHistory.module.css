@@ -243,3 +243,38 @@
   white-space: nowrap;
   min-width: 0;
 }
+
+.compareModeBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.compareModeText {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.itemSelected {
+  background: var(--color-accent-light);
+  border-radius: var(--radius-md);
+}
+
+.compareDismiss {
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.compareDismiss:hover {
+  color: var(--color-text-secondary);
+  text-decoration: underline;
+}

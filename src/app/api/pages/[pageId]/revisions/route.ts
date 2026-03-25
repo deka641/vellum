@@ -5,7 +5,7 @@ import { apiError } from "@/lib/api-helpers";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ pageId: string }> }
 ) {
   try {
@@ -28,13 +28,34 @@ export async function GET(
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
+    const { searchParams } = new URL(req.url);
+    const revisionId = searchParams.get("revisionId");
+
+    if (revisionId) {
+      const revision = await db.pageRevision.findFirst({
+        where: { id: revisionId, pageId },
+        select: {
+          id: true,
+          title: true,
+          note: true,
+          blocks: true,
+          createdAt: true,
+        },
+      });
+
+      if (!revision) {
+        return NextResponse.json({ error: "Revision not found" }, { status: 404 });
+      }
+
+      return NextResponse.json(revision);
+    }
+
     const revisions = await db.pageRevision.findMany({
       where: { pageId },
       select: {
         id: true,
         title: true,
         note: true,
-        blocks: true,
         createdAt: true,
       },
       orderBy: { createdAt: "desc" },

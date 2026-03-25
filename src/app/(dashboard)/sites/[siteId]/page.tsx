@@ -80,6 +80,8 @@ export default function SiteDetailPage() {
   const [trashedPages, setTrashedPages] = useState<PageItem[]>([]);
   const [deletePageId, setDeletePageId] = useState<string | null>(null);
   const [permDeletePageId, setPermDeletePageId] = useState<string | null>(null);
+  const [confirmEmptyTrash, setConfirmEmptyTrash] = useState(false);
+  const [bulkTrashLoading, setBulkTrashLoading] = useState(false);
   const [fetchError, setFetchError] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [crossSiteSources, setCrossSiteSources] = useState<Array<{ id: string; name: string; pages: Array<{ id: string; title: string }> }>>([]);
@@ -266,6 +268,63 @@ export default function SiteDetailPage() {
     setPermDeletePageId(null);
   }
 
+  async function handleRestoreAll() {
+    if (trashedPages.length === 0) return;
+    setBulkTrashLoading(true);
+    try {
+      const res = await fetch("/api/pages/bulk-restore", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pageIds: trashedPages.map((p) => p.id) }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSite((prev) =>
+          prev ? { ...prev, pages: [...prev.pages, ...trashedPages.map((p) => ({ ...p, deletedAt: null }))] } : null
+        );
+        setTrashedPages([]);
+        toast(`${data.restored} ${data.restored === 1 ? "page" : "pages"} restored`);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast(data.error || "Failed to restore pages", "error");
+      }
+    } catch {
+      toast("Network error — could not restore pages", "error");
+    } finally {
+      setBulkTrashLoading(false);
+    }
+  }
+
+  async function handleEmptyTrash() {
+    setBulkTrashLoading(true);
+    try {
+      const results = await Promise.allSettled(
+        trashedPages.map((p) =>
+          fetch(`/api/pages/${p.id}?permanent=true`, { method: "DELETE" })
+        )
+      );
+      const succeeded = results.filter((r) => r.status === "fulfilled" && (r.value as Response).ok).length;
+      if (succeeded > 0) {
+        setTrashedPages((prev) => {
+          const deletedIds = new Set(
+            results
+              .map((r, i) => r.status === "fulfilled" && (r.value as Response).ok ? trashedPages[i].id : null)
+              .filter((id): id is string => id !== null)
+          );
+          return prev.filter((p) => !deletedIds.has(p.id));
+        });
+        toast(`${succeeded} ${succeeded === 1 ? "page" : "pages"} permanently deleted`);
+      } else {
+        toast("Failed to empty trash", "error");
+      }
+    } catch {
+      toast("Network error — could not empty trash", "error");
+    } finally {
+      setBulkTrashLoading(false);
+      setConfirmEmptyTrash(false);
+    }
+  }
+
   async function handlePublishPage(pageId: string) {
     try {
       const res = await fetch(`/api/pages/${pageId}/publish`, { method: "POST" });
@@ -383,6 +442,35 @@ export default function SiteDetailPage() {
     }, 400);
   }
 
+  async function handleSetHomepage(pageId: string) {
+    try {
+      const res = await fetch(`/api/pages/${pageId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isHomepage: true }),
+      });
+      if (res.ok) {
+        setSite((prev) =>
+          prev
+            ? {
+                ...prev,
+                pages: prev.pages.map((p) => ({
+                  ...p,
+                  isHomepage: p.id === pageId,
+                })),
+              }
+            : null
+        );
+        toast("Homepage updated");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast(data.error || "Failed to set homepage", "error");
+      }
+    } catch {
+      toast("Network error — could not set homepage", "error");
+    }
+  }
+
   async function handleDuplicatePage(pageId: string) {
     try {
       const sourcePage = site?.pages.find((p) => p.id === pageId);
@@ -483,6 +571,9 @@ export default function SiteDetailPage() {
         );
         const label = action === "publish" ? "published" : "unpublished";
         toast(`${data.updated} ${data.updated === 1 ? "page" : "pages"} ${label}`);
+        if (action === "publish" && data.updated > (data.revisionsCreated ?? data.updated)) {
+          toast("Pages published. Some revision snapshots could not be saved.", "info");
+        }
       } else {
         const data = await res.json().catch(() => ({}));
         toast(data.error || `Failed to ${action} pages`, "error");
@@ -621,10 +712,34 @@ export default function SiteDetailPage() {
           />
         ) : showTrash ? (
           <div>
-            <h3 className={styles.trashTitle}>
-              <Trash2 size={18} />
-              Trash
-            </h3>
+            <div className={styles.trashHeader}>
+              <h3 className={styles.trashTitle}>
+                <Trash2 size={18} />
+                Trash
+              </h3>
+              {trashedPages.length > 1 && (
+                <div className={styles.trashBulkActions}>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    leftIcon={<RotateCcw size={14} />}
+                    onClick={handleRestoreAll}
+                    disabled={bulkTrashLoading}
+                  >
+                    Restore all
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    leftIcon={<Trash2 size={14} />}
+                    onClick={() => setConfirmEmptyTrash(true)}
+                    disabled={bulkTrashLoading}
+                  >
+                    Empty trash
+                  </Button>
+                </div>
+              )}
+            </div>
             {trashedPages.length === 0 ? (
               <div className={styles.empty}>
                 <Trash2 size={48} strokeWidth={1} />
@@ -749,6 +864,7 @@ export default function SiteDetailPage() {
               onPublish={handlePublishPage}
               onUnpublish={handleUnpublishPage}
               onDuplicate={handleDuplicatePage}
+              onSetHomepage={handleSetHomepage}
               onReorder={handleReorderPages}
               onToggleNav={handleToggleNav}
               onBulkAction={handleBulkAction}
@@ -861,6 +977,16 @@ export default function SiteDetailPage() {
         confirmLabel="Delete forever"
         variant="danger"
         onConfirm={confirmPermanentDelete}
+      />
+      <ConfirmDialog
+        open={confirmEmptyTrash}
+        onOpenChange={(open) => { if (!open) setConfirmEmptyTrash(false); }}
+        title="Empty trash"
+        description={`Permanently delete all ${trashedPages.length} trashed pages? This cannot be undone.`}
+        confirmLabel="Delete all forever"
+        variant="danger"
+        onConfirm={handleEmptyTrash}
+        loading={bulkTrashLoading}
       />
     </>
   );

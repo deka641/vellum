@@ -18,6 +18,9 @@ export async function GET(
 
     const { siteId } = await params;
 
+    const rl = rateLimit(`tags-read:${session.user.id}`, "read");
+    if (!rl.success) return rateLimitResponse(rl);
+
     const site = await db.site.findFirst({
       where: { id: siteId, userId: session.user.id },
       select: { id: true },

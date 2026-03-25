@@ -167,6 +167,13 @@
 }
 
 /* Trash */
+.trashHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+
 .trashTitle {
   display: flex;
   align-items: center;
@@ -176,7 +183,12 @@
   font-weight: var(--weight-semibold);
   color: var(--color-text-primary);
   letter-spacing: normal;
-  margin-bottom: var(--space-4);
+  margin-bottom: 0;
+}
+
+.trashBulkActions {
+  display: flex;
+  gap: var(--space-2);
 }
 
 .trashList {

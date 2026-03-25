@@ -1877,3 +1877,12 @@ details[open] > .accordionBody > .accordionBodyInner {
     display: none;
   }
 }
+
+/* --- Block Error Placeholder --- */
+
+.blockErrorPlaceholder {
+  min-height: 2px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  opacity: 0.3;
+}

@@ -39,6 +39,23 @@ export async function POST(
       return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
 
+    // Early count checks to avoid loading large datasets
+    const pageCount = await db.page.count({ where: { siteId, deletedAt: null } });
+    if (pageCount > 200) {
+      return NextResponse.json(
+        { error: "Site has too many pages to duplicate (max 200)" },
+        { status: 400 }
+      );
+    }
+
+    const blockCount = await db.block.count({ where: { page: { siteId, deletedAt: null } } });
+    if (blockCount > 10000) {
+      return NextResponse.json(
+        { error: "Site has too many blocks to duplicate (max 10,000)" },
+        { status: 400 }
+      );
+    }
+
     // Fetch source site with all pages, blocks, tags, and redirects
     const sourceSite = await db.site.findFirst({
       where: { id: siteId, userId },

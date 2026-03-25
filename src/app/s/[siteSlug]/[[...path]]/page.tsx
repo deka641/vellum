@@ -8,7 +8,8 @@ import { WebPageJsonLd, BreadcrumbJsonLd, FaqJsonLd, ContactPageJsonLd, ArticleJ
 import { Breadcrumbs } from "@/components/published/Breadcrumbs";
 import { PageNavigation } from "@/components/published/PageNavigation";
 import { SocialShareBar } from "@/components/published/SocialShareBar";
-import type { BlockType, BlockData } from "@/types/blocks";
+import type { BlockData } from "@/types/blocks";
+import { toBlockType } from "@/lib/blocks";
 
 const getSite = cache((slug: string) =>
   db.site.findUnique({
@@ -214,13 +215,19 @@ export default async function PublicSitePage({ params }: Props) {
   const canonical = buildPageUrl(baseUrl, siteSlug, page.isHomepage, page.slug);
   const siteUrl = `${baseUrl}/s/${siteSlug}`;
 
-  const blocks: BlockData[] = page.blocks.map((b) => ({
-    id: b.id,
-    type: b.type as BlockType,
-    content: b.content as Record<string, unknown>,
-    settings: (b.settings || {}) as Record<string, unknown>,
-    parentId: b.parentId,
-  }));
+  const blocks: BlockData[] = page.blocks.reduce<BlockData[]>((acc, b) => {
+    const blockType = toBlockType(b.type);
+    if (blockType) {
+      acc.push({
+        id: b.id,
+        type: blockType,
+        content: b.content as Record<string, unknown>,
+        settings: (b.settings || {}) as Record<string, unknown>,
+        parentId: b.parentId,
+      });
+    }
+    return acc;
+  }, []);
 
   const homeHref = `/s/${siteSlug}`;
 

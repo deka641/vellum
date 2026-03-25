@@ -7,6 +7,7 @@ import { Topbar } from "@/components/dashboard/Topbar";
 import { GettingStarted } from "@/components/dashboard/GettingStarted";
 import { formatDate } from "@/lib/utils";
 import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
+import { ContentHealth } from "@/components/dashboard/ContentHealth";
 import styles from "./home.module.css";
 
 interface SiteOverview {
@@ -21,7 +22,8 @@ interface SiteOverview {
 
 const getDashboardData = unstable_cache(
   async (userId: string) => {
-    const [siteCount, pageCounts, submissionCount, unreadSubmissionCount, mediaCount, recentPages, recentSubmissions, firstSite, sites] =
+    const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+    const [siteCount, pageCounts, submissionCount, unreadSubmissionCount, mediaCount, recentPages, recentSubmissions, firstSite, sites, stalePages, missingDescriptions, draftCount, imageBlocks] =
       await Promise.all([
         db.site.count({ where: { userId } }),
         db.page.groupBy({
@@ -84,6 +86,20 @@ const getDashboardData = unstable_cache(
             },
           },
         }),
+        // Content health queries
+        db.page.count({
+          where: { status: "PUBLISHED", deletedAt: null, site: { userId }, updatedAt: { lt: ninetyDaysAgo } },
+        }),
+        db.page.count({
+          where: { status: "PUBLISHED", deletedAt: null, site: { userId }, description: null },
+        }),
+        db.page.count({
+          where: { status: "DRAFT", deletedAt: null, site: { userId }, publishedAt: null },
+        }),
+        db.block.findMany({
+          where: { type: "image", page: { status: "PUBLISHED", deletedAt: null, site: { userId } } },
+          select: { content: true },
+        }),
       ]);
 
     const pageCount = pageCounts.reduce((sum, g) => sum + g._count, 0);
@@ -99,7 +115,12 @@ const getDashboardData = unstable_cache(
       submissionCount: site.pages.reduce((sum, p) => sum + p.formSubmissions.length, 0),
     }));
 
-    return { siteCount, pageCount, publishedCount, submissionCount, unreadSubmissionCount, mediaCount, recentPages, recentSubmissions, firstSite, siteOverviews };
+    const missingAltText = imageBlocks.filter((b) => {
+      const content = b.content as Record<string, unknown>;
+      return !content.alt || (typeof content.alt === "string" && content.alt.trim() === "");
+    }).length;
+
+    return { siteCount, pageCount, publishedCount, submissionCount, unreadSubmissionCount, mediaCount, recentPages, recentSubmissions, firstSite, siteOverviews, stalePages, missingDescriptions, missingAltText, draftCount };
   },
   ["dashboard"],
   { revalidate: 30, tags: ["dashboard"] }
@@ -108,7 +129,7 @@ const getDashboardData = unstable_cache(
 export default async function DashboardPage() {
   const user = await requireAuth();
 
-  const { siteCount, pageCount, publishedCount, submissionCount, unreadSubmissionCount, mediaCount, recentPages, recentSubmissions, firstSite, siteOverviews } =
+  const { siteCount, pageCount, publishedCount, submissionCount, unreadSubmissionCount, mediaCount, recentPages, recentSubmissions, firstSite, siteOverviews, stalePages, missingDescriptions, missingAltText, draftCount } =
     await getDashboardData(user.id);
 
   return (
@@ -170,6 +191,13 @@ export default async function DashboardPage() {
             Browse Templates
           </Link>
         </div>
+
+        <ContentHealth
+          stalePages={stalePages}
+          missingDescriptions={missingDescriptions}
+          missingAltText={missingAltText}
+          draftCount={draftCount}
+        />
 
         {siteOverviews.length > 1 && (
           <div className={styles.card}>

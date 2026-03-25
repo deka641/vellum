@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { rateLimit, getRateLimitStoreSize } from "../rate-limit";
+import { rateLimit, rateLimitResponse, getRateLimitStoreSize } from "../rate-limit";
 
 describe("rateLimit", () => {
   // Note: We can't easily reset the store between tests since it's module-level,
@@ -60,6 +60,51 @@ describe("getRateLimitStoreSize", () => {
     rateLimit("test-size-" + Date.now() + "-" + Math.random(), "read");
     const after = getRateLimitStoreSize();
     expect(after).toBeGreaterThan(before);
+  });
+});
+
+describe("rateLimitResponse", () => {
+  it("returns a Response with status 429", async () => {
+    const key = "rlr-status-" + Date.now();
+    for (let i = 0; i < 30; i++) rateLimit(key, "mutation");
+    const result = rateLimit(key, "mutation");
+    const res = rateLimitResponse(result);
+    expect(res.status).toBe(429);
+  });
+
+  it("includes Retry-After header", async () => {
+    const key = "rlr-retry-" + Date.now();
+    for (let i = 0; i < 30; i++) rateLimit(key, "mutation");
+    const result = rateLimit(key, "mutation");
+    const res = rateLimitResponse(result);
+    const retryAfter = res.headers.get("Retry-After");
+    expect(retryAfter).toBeTruthy();
+    expect(Number(retryAfter)).toBeGreaterThanOrEqual(1);
+  });
+
+  it("includes X-RateLimit-Limit header", async () => {
+    const key = "rlr-limit-" + Date.now();
+    for (let i = 0; i < 30; i++) rateLimit(key, "mutation");
+    const result = rateLimit(key, "mutation");
+    const res = rateLimitResponse(result);
+    expect(res.headers.get("X-RateLimit-Limit")).toBe("30");
+  });
+
+  it("includes X-RateLimit-Remaining header with value 0", async () => {
+    const key = "rlr-remaining-" + Date.now();
+    for (let i = 0; i < 30; i++) rateLimit(key, "mutation");
+    const result = rateLimit(key, "mutation");
+    const res = rateLimitResponse(result);
+    expect(res.headers.get("X-RateLimit-Remaining")).toBe("0");
+  });
+
+  it("body contains error message", async () => {
+    const key = "rlr-body-" + Date.now();
+    for (let i = 0; i < 30; i++) rateLimit(key, "mutation");
+    const result = rateLimit(key, "mutation");
+    const res = rateLimitResponse(result);
+    const body = await res.json();
+    expect(body.error).toBe("Too many requests. Please try again later.");
   });
 });
 

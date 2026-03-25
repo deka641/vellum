@@ -4,7 +4,17 @@ import {
   type BlockContent,
   type BlockSettings,
 } from "@/types/blocks";
+import { blockTypeEnum } from "@/lib/validations";
 import { generateId } from "./utils";
+
+const VALID_BLOCK_TYPES = new Set(blockTypeEnum.options);
+
+export function toBlockType(type: string): BlockType | null {
+  if (VALID_BLOCK_TYPES.has(type as BlockType)) {
+    return type as BlockType;
+  }
+  return null;
+}
 
 interface BlockDefinition {
   type: BlockType;

@@ -423,7 +423,7 @@ describe("buildContentHtml", () => {
       expect(result).toContain("</table>");
     });
 
-    it("renders table with caption", () => {
+    it("renders table with caption inside the table element", () => {
       const blocks = [
         {
           type: "table",
@@ -435,6 +435,40 @@ describe("buildContentHtml", () => {
       ];
       const result = buildContentHtml(blocks, baseUrl);
       expect(result).toContain("<caption>My Table</caption>");
+      // caption must be inside <table>
+      const tableStart = result.indexOf("<table>");
+      const captionStart = result.indexOf("<caption>");
+      const tableEnd = result.indexOf("</table>");
+      expect(captionStart).toBeGreaterThan(tableStart);
+      expect(captionStart).toBeLessThan(tableEnd);
+    });
+
+    it("escapes special characters in caption", () => {
+      const blocks = [
+        {
+          type: "table",
+          content: {
+            caption: "Sales & Revenue <2024>",
+            rows: [["Q1"], ["100"]],
+          },
+        },
+      ];
+      const result = buildContentHtml(blocks, baseUrl);
+      expect(result).toContain("<caption>Sales &amp; Revenue &lt;2024&gt;</caption>");
+    });
+
+    it("does not render caption element when caption is absent", () => {
+      const blocks = [
+        {
+          type: "table",
+          content: {
+            rows: [["Name", "Age"], ["Alice", "30"]],
+          },
+        },
+      ];
+      const result = buildContentHtml(blocks, baseUrl);
+      expect(result).not.toContain("<caption>");
+      expect(result).toContain("<table>");
     });
 
     it("renders header-only table (no body rows)", () => {
@@ -527,7 +561,7 @@ describe("buildContentHtml", () => {
 
   // --- accordion ---
   describe("accordion block", () => {
-    it("renders definition list with items", () => {
+    it("renders details/summary elements for each item", () => {
       const blocks = [
         {
           type: "accordion",
@@ -540,12 +574,32 @@ describe("buildContentHtml", () => {
         },
       ];
       const result = buildContentHtml(blocks, baseUrl);
-      expect(result).toContain("<dl>");
-      expect(result).toContain("<dt><strong>Q1</strong></dt>");
-      expect(result).toContain("<dd>A1</dd>");
-      expect(result).toContain("<dt><strong>Q2</strong></dt>");
-      expect(result).toContain("<dd>A2</dd>");
-      expect(result).toContain("</dl>");
+      expect(result).toContain("<details>");
+      expect(result).toContain("<summary>Q1</summary>");
+      expect(result).toContain("A1");
+      expect(result).toContain("</details>");
+      expect(result).toContain("<summary>Q2</summary>");
+      expect(result).toContain("A2");
+    });
+
+    it("produces one details element per accordion item", () => {
+      const blocks = [
+        {
+          type: "accordion",
+          content: {
+            items: [
+              { question: "Q1", answer: "A1" },
+              { question: "Q2", answer: "A2" },
+              { question: "Q3", answer: "A3" },
+            ],
+          },
+        },
+      ];
+      const result = buildContentHtml(blocks, baseUrl);
+      const detailsCount = (result.match(/<details>/g) || []).length;
+      const summaryCount = (result.match(/<summary>/g) || []).length;
+      expect(detailsCount).toBe(3);
+      expect(summaryCount).toBe(3);
     });
 
     it("escapes special characters in questions", () => {
@@ -558,7 +612,7 @@ describe("buildContentHtml", () => {
         },
       ];
       const result = buildContentHtml(blocks, baseUrl);
-      expect(result).toContain("A &amp; B?");
+      expect(result).toContain("<summary>A &amp; B?</summary>");
     });
 
     it("renders rich HTML in accordion answers", () => {
@@ -571,7 +625,9 @@ describe("buildContentHtml", () => {
         },
       ];
       const result = buildContentHtml(blocks, baseUrl);
-      expect(result).toContain("<dd><p><strong>Bold</strong> answer</p></dd>");
+      expect(result).toContain("<summary>Q1</summary>");
+      expect(result).toContain("<p><strong>Bold</strong> answer</p>");
+      expect(result).toContain("</details>");
     });
 
     it("strips dangerous tags from accordion answers", () => {
@@ -706,6 +762,38 @@ describe("buildContentHtml", () => {
       expect(parts[0]).toBe("<h1>Title</h1>");
       expect(parts[1]).toBe("<hr />");
     });
+  });
+
+  // --- all block types coverage ---
+  describe("all block types produce expected output", () => {
+    const validBlocks: Array<{ type: string; content: Record<string, unknown>; expectNonEmpty: boolean; label: string }> = [
+      { type: "heading", content: { level: 2, text: "Test Heading" }, expectNonEmpty: true, label: "heading" },
+      { type: "text", content: { html: "<p>Test paragraph</p>" }, expectNonEmpty: true, label: "text" },
+      { type: "image", content: { src: "/test.jpg", alt: "test" }, expectNonEmpty: true, label: "image" },
+      { type: "quote", content: { text: "Test quote" }, expectNonEmpty: true, label: "quote" },
+      { type: "divider", content: {}, expectNonEmpty: true, label: "divider" },
+      { type: "button", content: { text: "Click", url: "/page" }, expectNonEmpty: true, label: "button" },
+      { type: "columns", content: { columns: [{ blocks: [{ type: "text", content: { html: "<p>Col</p>" } }] }] }, expectNonEmpty: true, label: "columns" },
+      { type: "table", content: { rows: [["H1"], ["V1"]] }, expectNonEmpty: true, label: "table" },
+      { type: "code", content: { code: "x = 1", language: "python" }, expectNonEmpty: true, label: "code" },
+      { type: "accordion", content: { items: [{ question: "Q", answer: "A" }] }, expectNonEmpty: true, label: "accordion" },
+      { type: "video", content: { url: "https://youtube.com/watch?v=abc" }, expectNonEmpty: true, label: "video" },
+      { type: "social", content: { links: [{ platform: "Twitter", url: "https://twitter.com/t" }] }, expectNonEmpty: true, label: "social" },
+      { type: "spacer", content: {}, expectNonEmpty: false, label: "spacer (omitted)" },
+      { type: "toc", content: {}, expectNonEmpty: false, label: "toc (omitted)" },
+      { type: "form", content: {}, expectNonEmpty: false, label: "form (omitted)" },
+    ];
+
+    for (const { type, content, expectNonEmpty, label } of validBlocks) {
+      it(`${label} block returns ${expectNonEmpty ? "non-empty" : "empty"} HTML`, () => {
+        const result = buildContentHtml([{ type, content }], baseUrl);
+        if (expectNonEmpty) {
+          expect(result.length).toBeGreaterThan(0);
+        } else {
+          expect(result).toBe("");
+        }
+      });
+    }
   });
 
   // --- hidden blocks ---

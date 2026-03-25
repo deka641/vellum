@@ -339,9 +339,11 @@ export function EditorToolbar({ siteId, siteSlug, isHomepage, pageStatus, schedu
             aria-label="Save failed, click to retry"
           >
             <AlertCircle size={14} />
-            {saveErrorType === "network"
-              ? "Connection lost \u2014 click to retry"
-              : "Save failed \u2014 click to retry"}
+            {saveErrorType === "ratelimit"
+              ? "Saving paused \u2014 click to retry"
+              : saveErrorType === "network"
+                ? "Connection lost \u2014 click to retry"
+                : "Save failed \u2014 click to retry"}
           </button>
         )}
         {!hasConflict && !isSaving && !saveError && isDirty && (

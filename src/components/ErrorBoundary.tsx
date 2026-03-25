@@ -9,6 +9,8 @@ interface ErrorBoundaryProps {
   onError?: (error: Error) => void;
   resetKey?: string;
   silent?: boolean;
+  placeholder?: boolean;
+  placeholderClassName?: string;
 }
 
 interface ErrorBoundaryState {
@@ -42,7 +44,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   render() {
     if (this.state.hasError) {
-      if (this.props.silent) return null;
+      if (this.props.silent) {
+        if (this.props.placeholder) {
+          console.error("[ErrorBoundary] Block render error:", this.state.error);
+          return <div className={this.props.placeholderClassName} />;
+        }
+        return null;
+      }
 
       if (this.props.fallback) return this.props.fallback;
 

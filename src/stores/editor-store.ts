@@ -31,7 +31,7 @@ interface EditorState {
   blocksDirty: boolean;
   isSaving: boolean;
   saveError: string | null;
-  saveErrorType: "network" | "conflict" | "server" | null;
+  saveErrorType: "network" | "conflict" | "server" | "ratelimit" | null;
   pageId: string | null;
   pageTitle: string;
   pageDescription: string | null;
@@ -64,7 +64,7 @@ interface EditorState {
   setBlocksDirty: (dirty: boolean) => void;
   setSaving: (saving: boolean) => void;
   setSaveError: (error: string | null) => void;
-  setSaveErrorType: (errorType: "network" | "conflict" | "server" | null) => void;
+  setSaveErrorType: (errorType: "network" | "conflict" | "server" | "ratelimit" | null) => void;
   setPageTitle: (title: string) => void;
   setPageDescription: (description: string | null) => void;
   setPageSlug: (slug: string) => void;

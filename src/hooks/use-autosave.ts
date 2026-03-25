@@ -27,7 +27,7 @@ export function useAutosave() {
     }
   }, [blocksDirty, blocks, pageTitle]);
 
-  const saveWithRetry = useCallback(async (): Promise<{ success: boolean; conflict?: boolean }> => {
+  const saveWithRetry = useCallback(async (): Promise<{ success: boolean; conflict?: boolean; rateLimit?: boolean; retryAfter?: number }> => {
     const state = useEditorStore.getState();
     if (!state.pageId) return { success: false };
 
@@ -78,6 +78,11 @@ export function useAutosave() {
       return { success: false, conflict: true };
     }
 
+    if (res.status === 429) {
+      const retryAfter = parseInt(res.headers.get("Retry-After") || "30", 10);
+      return { success: false, rateLimit: true, retryAfter };
+    }
+
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       throw new Error(data.error || `Save failed (${res.status})`);
@@ -110,6 +115,18 @@ export function useAutosave() {
           toast("This page was modified in another session", "info");
           isSavingRef.current = false;
           useEditorStore.getState().setSaving(false);
+          return;
+        }
+
+        if (result.rateLimit) {
+          const retryAfter = result.retryAfter || 30;
+          const store = useEditorStore.getState();
+          store.setSaveError("Rate limited");
+          store.setSaveErrorType("ratelimit");
+          toast(`Rate limited. Retrying in ${retryAfter}s`, "info");
+          isSavingRef.current = false;
+          store.setSaving(false);
+          await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000));
           return;
         }
 

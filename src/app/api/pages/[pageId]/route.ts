@@ -106,6 +106,23 @@ export async function PATCH(
         : null;
     }
 
+    // Handle homepage designation change
+    if (parsed.data.isHomepage === true && !page.isHomepage) {
+      await db.$transaction([
+        // Unset current homepage in this site
+        db.page.updateMany({
+          where: { siteId: page.siteId, isHomepage: true, id: { not: pageId } },
+          data: { isHomepage: false },
+        }),
+        // Set this page as homepage
+        db.page.update({
+          where: { id: pageId },
+          data: { isHomepage: true },
+        }),
+      ]);
+      updateData.isHomepage = true;
+    }
+
     if (parsed.data.slug !== undefined) {
       if (page.isHomepage) {
         return NextResponse.json(

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
@@ -77,34 +78,22 @@ export async function GET(
       });
     }
 
-    // Pass 1: Collect all field keys (only keys, not data — O(1) memory per row)
-    const allKeys = new Set<string>();
-    let cursor: string | undefined;
-    let hasMore = true;
-
-    while (hasMore) {
-      const batch = await db.formSubmission.findMany({
-        where,
-        orderBy: { id: "asc" },
-        take: BATCH_SIZE,
-        ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
-        select: { id: true, data: true },
-      });
-
-      for (const sub of batch) {
-        const data = safeRecord(sub.data);
-        Object.keys(data).forEach((k) => allKeys.add(k));
-      }
-
-      hasMore = batch.length === BATCH_SIZE;
-      if (batch.length > 0) cursor = batch[batch.length - 1].id;
-    }
-
-    const keysArray = Array.from(allKeys);
+    // Collect all field keys with a single aggregate query
+    const keyResult = await db.$queryRaw<Array<{ key: string }>>`
+      SELECT DISTINCT k AS key
+      FROM "FormSubmission" fs,
+      LATERAL jsonb_object_keys(fs.data::jsonb) AS k
+      WHERE fs."pageId" IN (
+        SELECT p.id FROM "Page" p WHERE p."siteId" = ${siteId}
+        ${pageIdFilter ? Prisma.sql`AND p.id = ${pageIdFilter}` : Prisma.empty}
+      )
+      ORDER BY k
+    `;
+    const keysArray = keyResult.map((r) => r.key);
     const headers = ["Page", "Date", ...keysArray];
     const encoder = new TextEncoder();
 
-    // Pass 2: Stream rows directly without accumulating in memory
+    // Stream rows directly without accumulating in memory
     const stream = new ReadableStream({
       async start(controller) {
         try {

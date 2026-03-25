@@ -117,6 +117,8 @@ export function RevisionHistory({ pageId }: RevisionHistoryProps) {
   const [diffBlocks, setDiffBlocks] = useState<DiffBlock[] | null>(null);
   const [diffLoading, setDiffLoading] = useState(false);
   const [diffError, setDiffError] = useState<string | null>(null);
+  const [compareMode, setCompareMode] = useState(false);
+  const [compareBaseId, setCompareBaseId] = useState<string | null>(null);
 
   const { toast } = useToast();
   const currentBlocks = useEditorStore((s) => s.blocks);
@@ -193,6 +195,10 @@ export function RevisionHistory({ pageId }: RevisionHistoryProps) {
   }
 
   async function handleCompare(revisionId: string) {
+    if (compareMode) {
+      handleCompareRevisionClick(revisionId);
+      return;
+    }
     if (diffRevisionId === revisionId) {
       setDiffRevisionId(null);
       setDiffBlocks(null);
@@ -200,22 +206,13 @@ export function RevisionHistory({ pageId }: RevisionHistoryProps) {
     }
     setDiffRevisionId(revisionId);
     setDiffLoading(true);
-    try {
-      const res = await fetch(`/api/pages/${pageId}/revisions/${revisionId}/restore`, { method: "GET" });
-      if (!res.ok) throw new Error("Failed to load revision");
-      // The restore endpoint is POST-only, so we need to get revision data another way
-      // We'll use the revisions list API and parse the blocks from there
-    } catch {
-      // Fallback: fetch revision detail
-    }
-    // For now, fetch the revision blocks via the revisions API
     setDiffError(null);
+    setDiffBlocks(null);
     try {
-      const res = await fetch(`/api/pages/${pageId}/revisions`);
-      if (!res.ok) throw new Error("Failed");
-      const allRevisions = await res.json() as Array<{ id: string; blocks?: EditorBlock[] }>;
-      const rev = allRevisions.find((r) => r.id === revisionId);
-      if (rev && Array.isArray(rev.blocks)) {
+      const res = await fetch(`/api/pages/${pageId}/revisions?revisionId=${revisionId}`);
+      if (!res.ok) throw new Error("Failed to load revision");
+      const rev = await res.json() as { id: string; blocks?: EditorBlock[] };
+      if (Array.isArray(rev.blocks)) {
         setDiffBlocks(computeDiff(currentBlocks, rev.blocks as EditorBlock[]));
       }
     } catch {
@@ -224,6 +221,58 @@ export function RevisionHistory({ pageId }: RevisionHistoryProps) {
     } finally {
       setDiffLoading(false);
     }
+  }
+
+  async function handleCompareRevisionClick(revisionId: string) {
+    if (!compareBaseId) {
+      setCompareBaseId(revisionId);
+      return;
+    }
+    if (compareBaseId === revisionId) {
+      setCompareBaseId(null);
+      return;
+    }
+
+    const idA = compareBaseId;
+    const idB = revisionId;
+    setDiffLoading(true);
+    setDiffError(null);
+    setDiffBlocks(null);
+
+    try {
+      const [resA, resB] = await Promise.all([
+        fetch(`/api/pages/${pageId}/revisions?revisionId=${idA}`),
+        fetch(`/api/pages/${pageId}/revisions?revisionId=${idB}`),
+      ]);
+      if (!resA.ok || !resB.ok) throw new Error("Failed to load revisions");
+      const revA = await resA.json() as { id: string; blocks?: EditorBlock[]; createdAt: string };
+      const revB = await resB.json() as { id: string; blocks?: EditorBlock[]; createdAt: string };
+
+      const aTime = new Date(revA.createdAt).getTime();
+      const bTime = new Date(revB.createdAt).getTime();
+      const older = aTime <= bTime ? revA : revB;
+      const newer = aTime <= bTime ? revB : revA;
+
+      if (Array.isArray(newer.blocks) && Array.isArray(older.blocks)) {
+        setDiffBlocks(computeDiff(newer.blocks as EditorBlock[], older.blocks as EditorBlock[]));
+        setDiffRevisionId(`${older.id}:${newer.id}`);
+      }
+    } catch {
+      setDiffBlocks(null);
+      setDiffError("Failed to load revision data for comparison");
+    } finally {
+      setDiffLoading(false);
+      setCompareMode(false);
+      setCompareBaseId(null);
+    }
+  }
+
+  function exitCompareMode() {
+    setCompareMode(false);
+    setCompareBaseId(null);
+    setDiffRevisionId(null);
+    setDiffBlocks(null);
+    setDiffError(null);
   }
 
   if (loading) {
@@ -259,12 +308,46 @@ export function RevisionHistory({ pageId }: RevisionHistoryProps) {
     );
   }
 
+  const compareRevisionIds = diffRevisionId?.includes(":") ? diffRevisionId.split(":") : null;
+  const olderCompareRevision = compareRevisionIds ? revisions.find((r) => r.id === compareRevisionIds[0]) : null;
+  const newerCompareRevision = compareRevisionIds ? revisions.find((r) => r.id === compareRevisionIds[1]) : null;
+
   return (
     <div className={styles.container}>
+      {revisions.length >= 2 && (
+        <div className={styles.compareModeBar}>
+          {compareMode ? (
+            <>
+              <span className={styles.compareModeText}>
+                {compareBaseId ? "Select the second revision to compare" : "Select the first revision to compare"}
+              </span>
+              <Button variant="ghost" size="sm" onClick={exitCompareMode}>
+                Cancel
+              </Button>
+            </>
+          ) : (
+            <Button
+              variant="secondary"
+              size="sm"
+              leftIcon={<GitCompare size={14} />}
+              onClick={() => {
+                setCompareMode(true);
+                setCompareBaseId(null);
+                setDiffRevisionId(null);
+                setDiffBlocks(null);
+              }}
+            >
+              Compare revisions
+            </Button>
+          )}
+        </div>
+      )}
       <div className={styles.list}>
-        {revisions.map((rev) => (
+        {revisions.map((rev) => {
+          const isCompareSelected = compareMode && compareBaseId === rev.id;
+          return (
           <div key={rev.id}>
-            <div className={styles.item}>
+            <div className={`${styles.item} ${isCompareSelected ? styles.itemSelected : ""}`}>
               <div className={styles.itemInfo}>
                 <span className={styles.itemTitle}>{rev.title}</span>
                 <div className={styles.itemMeta}>
@@ -276,13 +359,14 @@ export function RevisionHistory({ pageId }: RevisionHistoryProps) {
               </div>
               <div className={styles.itemActions}>
                 <button
-                  className={`${styles.compareButton} ${diffRevisionId === rev.id ? styles.compareButtonActive : ""}`}
+                  className={`${styles.compareButton} ${diffRevisionId === rev.id || isCompareSelected ? styles.compareButtonActive : ""}`}
                   onClick={() => handleCompare(rev.id)}
                   disabled={diffLoading}
-                  title="Compare with current"
+                  title={compareMode ? (isCompareSelected ? "Deselect" : "Select for comparison") : "Compare with current"}
                 >
-                  {diffRevisionId === rev.id ? <X size={12} /> : <GitCompare size={12} />}
+                  {diffRevisionId === rev.id && !compareMode ? <X size={12} /> : <GitCompare size={12} />}
                 </button>
+                {!compareMode && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
@@ -305,6 +389,7 @@ export function RevisionHistory({ pageId }: RevisionHistoryProps) {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
+                )}
               </div>
             </div>
             {diffRevisionId === rev.id && diffBlocks && (
@@ -338,8 +423,50 @@ export function RevisionHistory({ pageId }: RevisionHistoryProps) {
               </div>
             )}
           </div>
-        ))}
+          );
+        })}
       </div>
+      {compareRevisionIds && diffBlocks && (
+        <div className={styles.diffPanel}>
+          <div className={styles.diffHeader}>
+            {olderCompareRevision
+              ? `Older: "${olderCompareRevision.title}" (${formatRelativeTime(olderCompareRevision.createdAt)})`
+              : "Older revision"}{" "}
+            vs{" "}
+            {newerCompareRevision
+              ? `Newer: "${newerCompareRevision.title}" (${formatRelativeTime(newerCompareRevision.createdAt)})`
+              : "Newer revision"}
+          </div>
+          {diffBlocks.filter((d) => d.status !== "unchanged").length === 0 ? (
+            <div className={styles.diffEmpty}>No changes detected between revisions</div>
+          ) : (
+            <div className={styles.diffList}>
+              {diffBlocks.filter((d) => d.status !== "unchanged").map((d) => (
+                <div key={d.id} className={`${styles.diffItem} ${styles[`diff-${d.status}`]}`}>
+                  <span className={styles.diffBadge}>{d.status}</span>
+                  <span className={styles.diffType}>{d.type}</span>
+                  <span className={styles.diffSummary}>
+                    {d.status === "changed" ? d.revisionSummary : d.currentSummary || d.revisionSummary}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+          <button className={styles.compareDismiss} onClick={() => { setDiffRevisionId(null); setDiffBlocks(null); }}>
+            Dismiss
+          </button>
+        </div>
+      )}
+      {compareRevisionIds && diffError && !diffLoading && (
+        <div className={styles.diffPanel}>
+          <div className={styles.diffEmpty}>{diffError}</div>
+        </div>
+      )}
+      {compareRevisionIds && diffLoading && (
+        <div className={styles.diffPanel}>
+          <Skeleton height={60} />
+        </div>
+      )}
 
       <ConfirmDialog
         open={confirmRevisionId !== null}

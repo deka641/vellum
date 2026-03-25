@@ -61,6 +61,7 @@ interface PageListProps {
   onPublish: (id: string) => void;
   onUnpublish: (id: string) => void;
   onDuplicate: (id: string) => void;
+  onSetHomepage?: (id: string) => void;
   onReorder?: (pages: Page[]) => void;
   onToggleNav?: (id: string) => void;
   onBulkAction?: (action: "publish" | "unpublish", pageIds: string[]) => Promise<void>;
@@ -75,6 +76,7 @@ function SortablePageItem({
   onPublish,
   onUnpublish,
   onDuplicate,
+  onSetHomepage,
   onToggleNav,
   selected,
   hasSelection,
@@ -86,6 +88,7 @@ function SortablePageItem({
   onPublish: (id: string) => void;
   onUnpublish: (id: string) => void;
   onDuplicate: (id: string) => void;
+  onSetHomepage?: (id: string) => void;
   onToggleNav?: (id: string) => void;
   selected: boolean;
   hasSelection: boolean;
@@ -230,6 +233,12 @@ function SortablePageItem({
               <Copy size={16} />
               Duplicate
             </DropdownMenuItem>
+            {!page.isHomepage && onSetHomepage && (
+              <DropdownMenuItem onClick={() => onSetHomepage(page.id)}>
+                <Home size={16} />
+                Set as homepage
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem danger onClick={() => onDelete(page.id)}>
               <Trash2 size={16} />
@@ -242,7 +251,7 @@ function SortablePageItem({
   );
 }
 
-export function PageList({ pages, siteSlug, onDelete, onPublish, onUnpublish, onDuplicate, onReorder, onToggleNav, onBulkAction, tags, onBulkTagAction }: PageListProps) {
+export function PageList({ pages, siteSlug, onDelete, onPublish, onUnpublish, onDuplicate, onSetHomepage, onReorder, onToggleNav, onBulkAction, tags, onBulkTagAction }: PageListProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
   const [tagMenuOpen, setTagMenuOpen] = useState(false);
@@ -456,6 +465,7 @@ export function PageList({ pages, siteSlug, onDelete, onPublish, onUnpublish, on
                 onPublish={onPublish}
                 onUnpublish={onUnpublish}
                 onDuplicate={onDuplicate}
+                onSetHomepage={onSetHomepage}
                 onToggleNav={onToggleNav}
                 selected={selectedIds.has(page.id)}
                 hasSelection={hasSelection}

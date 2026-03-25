@@ -316,6 +316,116 @@ describe("blockSettingsSchema (via updateBlocksSchema)", () => {
       expect(result.data.blocks![0].settings).toEqual({});
     }
   });
+
+  it("passes through all allowed keys", () => {
+    const result = updateBlocksSchema.safeParse({
+      blocks: [
+        {
+          id: "test1",
+          type: "text",
+          content: { html: "hello" },
+          settings: {
+            textColor: "#000",
+            backgroundColor: "#fff",
+            fontSize: "16px",
+            paddingY: "8px",
+            paddingX: "8px",
+            marginTop: "16px",
+            marginBottom: "16px",
+          },
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      const settings = result.data.blocks![0].settings as Record<string, unknown>;
+      expect(settings.textColor).toBe("#000");
+      expect(settings.backgroundColor).toBe("#fff");
+      expect(settings.fontSize).toBe("16px");
+      expect(settings.paddingY).toBe("8px");
+      expect(settings.paddingX).toBe("8px");
+      expect(settings.marginTop).toBe("16px");
+      expect(settings.marginBottom).toBe("16px");
+    }
+  });
+
+  it("filters out multiple unknown keys", () => {
+    const result = updateBlocksSchema.safeParse({
+      blocks: [
+        {
+          id: "test1",
+          type: "text",
+          content: { html: "hello" },
+          settings: {
+            textColor: "#000",
+            xssPayload: "alert(1)",
+            malicious: "evil",
+            __proto__: "bad",
+          },
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      const settings = result.data.blocks![0].settings as Record<string, unknown>;
+      expect(settings.textColor).toBe("#000");
+      expect(settings).not.toHaveProperty("xssPayload");
+      expect(settings).not.toHaveProperty("malicious");
+    }
+  });
+
+  it("rejects values containing angle brackets (<>)", () => {
+    const result = updateBlocksSchema.safeParse({
+      blocks: [
+        {
+          id: "test1",
+          type: "text",
+          content: { html: "hello" },
+          settings: { backgroundColor: "red<img onerror=alert(1)>" },
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      const settings = result.data.blocks![0].settings as Record<string, unknown>;
+      expect(settings).not.toHaveProperty("backgroundColor");
+    }
+  });
+
+  it("hidden boolean passes through correctly", () => {
+    const result = updateBlocksSchema.safeParse({
+      blocks: [
+        {
+          id: "test1",
+          type: "text",
+          content: { html: "hello" },
+          settings: { hidden: true },
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      const settings = result.data.blocks![0].settings as Record<string, unknown>;
+      expect(settings.hidden).toBe(true);
+    }
+  });
+
+  it("empty settings object returns empty object", () => {
+    const result = updateBlocksSchema.safeParse({
+      blocks: [
+        {
+          id: "test1",
+          type: "text",
+          content: { html: "hello" },
+          settings: {},
+        },
+      ],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.blocks![0].settings).toEqual({});
+    }
+  });
 });
 
 describe("validateBlockHierarchy", () => {

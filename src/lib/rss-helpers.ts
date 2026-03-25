@@ -127,13 +127,13 @@ export function buildContentHtml(
       case "accordion": {
         const items = block.content.items as Array<{ question: string; answer: string }> | undefined;
         if (items && items.length > 0) {
-          let html = "<dl>";
           for (const item of items) {
-            html += `<dt><strong>${escapeXml(item.question)}</strong></dt>`;
-            html += `<dd>${sanitizeRichHtml(item.answer)}</dd>`;
+            let html = "<details>";
+            html += `<summary>${escapeXml(item.question)}</summary>`;
+            html += sanitizeRichHtml(item.answer);
+            html += "</details>";
+            parts.push(html);
           }
-          html += "</dl>";
-          parts.push(html);
         }
         break;
       }

@@ -54,10 +54,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const baseUrl = await getBaseUrl();
   const canonical = `${baseUrl}/s/${siteSlug}/tag/${tagSlug}`;
 
+  const pages = await getTaggedPages(tag.id, site.id);
+
   return {
     title: `Posts tagged "${tag.name}" - ${site.name}`,
     description: `All pages tagged with "${tag.name}" on ${site.name}`,
     alternates: { canonical },
+    ...(pages.length < 2 ? { robots: "noindex, nofollow" } : {}),
     openGraph: {
       type: "website",
       url: canonical,

@@ -66,6 +66,8 @@ export async function POST(req: Request) {
       );
     }
 
+    let revisionsCreated = 0;
+
     if (action === "publish") {
       await db.page.updateMany({
         where: { id: { in: validIds } },
@@ -98,6 +100,7 @@ export async function POST(req: Request) {
 
         if (revisionData.length > 0) {
           await db.pageRevision.createMany({ data: revisionData });
+          revisionsCreated = revisionData.length;
         }
 
         // Revalidate published page paths (allSettled for resilience)
@@ -129,7 +132,7 @@ export async function POST(req: Request) {
     );
     revalidateTag("dashboard", { expire: 0 });
 
-    return NextResponse.json({ updated: validIds.length });
+    return NextResponse.json({ updated: validIds.length, revisionsCreated });
   } catch (error) {
     return apiError("POST /api/pages/bulk-status", error);
   }

@@ -295,6 +295,7 @@ export const updatePageSchema = z.object({
   metaTitle: z.string().max(200).nullable().optional(),
   ogImage: z.string().max(2000).nullable().optional(),
   noindex: z.boolean().optional(),
+  isHomepage: z.boolean().optional(),
   tagIds: z.array(z.string().min(1)).max(10).optional(),
   scheduledAt: z.string().optional().refine(
     (val) => {
