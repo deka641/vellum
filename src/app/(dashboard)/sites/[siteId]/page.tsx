@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { Plus, FileText, ArrowLeft, Navigation2, ExternalLink, Search, Send, Trash2, RotateCcw, Calendar, Tag } from "lucide-react";
+import { Suspense, useEffect, useState, useCallback, useRef } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { Plus, FileText, ArrowLeft, Navigation2, ExternalLink, Search, Send, Trash2, RotateCcw, Calendar, Tag, X } from "lucide-react";
 import Link from "next/link";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { PageList } from "@/components/dashboard/PageList";
@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/Dialog/Dialog";
 import { Input } from "@/components/ui/Input/Input";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog/ConfirmDialog";
+import { PageAnalytics } from "@/components/dashboard/PageAnalytics";
 import styles from "./site-detail.module.css";
 import dialogStyles from "@/components/ui/Dialog/Dialog.module.css";
 
@@ -40,8 +41,19 @@ interface PageItem {
   sortOrder: number;
   showInNav: boolean;
   ogImage?: string | null;
+  description?: string | null;
+  publishedAt?: string | null;
   pageTags?: Array<{ tag: TagItem }>;
 }
+
+type HealthFilter = "stale" | "no-description" | "no-alt" | "draft";
+
+const HEALTH_FILTER_LABELS: Record<HealthFilter, string> = {
+  stale: "Stale pages (>90 days)",
+  "no-description": "Missing descriptions",
+  "no-alt": "Missing alt text",
+  draft: "Unpublished drafts",
+};
 
 interface SiteDetail {
   id: string;
@@ -61,9 +73,10 @@ interface Template {
   blocks: unknown[];
 }
 
-export default function SiteDetailPage() {
+function SiteDetailContent() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [site, setSite] = useState<SiteDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -98,6 +111,14 @@ export default function SiteDetailPage() {
   const [contentSearching, setContentSearching] = useState(false);
   const contentSearchTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Health filter from dashboard deep-links
+  const filterParam = searchParams.get("filter");
+  const healthFilter: HealthFilter | null =
+    filterParam && filterParam in HEALTH_FILTER_LABELS
+      ? (filterParam as HealthFilter)
+      : null;
+  const [noAltPageIds, setNoAltPageIds] = useState<Set<string> | null>(null);
+
   useEffect(() => {
     setFetchError(false);
     fetch(`/api/sites/${params.siteId}`)
@@ -118,6 +139,45 @@ export default function SiteDetailPage() {
         setUnreadCount(-1);
       });
   }, [params.siteId]);
+
+  // When no-alt filter is active, fetch image blocks to identify pages with missing alt text
+  useEffect(() => {
+    if (healthFilter !== "no-alt" || !site) {
+      setNoAltPageIds(null);
+      return;
+    }
+
+    const publishedPageIds = site.pages
+      .filter((p) => p.status === "PUBLISHED")
+      .map((p) => p.id);
+
+    if (publishedPageIds.length === 0) {
+      setNoAltPageIds(new Set());
+      return;
+    }
+
+    const pageIdsWithMissingAlt = new Set<string>();
+    Promise.all(
+      publishedPageIds.map(async (pageId) => {
+        try {
+          const res = await fetch(`/api/pages/${pageId}/blocks`);
+          if (!res.ok) return;
+          const blocks = await res.json();
+          const hasNoAlt = blocks.some(
+            (b: { type: string; content: Record<string, unknown> }) =>
+              b.type === "image" &&
+              (!b.content.alt ||
+                (typeof b.content.alt === "string" && b.content.alt.trim() === ""))
+          );
+          if (hasNoAlt) pageIdsWithMissingAlt.add(pageId);
+        } catch {
+          // Skip pages that fail to load
+        }
+      })
+    ).then(() => {
+      setNoAltPageIds(new Set(pageIdsWithMissingAlt));
+    });
+  }, [healthFilter, site]);
 
   useEffect(() => {
     fetch("/api/templates")
@@ -788,6 +848,21 @@ export default function SiteDetailPage() {
           </div>
         ) : (
           <>
+            {healthFilter && (
+              <div className={styles.filterBadge}>
+                <span>Showing: {HEALTH_FILTER_LABELS[healthFilter]}</span>
+                {healthFilter === "no-alt" && noAltPageIds === null && (
+                  <span className={styles.filterLoading}>Loading...</span>
+                )}
+                <button
+                  className={styles.filterClear}
+                  onClick={() => router.replace(`/sites/${site.id}`)}
+                  aria-label="Clear filter"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            )}
             <div className={styles.filterBar}>
               <div className={styles.searchWrap}>
                 <Search size={16} className={styles.searchIcon} />
@@ -857,7 +932,21 @@ export default function SiteDetailPage() {
                 const matchesSearch = !q || p.title.toLowerCase().includes(q) || p.slug.toLowerCase().includes(q);
                 const matchesStatus = statusFilter === "ALL" || p.status === statusFilter;
                 const matchesTag = tagFilter === "ALL" || (p.pageTags?.some((pt) => pt.tag.id === tagFilter) ?? false);
-                return matchesSearch && matchesStatus && matchesTag;
+
+                // Health filter
+                let matchesHealth = true;
+                if (healthFilter === "stale") {
+                  const ninetyDaysAgo = Date.now() - 90 * 24 * 60 * 60 * 1000;
+                  matchesHealth = p.status === "PUBLISHED" && new Date(p.updatedAt).getTime() < ninetyDaysAgo;
+                } else if (healthFilter === "no-description") {
+                  matchesHealth = p.status === "PUBLISHED" && (!p.description || p.description.trim() === "");
+                } else if (healthFilter === "no-alt") {
+                  matchesHealth = noAltPageIds !== null && noAltPageIds.has(p.id);
+                } else if (healthFilter === "draft") {
+                  matchesHealth = p.status === "DRAFT" && !p.publishedAt;
+                }
+
+                return matchesSearch && matchesStatus && matchesTag && matchesHealth;
               })}
               siteSlug={site.slug}
               onDelete={handleDeletePage}
@@ -871,6 +960,7 @@ export default function SiteDetailPage() {
               tags={site.tags}
               onBulkTagAction={handleBulkTagAction}
             />
+            <PageAnalytics siteId={site.id} />
           </>
         )}
       </div>
@@ -989,5 +1079,13 @@ export default function SiteDetailPage() {
         loading={bulkTrashLoading}
       />
     </>
+  );
+}
+
+export default function SiteDetailPage() {
+  return (
+    <Suspense>
+      <SiteDetailContent />
+    </Suspense>
   );
 }

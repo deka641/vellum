@@ -9,6 +9,7 @@ import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { sanitizeImageSrc } from "@/lib/sanitize";
 import { logger } from "@/lib/logger";
 import { logActivity } from "@/lib/activity";
+import { fireWebhooks } from "@/lib/webhook";
 
 export async function GET(
   _req: Request,
@@ -117,6 +118,12 @@ export async function PATCH(
 
     const userId = session.user.id;
     logActivity({ userId, siteId, action: "site.updated", details: { name: parsed.data.name } });
+
+    // Fire webhooks (fire-and-forget)
+    fireWebhooks(siteId, "site.updated", {
+      siteId,
+      name: updated.name,
+    }).catch(() => {});
 
     return NextResponse.json(updated);
   } catch (error) {

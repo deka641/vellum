@@ -10,6 +10,7 @@ import { PageNavigation } from "@/components/published/PageNavigation";
 import { SocialShareBar } from "@/components/published/SocialShareBar";
 import type { BlockData } from "@/types/blocks";
 import { toBlockType } from "@/lib/blocks";
+import { PageViewTracker } from "@/components/published/PageViewTracker";
 
 const getSite = cache((slug: string) =>
   db.site.findUnique({
@@ -328,6 +329,7 @@ export default async function PublicSitePage({ params }: Props) {
         isHomepage={page.isHomepage}
       />
       <PageNavigation prevPage={prevPage} nextPage={nextPage} />
+      <PageViewTracker siteId={site.id} pageId={page.id} path={page.slug} />
     </>
   );
 }

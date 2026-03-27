@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { apiError } from "@/lib/api-helpers";
-import { extractTextFromBlocks, getSnippet } from "@/lib/search";
+import { extractTextFromBlocks, getSnippet, rankSearchResults, highlightSnippet } from "@/lib/search";
 
 const MAX_RESULTS = 50;
 const BATCH_SIZE = 25;
@@ -165,7 +165,13 @@ export async function GET(req: Request) {
       }
     }
 
-    return NextResponse.json({ results, total: results.length });
+    const ranked = rankSearchResults(results);
+    const highlighted = ranked.map((r) => ({
+      ...r,
+      snippet: highlightSnippet(r.snippet, q),
+    }));
+
+    return NextResponse.json({ results: highlighted, total: highlighted.length });
   } catch (error) {
     return apiError("GET /api/search", error);
   }

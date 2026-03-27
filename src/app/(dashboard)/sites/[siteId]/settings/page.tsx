@@ -10,6 +10,7 @@ import { Input, Textarea } from "@/components/ui/Input/Input";
 import { Button } from "@/components/ui/Button/Button";
 import { useToast } from "@/components/ui/Toast/Toast";
 import { ThemeConfigurator } from "@/components/dashboard/ThemeConfigurator";
+import { WebhooksSettings } from "@/components/dashboard/WebhooksSettings";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog/ConfirmDialog";
 import { DEFAULT_THEME, parseSiteTheme, type SiteTheme } from "@/lib/theme";
 import styles from "./settings.module.css";
@@ -892,6 +893,8 @@ export default function SiteSettingsPage() {
             </Button>
           </div>
         </div>
+
+        <WebhooksSettings siteId={params.siteId as string} />
 
         <div className={styles.dangerZone}>
           <h3>Danger Zone</h3>

@@ -43,3 +43,12 @@
 .lg .fallback {
   font-size: var(--text-sm);
 }
+
+.xl {
+  width: 80px;
+  height: 80px;
+}
+
+.xl .fallback {
+  font-size: var(--text-xl);
+}

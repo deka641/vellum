@@ -8,6 +8,7 @@ import { sanitizePlainText } from "@/lib/sanitize";
 import { parseBody, formSubmissionSchema } from "@/lib/validations";
 import { notifyFormSubmission } from "@/lib/notify";
 import { logger } from "@/lib/logger";
+import { fireWebhooks } from "@/lib/webhook";
 
 export async function POST(
   req: Request,
@@ -168,6 +169,16 @@ export async function POST(
         submittedAt: new Date(),
         data: sanitizedData,
       }).catch((err) => logger.warn("form-notification", "Failed to send notification", err));
+    }
+
+    // Fire webhooks (fire-and-forget)
+    if (page.site?.id) {
+      fireWebhooks(page.site.id, "form.submitted", {
+        formId: blockId,
+        pageId,
+        siteId: page.site.id,
+        submissionId: submission.id,
+      }).catch(() => {});
     }
 
     revalidateTag("dashboard", { expire: 0 });

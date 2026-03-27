@@ -20,60 +20,62 @@ model User {
 }
 
 model Site {
-  id                String     @id @default(cuid())
-  name              String
-  slug              String     @unique
-  description       String?
-  favicon           String?
-  logo              String?
+  id                 String     @id @default(cuid())
+  name               String
+  slug               String     @unique
+  description        String?
+  favicon            String?
+  logo               String?
   notificationEmail  String?
   defaultOgImage     String?
   turnstileSiteKey   String?
   turnstileSecretKey String?
   theme              Json       @default("{}")
-  footer            Json       @default("{}")
-  customHead        String?    @db.Text
-  customFooter      String?    @db.Text
-  cookieConsent     Json?
-  autoBackup        Boolean    @default(false)
-  userId            String
-  user              User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  pages             Page[]
-  redirects         Redirect[]
-  tags              Tag[]
-  createdAt         DateTime   @default(now())
-  updatedAt         DateTime   @updatedAt
+  footer             Json       @default("{}")
+  customHead         String?    @db.Text
+  customFooter       String?    @db.Text
+  cookieConsent      Json?
+  autoBackup         Boolean    @default(false)
+  userId             String
+  user               User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pages              Page[]
+  redirects          Redirect[]
+  tags               Tag[]
+  webhooks           Webhook[]
+  pageViews          PageView[]
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
 
   @@index([userId])
 }
 
 model Page {
-  id                 String           @id @default(cuid())
-  title              String
-  slug               String
-  description        String?
-  metaTitle          String?
-  ogImage            String?
-  noindex            Boolean          @default(false)
-  status             PageStatus       @default(DRAFT)
-  isHomepage         Boolean          @default(false)
-  showInNav          Boolean          @default(true)
-  sortOrder          Int              @default(0)
+  id                   String           @id @default(cuid())
+  title                String
+  slug                 String
+  description          String?
+  metaTitle            String?
+  ogImage              String?
+  noindex              Boolean          @default(false)
+  status               PageStatus       @default(DRAFT)
+  isHomepage           Boolean          @default(false)
+  showInNav            Boolean          @default(true)
+  sortOrder            Int              @default(0)
   scheduledPublishAt   DateTime?
   scheduledUnpublishAt DateTime?
-  previewToken       String?
-  editingBy          String?
-  editingAt          DateTime?
-  siteId             String
-  site               Site             @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  blocks             Block[]
-  formSubmissions    FormSubmission[]
-  revisions          PageRevision[]
-  pageTags           PageTag[]
-  deletedAt          DateTime?
-  publishedAt        DateTime?
-  createdAt          DateTime         @default(now())
-  updatedAt          DateTime         @updatedAt
+  previewToken         String?
+  editingBy            String?
+  editingAt            DateTime?
+  siteId               String
+  site                 Site             @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  blocks               Block[]
+  formSubmissions      FormSubmission[]
+  revisions            PageRevision[]
+  pageTags             PageTag[]
+  deletedAt            DateTime?
+  publishedAt          DateTime?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
 
   @@unique([siteId, slug])
   @@index([siteId])
@@ -245,4 +247,33 @@ model ActivityLog {
   @@index([userId, createdAt])
   @@index([siteId, createdAt])
   @@index([pageId])
+}
+
+model Webhook {
+  id              String    @id @default(cuid())
+  siteId          String
+  site            Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  url             String
+  events          String[]
+  secret          String
+  active          Boolean   @default(true)
+  lastTriggeredAt DateTime?
+  lastStatusCode  Int?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([siteId])
+}
+
+model PageView {
+  id       String   @id @default(cuid())
+  siteId   String
+  site     Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  pageId   String?
+  path     String
+  referrer String?
+  viewedAt DateTime @default(now())
+
+  @@index([siteId, viewedAt])
+  @@index([pageId, viewedAt])
 }

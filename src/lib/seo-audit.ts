@@ -1,4 +1,5 @@
-import type { EditorBlock, HeadingContent, ImageContent, ColumnsContent } from "@/types/blocks";
+import type { EditorBlock, HeadingContent, ImageContent, TextContent, ColumnsContent } from "@/types/blocks";
+import { truncateAtWord } from "@/lib/utils";
 
 export type SeoStatus = "good" | "warning" | "error";
 
@@ -7,7 +8,57 @@ export interface SeoCheck {
   label: string;
   status: SeoStatus;
   message: string;
+  suggestion?: string;
   details?: { blockIds?: string[] };
+}
+
+/** Strip HTML tags from a string, returning plain text. */
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+/**
+ * Extract a description snippet from the first text block, trimmed at a word
+ * boundary to fit within `maxLen` characters.
+ */
+function extractDescriptionFromBlocks(blocks: EditorBlock[], maxLen = 155): string | null {
+  for (const block of blocks) {
+    if (block.type === "text") {
+      const html = (block.content as TextContent).html;
+      if (html) {
+        const text = stripHtml(html);
+        if (text.length > 0) {
+          return truncateAtWord(text, maxLen);
+        }
+      }
+    }
+    if (block.type === "columns") {
+      const cols = (block.content as ColumnsContent).columns;
+      for (const col of cols) {
+        const result = extractDescriptionFromBlocks(col.blocks, maxLen);
+        if (result) return result;
+      }
+    }
+  }
+  return null;
+}
+
+/** Find the `src` of the first image block. */
+function findFirstImageSrc(blocks: EditorBlock[]): string | null {
+  for (const block of blocks) {
+    if (block.type === "image") {
+      const src = (block.content as ImageContent).src;
+      if (src) return src;
+    }
+    if (block.type === "columns") {
+      const cols = (block.content as ColumnsContent).columns;
+      for (const col of cols) {
+        const result = findFirstImageSrc(col.blocks);
+        if (result) return result;
+      }
+    }
+  }
+  return null;
 }
 
 export interface SeoAuditResult {
@@ -42,22 +93,45 @@ export function runSeoAudit(
   // 1. Title length
   const title = metaTitle || pageTitle;
   if (!title || title.length === 0) {
-    checks.push({ id: "title", label: "Page title", status: "error", message: "No title set" });
+    checks.push({
+      id: "title", label: "Page title", status: "error", message: "No title set",
+      suggestion: pageTitle ? pageTitle : "Consider adding a descriptive title",
+    });
   } else if (title.length < 15) {
-    checks.push({ id: "title", label: "Page title", status: "warning", message: `Too short (${title.length} chars, aim for 30-60)` });
+    checks.push({
+      id: "title", label: "Page title", status: "warning",
+      message: `Too short (${title.length} chars, aim for 30-60)`,
+      suggestion: !metaTitle && pageTitle.length >= 15 ? pageTitle : undefined,
+    });
   } else if (title.length > 60) {
-    checks.push({ id: "title", label: "Page title", status: "warning", message: `Too long (${title.length} chars, aim for 30-60)` });
+    checks.push({
+      id: "title", label: "Page title", status: "warning",
+      message: `Too long (${title.length} chars, aim for 30-60)`,
+      suggestion: truncateAtWord(title, 60),
+    });
   } else {
     checks.push({ id: "title", label: "Page title", status: "good", message: `${title.length} characters` });
   }
 
   // 2. Meta description
   if (!description || description.length === 0) {
-    checks.push({ id: "description", label: "Meta description", status: "error", message: "Missing — add a description for search results" });
+    const descSnippet = extractDescriptionFromBlocks(blocks);
+    checks.push({
+      id: "description", label: "Meta description", status: "error",
+      message: "Missing — add a description for search results",
+      suggestion: descSnippet || undefined,
+    });
   } else if (description.length < 50) {
-    checks.push({ id: "description", label: "Meta description", status: "warning", message: `Too short (${description.length} chars, aim for 120-160)` });
+    checks.push({
+      id: "description", label: "Meta description", status: "warning",
+      message: `Too short (${description.length} chars, aim for 120-160)`,
+    });
   } else if (description.length > 160) {
-    checks.push({ id: "description", label: "Meta description", status: "warning", message: `Too long (${description.length} chars, aim for 120-160)` });
+    checks.push({
+      id: "description", label: "Meta description", status: "warning",
+      message: `Too long (${description.length} chars, aim for 120-160)`,
+      suggestion: truncateAtWord(description, 155),
+    });
   } else {
     checks.push({ id: "description", label: "Meta description", status: "good", message: `${description.length} characters` });
   }
@@ -67,11 +141,19 @@ export function runSeoAudit(
   const headings = headingBlocks.map((b) => (b.content as HeadingContent).level);
 
   if (headings.length === 0) {
-    checks.push({ id: "headings", label: "Headings", status: "warning", message: "No headings found — add at least one H1" });
+    checks.push({
+      id: "headings", label: "Headings", status: "warning",
+      message: "No headings found — add at least one H1",
+      suggestion: "Add an H1 heading as the first block",
+    });
   } else {
     const h1Count = headings.filter((l) => l === 1).length;
     if (h1Count === 0) {
-      checks.push({ id: "headings", label: "Headings", status: "warning", message: "No H1 heading — add exactly one for SEO" });
+      checks.push({
+        id: "headings", label: "Headings", status: "warning",
+        message: "No H1 heading — add exactly one for SEO",
+        suggestion: "Add an H1 heading as the first block",
+      });
     } else if (h1Count > 1) {
       checks.push({ id: "headings", label: "Headings", status: "warning", message: `${h1Count} H1 headings — use exactly one` });
     } else {
@@ -109,6 +191,7 @@ export function runSeoAudit(
         label: "Image alt text",
         status: "error",
         message: `${missingAlt.length} of ${images.length} image${images.length === 1 ? "" : "s"} missing alt text`,
+        suggestion: "Add descriptive alt text to images for accessibility and SEO",
       });
     } else {
       checks.push({
@@ -125,10 +208,17 @@ export function runSeoAudit(
   // 5. OG Image
   if (ogImage) {
     checks.push({ id: "og", label: "Social image", status: "good", message: "OG image set" });
-  } else if (images.length > 0) {
-    checks.push({ id: "og", label: "Social image", status: "warning", message: "No OG image — first page image will be used" });
   } else {
-    checks.push({ id: "og", label: "Social image", status: "warning", message: "No OG image or page images" });
+    const firstImageSrc = findFirstImageSrc(blocks);
+    if (images.length > 0 && firstImageSrc) {
+      checks.push({
+        id: "og", label: "Social image", status: "warning",
+        message: "No OG image — first page image will be used",
+        suggestion: firstImageSrc,
+      });
+    } else {
+      checks.push({ id: "og", label: "Social image", status: "warning", message: "No OG image or page images" });
+    }
   }
 
   // 6. Content length
@@ -143,9 +233,17 @@ export function runSeoAudit(
 
   const wordCount = textContent.split(/\s+/).filter(Boolean).length;
   if (wordCount < 50) {
-    checks.push({ id: "content", label: "Content length", status: "warning", message: `${wordCount} words — aim for 300+ for SEO` });
+    checks.push({
+      id: "content", label: "Content length", status: "warning",
+      message: `${wordCount} words — aim for 300+ for SEO`,
+      suggestion: `Add at least ${300 - wordCount} more words to reach the recommended 300-word minimum`,
+    });
   } else if (wordCount < 300) {
-    checks.push({ id: "content", label: "Content length", status: "warning", message: `${wordCount} words — consider adding more content` });
+    checks.push({
+      id: "content", label: "Content length", status: "warning",
+      message: `${wordCount} words — consider adding more content`,
+      suggestion: `Add ${300 - wordCount} more words to reach the recommended 300-word minimum`,
+    });
   } else {
     checks.push({ id: "content", label: "Content length", status: "good", message: `${wordCount} words` });
   }

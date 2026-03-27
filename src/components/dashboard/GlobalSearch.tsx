@@ -142,7 +142,10 @@ export function GlobalSearch() {
                     <FileText size={16} className={styles.resultIcon} />
                     <div className={styles.resultContent}>
                       <span className={styles.resultTitle}>{r.pageTitle}</span>
-                      <span className={styles.resultSnippet}>{r.snippet}</span>
+                      <span
+                        className={styles.resultSnippet}
+                        dangerouslySetInnerHTML={{ __html: r.snippet }}
+                      />
                     </div>
                     <span className={styles.resultBadge}>{r.status === "PUBLISHED" ? "Published" : "Draft"}</span>
                   </button>

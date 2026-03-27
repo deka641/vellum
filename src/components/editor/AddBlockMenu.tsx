@@ -307,6 +307,11 @@ export function AddBlockMenu({ onAdd }: AddBlockMenuProps) {
     });
   }, []);
 
+  // Autofocus search input when menu mounts (tab becomes active)
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
   // Reset active index when filter or category changes
   useEffect(() => {
     setActiveIndex(-1);
@@ -363,6 +368,9 @@ export function AddBlockMenu({ onAdd }: AddBlockMenuProps) {
           aria-activedescendant={activeIndex >= 0 && filteredBlocks[activeIndex] ? `block-option-${filteredBlocks[activeIndex].type}` : undefined}
         />
       </div>
+      {!filter && (
+        <span className={styles.searchHint}>Press <kbd>/</kbd> to open from editor</span>
+      )}
       <div className={styles.filterChips}>
         {ALL_CATEGORIES.map((cat) => (
           <button
@@ -427,8 +435,8 @@ export function AddBlockMenu({ onAdd }: AddBlockMenuProps) {
           ) : savedTemplates.length === 0 ? (
             <div className={styles.savedEmpty}>
               <Bookmark size={24} />
-              <p>No saved templates yet</p>
-              <span>Use the bookmark icon on any block to save it as a template</span>
+              <p>No saved block templates yet.</p>
+              <span>Save blocks from the editor to reuse them.</span>
             </div>
           ) : (
             <>

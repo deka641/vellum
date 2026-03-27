@@ -31,6 +31,12 @@ interface EditorCanvasProps {
   onAddBlock: () => void;
 }
 
+interface HeadingWarning {
+  message: string;
+  blockId?: string;
+  severity: "warning" | "info";
+}
+
 const previewWidths = {
   desktop: "100%",
   tablet: "768px",
@@ -69,6 +75,7 @@ export function EditorCanvas({ onAddBlock }: EditorCanvasProps) {
   const [uploadingBlocks, setUploadingBlocks] = useState<Set<string>>(new Set());
   const prevBlockCountRef = useRef(blocks.length);
   const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
+  const selectBlock = useEditorStore((s) => s.selectBlock);
 
   // Scroll to newly added block
   useEffect(() => {
@@ -198,20 +205,24 @@ export function EditorCanvas({ onAddBlock }: EditorCanvasProps) {
     }
   }, [toast, updateBlockContent]);
 
-  const headingWarning = useMemo(() => {
+  const headingWarnings: HeadingWarning[] = useMemo(() => {
+    const warnings: HeadingWarning[] = [];
     const headings = blocks.filter((b) => b.type === "heading");
-    if (headings.length === 0) return null;
+    if (headings.length === 0) return warnings;
     const hasH1 = headings.some((h) => (h.content as HeadingContent).level === 1);
-    if (!hasH1) return "Page has no H1 heading. Add one for better SEO and accessibility.";
+    if (!hasH1) {
+      warnings.push({ message: "Page has no H1 heading. Add one for better SEO.", severity: "warning" });
+    }
     let prevLevel = 0;
     for (const h of headings) {
       const level = (h.content as HeadingContent).level || 1;
       if (level > prevLevel + 1 && prevLevel > 0) {
-        return `Heading levels skip from H${prevLevel} to H${level}. This may confuse screen readers.`;
+        warnings.push({ message: `Heading skips from H${prevLevel} to H${level}.`, blockId: h.id, severity: "info" });
       }
       prevLevel = level;
+      if (warnings.length >= 5) break;
     }
-    return null;
+    return warnings;
   }, [blocks]);
 
   const activeBlock = activeId ? blocks.find((b) => b.id === activeId) : null;
@@ -239,10 +250,28 @@ export function EditorCanvas({ onAddBlock }: EditorCanvasProps) {
           transition: "max-width 300ms ease",
         }}
       >
-        {headingWarning && blocks.length > 0 && (
-          <div className={styles.headingWarning}>
-            <AlertTriangle size={14} />
-            <span>{headingWarning}</span>
+        {headingWarnings.length > 0 && blocks.length > 0 && (
+          <div className={styles.headingWarnings}>
+            {headingWarnings.map((warning, i) => (
+              <button
+                key={i}
+                className={`${styles.headingWarning} ${styles[warning.severity]}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (warning.blockId) {
+                    const el = document.querySelector(`[data-block-id="${warning.blockId}"]`);
+                    if (el) {
+                      el.scrollIntoView({ behavior: "smooth", block: "center" });
+                      selectBlock(warning.blockId);
+                    }
+                  }
+                }}
+                type="button"
+              >
+                <AlertTriangle size={14} />
+                <span>{warning.message}</span>
+              </button>
+            ))}
           </div>
         )}
         {blocks.length === 0 ? (

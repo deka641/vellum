@@ -3,6 +3,12 @@
   border-radius: var(--radius-md);
   position: relative;
   overflow: hidden;
+  animation: skeleton-appear 0s 200ms both;
+}
+
+@keyframes skeleton-appear {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .skeleton::after {

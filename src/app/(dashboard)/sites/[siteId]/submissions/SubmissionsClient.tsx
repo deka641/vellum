@@ -7,6 +7,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog/ConfirmDialog";
 import { useToast } from "@/components/ui/Toast/Toast";
 import { formatDate } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/Skeleton/Skeleton";
+import { SubmissionChart } from "@/components/dashboard/SubmissionChart";
 import styles from "./submissions.module.css";
 
 interface Submission {
@@ -190,6 +191,7 @@ export function SubmissionsClient({ siteId, pages }: SubmissionsClientProps) {
 
   return (
     <div className={styles.content}>
+      <SubmissionChart siteId={siteId} />
       <div className={styles.toolbar}>
         <div className={styles.searchWrap}>
           <Search size={14} className={styles.searchIcon} />

@@ -28,9 +28,12 @@ interface MediaGridProps {
   onToggleSelect?: (id: string) => void;
   folders?: string[];
   onMoveToFolder?: (id: string, folder: string | null) => void;
+  bulkAltMode?: boolean;
+  altChanges?: Record<string, string>;
+  onBulkAltChange?: (id: string, alt: string) => void;
 }
 
-export function MediaGrid({ items, onSelect, onDelete, onUpdateAlt, selectable, selectionMode, selectedIds, onToggleSelect, folders, onMoveToFolder }: MediaGridProps) {
+export function MediaGrid({ items, onSelect, onDelete, onUpdateAlt, selectable, selectionMode, selectedIds, onToggleSelect, folders, onMoveToFolder, bulkAltMode, altChanges, onBulkAltChange }: MediaGridProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [altValue, setAltValue] = useState("");
   const [savingAlt, setSavingAlt] = useState(false);
@@ -137,7 +140,19 @@ export function MediaGrid({ items, onSelect, onDelete, onUpdateAlt, selectable, 
               ))}
             </div>
           )}
-          {expandedId === item.id && onUpdateAlt && (
+          {bulkAltMode && onBulkAltChange && (
+            <div className={styles.bulkAltRow}>
+              <input
+                className={`${styles.altInput} ${altChanges && item.id in altChanges ? styles.altInputChanged : ""}`}
+                value={altChanges && item.id in altChanges ? altChanges[item.id] : (item.alt || "")}
+                onChange={(e) => onBulkAltChange(item.id, e.target.value)}
+                placeholder="Alt text..."
+                onClick={(e) => e.stopPropagation()}
+                maxLength={500}
+              />
+            </div>
+          )}
+          {!bulkAltMode && expandedId === item.id && onUpdateAlt && (
             <div className={styles.altEditor}>
               <input
                 className={styles.altInput}

@@ -82,3 +82,39 @@
   color: var(--color-text-tertiary);
   line-height: var(--leading-normal);
 }
+
+.suggestion {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: rgba(59, 130, 246, 0.08);
+  border-radius: var(--radius-md);
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+}
+
+.suggestionText {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.applyButton {
+  flex-shrink: 0;
+  font-size: var(--text-xs);
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-weight: var(--weight-medium);
+  transition: opacity 0.15s;
+}
+
+.applyButton:hover {
+  opacity: 0.85;
+}

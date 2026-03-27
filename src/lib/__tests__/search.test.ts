@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { extractTextFromBlocks, getSnippet } from "../search";
+import { extractTextFromBlocks, getSnippet, highlightSnippet, rankSearchResults } from "../search";
 
 describe("extractTextFromBlocks", () => {
   it("extracts text from heading blocks", () => {
@@ -107,5 +107,119 @@ describe("getSnippet", () => {
     const text = "A".repeat(500);
     const snippet = getSnippet(text, "nomatch", 100);
     expect(snippet.length).toBeLessThanOrEqual(100);
+  });
+});
+
+describe("highlightSnippet", () => {
+  it("wraps matching text with <mark> tags", () => {
+    const result = highlightSnippet("Hello world", "world");
+    expect(result).toBe("Hello <mark>world</mark>");
+  });
+
+  it("is case-insensitive", () => {
+    const result = highlightSnippet("Hello World", "world");
+    expect(result).toBe("Hello <mark>World</mark>");
+  });
+
+  it("highlights multiple occurrences", () => {
+    const result = highlightSnippet("cat and cat", "cat");
+    expect(result).toBe("<mark>cat</mark> and <mark>cat</mark>");
+  });
+
+  it("escapes HTML in text before highlighting (XSS prevention)", () => {
+    const result = highlightSnippet('<script>alert("xss")</script> hello world', "world");
+    expect(result).toContain("&lt;script&gt;");
+    expect(result).not.toContain("<script>");
+    expect(result).toContain("<mark>world</mark>");
+  });
+
+  it("escapes HTML entities in the query too", () => {
+    const result = highlightSnippet("Use a <div> tag here", "<div>");
+    expect(result).toContain("<mark>&lt;div&gt;</mark>");
+    expect(result).not.toContain("<mark><div></mark>");
+  });
+
+  it("returns escaped text when query is empty", () => {
+    const result = highlightSnippet("Hello <b>world</b>", "");
+    expect(result).toBe("Hello &lt;b&gt;world&lt;/b&gt;");
+  });
+
+  it("handles regex special characters in query safely", () => {
+    const result = highlightSnippet("price is $10.00 now", "$10.00");
+    expect(result).toContain("<mark>$10.00</mark>");
+  });
+
+  it("handles query with no matches gracefully", () => {
+    const result = highlightSnippet("Hello world", "xyz");
+    expect(result).toBe("Hello world");
+  });
+
+  it("preserves original case in matched text", () => {
+    const result = highlightSnippet("TypeScript is great", "typescript");
+    expect(result).toBe("<mark>TypeScript</mark> is great");
+  });
+
+  it("handles ampersands in text", () => {
+    const result = highlightSnippet("Salt & Pepper", "salt");
+    expect(result).toBe("<mark>Salt</mark> &amp; Pepper");
+  });
+
+  it("handles quotes in text", () => {
+    const result = highlightSnippet('She said "hello"', "hello");
+    expect(result).toContain("&quot;");
+    expect(result).toContain("<mark>hello</mark>");
+  });
+});
+
+describe("rankSearchResults", () => {
+  it("sorts title matches first, then description, then content", () => {
+    const results = [
+      { matchType: "content", snippet: "c" },
+      { matchType: "title", snippet: "a" },
+      { matchType: "description", snippet: "b" },
+      { matchType: "content", snippet: "d" },
+      { matchType: "title", snippet: "e" },
+    ];
+
+    const ranked = rankSearchResults(results);
+    expect(ranked.map((r) => r.matchType)).toEqual([
+      "title", "title", "description", "content", "content",
+    ]);
+  });
+
+  it("preserves order within the same matchType group", () => {
+    const results = [
+      { matchType: "content", snippet: "first" },
+      { matchType: "content", snippet: "second" },
+      { matchType: "content", snippet: "third" },
+    ];
+
+    const ranked = rankSearchResults(results);
+    expect(ranked.map((r) => r.snippet)).toEqual(["first", "second", "third"]);
+  });
+
+  it("does not mutate the original array", () => {
+    const results = [
+      { matchType: "content", snippet: "c" },
+      { matchType: "title", snippet: "a" },
+    ];
+    const original = [...results];
+    rankSearchResults(results);
+    expect(results).toEqual(original);
+  });
+
+  it("handles empty array", () => {
+    expect(rankSearchResults([])).toEqual([]);
+  });
+
+  it("handles unknown matchType with lowest priority", () => {
+    const results = [
+      { matchType: "title", snippet: "a" },
+      { matchType: "unknown", snippet: "z" },
+      { matchType: "content", snippet: "c" },
+    ];
+
+    const ranked = rankSearchResults(results);
+    expect(ranked.map((r) => r.matchType)).toEqual(["title", "content", "unknown"]);
   });
 });

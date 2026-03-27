@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Search, CheckSquare, Trash2, ChevronLeft, ChevronRight, AlertCircle, RefreshCw, FolderOpen, Plus, Folder, Upload } from "lucide-react";
+import { Search, CheckSquare, Trash2, ChevronLeft, ChevronRight, AlertCircle, RefreshCw, FolderOpen, Plus, Folder, Upload, PenLine } from "lucide-react";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { MediaGrid } from "@/components/media/MediaGrid";
 import { MediaUploader } from "@/components/media/MediaUploader";
+import { MediaDropZone } from "@/components/dashboard/MediaDropZone";
 import { Skeleton } from "@/components/ui/Skeleton/Skeleton";
 import { Button } from "@/components/ui/Button/Button";
 import { EmptyState } from "@/components/dashboard/EmptyState";
@@ -47,6 +48,9 @@ export default function MediaPage() {
   const [newFolderName, setNewFolderName] = useState("");
   const [showNewFolder, setShowNewFolder] = useState(false);
   const [uploadFolder, setUploadFolder] = useState<string | null>(null);
+  const [bulkAltMode, setBulkAltMode] = useState(false);
+  const [altChanges, setAltChanges] = useState<Record<string, string>>({});
+  const [savingBulkAlt, setSavingBulkAlt] = useState(false);
   const { toast } = useToast();
 
   // Debounce search input
@@ -175,6 +179,56 @@ export default function MediaPage() {
     }
   }
 
+  function handleBulkAltChange(id: string, alt: string) {
+    setAltChanges((prev) => {
+      // Find the original alt text for this item
+      const item = items.find((m) => m.id === id);
+      const originalAlt = item?.alt || "";
+      // If the new value matches the original, remove from changes
+      if (alt === originalAlt) {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      }
+      return { ...prev, [id]: alt };
+    });
+  }
+
+  async function handleSaveBulkAlt() {
+    const entries = Object.entries(altChanges);
+    if (entries.length === 0) return;
+
+    setSavingBulkAlt(true);
+    try {
+      const res = await fetch("/api/media/bulk-update", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          updates: entries.map(([id, alt]) => ({ id, alt })),
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        toast(`Updated alt text for ${data.updated} file(s)`);
+        setAltChanges({});
+        setBulkAltMode(false);
+        fetchMedia();
+      } else {
+        const data = await res.json().catch(() => null);
+        toast(data?.error || "Failed to save alt text", "error");
+      }
+    } catch {
+      toast("Failed to save alt text", "error");
+    } finally {
+      setSavingBulkAlt(false);
+    }
+  }
+
+  function handleCancelBulkAlt() {
+    setAltChanges({});
+    setBulkAltMode(false);
+  }
+
   async function handleUpdateAlt(id: string, alt: string) {
     const res = await fetch(`/api/media/${id}`, {
       method: "PATCH",
@@ -190,7 +244,10 @@ export default function MediaPage() {
   }
 
   return (
-    <>
+    <MediaDropZone
+      currentFolder={uploadFolder || undefined}
+      onUploadComplete={fetchMedia}
+    >
       <Topbar title="Media Library" description="Upload and manage your files" />
       <div className={styles.pageLayout}>
         <aside className={styles.folderSidebar}>
@@ -332,12 +389,32 @@ export default function MediaPage() {
                 <option value="size-asc">Smallest first</option>
               </select>
               <Button
+                variant={bulkAltMode ? "primary" : "secondary"}
+                size="sm"
+                leftIcon={<PenLine size={14} />}
+                onClick={() => {
+                  if (bulkAltMode) {
+                    handleCancelBulkAlt();
+                  } else {
+                    setBulkAltMode(true);
+                    setSelectionMode(false);
+                    setSelectedIds(new Set());
+                  }
+                }}
+              >
+                {bulkAltMode ? "Exit Alt Edit" : "Bulk Alt Text"}
+              </Button>
+              <Button
                 variant={selectionMode ? "primary" : "secondary"}
                 size="sm"
                 leftIcon={<CheckSquare size={14} />}
                 onClick={() => {
                   setSelectionMode(!selectionMode);
                   setSelectedIds(new Set());
+                  if (!selectionMode) {
+                    setBulkAltMode(false);
+                    setAltChanges({});
+                  }
                 }}
               >
                 Select
@@ -352,6 +429,9 @@ export default function MediaPage() {
               onToggleSelect={handleToggleSelect}
               folders={folders}
               onMoveToFolder={handleMoveToFolder}
+              bulkAltMode={bulkAltMode}
+              altChanges={altChanges}
+              onBulkAltChange={handleBulkAltChange}
             />
             {totalPages > 1 && (
               <div className={styles.pagination}>
@@ -391,6 +471,23 @@ export default function MediaPage() {
                 </button>
               </div>
             )}
+            {bulkAltMode && Object.keys(altChanges).length > 0 && (
+              <div className={mediaStyles.bulkBar}>
+                <span className={mediaStyles.bulkBarCount}>
+                  {Object.keys(altChanges).length} change{Object.keys(altChanges).length !== 1 ? "s" : ""}
+                </span>
+                <button
+                  className={mediaStyles.bulkBarSave}
+                  onClick={handleSaveBulkAlt}
+                  disabled={savingBulkAlt}
+                >
+                  {savingBulkAlt ? "Saving..." : "Save All"}
+                </button>
+                <button className={mediaStyles.bulkBarCancel} onClick={handleCancelBulkAlt}>
+                  Cancel
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>
@@ -413,6 +510,6 @@ export default function MediaPage() {
         variant="danger"
         onConfirm={confirmBulkDeleteFiles}
       />
-    </>
+    </MediaDropZone>
   );
 }

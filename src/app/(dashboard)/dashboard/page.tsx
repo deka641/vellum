@@ -23,7 +23,7 @@ interface SiteOverview {
 const getDashboardData = unstable_cache(
   async (userId: string) => {
     const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
-    const [siteCount, pageCounts, submissionCount, unreadSubmissionCount, mediaCount, recentPages, recentSubmissions, firstSite, sites, stalePages, missingDescriptions, draftCount, imageBlocks] =
+    const [siteCount, pageCounts, submissionCount, unreadSubmissionCount, mediaCount, recentPages, recentSubmissions, firstSite, sites, staleBySite, missingDescBySite, draftBySite, imageBlocks] =
       await Promise.all([
         db.site.count({ where: { userId } }),
         db.page.groupBy({
@@ -86,19 +86,25 @@ const getDashboardData = unstable_cache(
             },
           },
         }),
-        // Content health queries
-        db.page.count({
+        // Content health queries — grouped by site for deep-links
+        db.page.groupBy({
+          by: ["siteId"],
           where: { status: "PUBLISHED", deletedAt: null, site: { userId }, updatedAt: { lt: ninetyDaysAgo } },
+          _count: true,
         }),
-        db.page.count({
+        db.page.groupBy({
+          by: ["siteId"],
           where: { status: "PUBLISHED", deletedAt: null, site: { userId }, description: null },
+          _count: true,
         }),
-        db.page.count({
+        db.page.groupBy({
+          by: ["siteId"],
           where: { status: "DRAFT", deletedAt: null, site: { userId }, publishedAt: null },
+          _count: true,
         }),
         db.block.findMany({
           where: { type: "image", page: { status: "PUBLISHED", deletedAt: null, site: { userId } } },
-          select: { content: true },
+          select: { content: true, page: { select: { siteId: true } } },
         }),
       ]);
 
@@ -115,12 +121,39 @@ const getDashboardData = unstable_cache(
       submissionCount: site.pages.reduce((sum, p) => sum + p.formSubmissions.length, 0),
     }));
 
-    const missingAltText = imageBlocks.filter((b) => {
-      const content = b.content as Record<string, unknown>;
-      return !content.alt || (typeof content.alt === "string" && content.alt.trim() === "");
-    }).length;
+    // Build site name lookup for health deep-links
+    const siteNameMap = new Map(sites.map((s) => [s.id, s.name]));
 
-    return { siteCount, pageCount, publishedCount, submissionCount, unreadSubmissionCount, mediaCount, recentPages, recentSubmissions, firstSite, siteOverviews, stalePages, missingDescriptions, missingAltText, draftCount };
+    const stalePages = staleBySite.reduce((sum, g) => sum + g._count, 0);
+    const missingDescriptions = missingDescBySite.reduce((sum, g) => sum + g._count, 0);
+    const draftCount = draftBySite.reduce((sum, g) => sum + g._count, 0);
+
+    // Build per-site health breakdown for deep-links
+    const stalePerSite = staleBySite
+      .filter((g) => g._count > 0)
+      .map((g) => ({ siteId: g.siteId, siteName: siteNameMap.get(g.siteId) ?? "Unknown", count: g._count }));
+    const missingDescPerSite = missingDescBySite
+      .filter((g) => g._count > 0)
+      .map((g) => ({ siteId: g.siteId, siteName: siteNameMap.get(g.siteId) ?? "Unknown", count: g._count }));
+    const draftPerSite = draftBySite
+      .filter((g) => g._count > 0)
+      .map((g) => ({ siteId: g.siteId, siteName: siteNameMap.get(g.siteId) ?? "Unknown", count: g._count }));
+
+    // Compute missing alt per site
+    const altBySiteMap = new Map<string, number>();
+    for (const b of imageBlocks) {
+      const content = b.content as Record<string, unknown>;
+      if (!content.alt || (typeof content.alt === "string" && content.alt.trim() === "")) {
+        const sid = b.page.siteId;
+        altBySiteMap.set(sid, (altBySiteMap.get(sid) ?? 0) + 1);
+      }
+    }
+    const missingAltText = Array.from(altBySiteMap.values()).reduce((sum, c) => sum + c, 0);
+    const missingAltPerSite = Array.from(altBySiteMap.entries())
+      .filter(([_, count]) => count > 0)
+      .map(([siteId, count]) => ({ siteId, siteName: siteNameMap.get(siteId) ?? "Unknown", count }));
+
+    return { siteCount, pageCount, publishedCount, submissionCount, unreadSubmissionCount, mediaCount, recentPages, recentSubmissions, firstSite, siteOverviews, stalePages, missingDescriptions, missingAltText, draftCount, stalePerSite, missingDescPerSite, draftPerSite, missingAltPerSite };
   },
   ["dashboard"],
   { revalidate: 30, tags: ["dashboard"] }
@@ -129,7 +162,7 @@ const getDashboardData = unstable_cache(
 export default async function DashboardPage() {
   const user = await requireAuth();
 
-  const { siteCount, pageCount, publishedCount, submissionCount, unreadSubmissionCount, mediaCount, recentPages, recentSubmissions, firstSite, siteOverviews, stalePages, missingDescriptions, missingAltText, draftCount } =
+  const { siteCount, pageCount, publishedCount, submissionCount, unreadSubmissionCount, mediaCount, recentPages, recentSubmissions, firstSite, siteOverviews, stalePages, missingDescriptions, missingAltText, draftCount, stalePerSite, missingDescPerSite, draftPerSite, missingAltPerSite } =
     await getDashboardData(user.id);
 
   return (
@@ -197,6 +230,10 @@ export default async function DashboardPage() {
           missingDescriptions={missingDescriptions}
           missingAltText={missingAltText}
           draftCount={draftCount}
+          stalePerSite={stalePerSite}
+          missingDescPerSite={missingDescPerSite}
+          draftPerSite={draftPerSite}
+          missingAltPerSite={missingAltPerSite}
         />
 
         {siteOverviews.length > 1 && (

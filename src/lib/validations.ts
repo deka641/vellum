@@ -346,6 +346,13 @@ export const bulkDeleteMediaSchema = z.object({
   ids: z.array(z.string().min(1)).min(1).max(100),
 });
 
+export const mediaBulkUpdateSchema = z.object({
+  updates: z.array(z.object({
+    id: z.string().min(1),
+    alt: z.string().max(500),
+  })).min(1).max(50),
+});
+
 // --- Templates ---
 
 export const createTemplateSchema = z.object({
@@ -454,6 +461,39 @@ export const bulkTagsSchema = z.object({
   pageIds: z.array(z.string()).min(1).max(100),
   tagIds: z.array(z.string()).min(1).max(50),
   action: z.enum(["add", "remove"]),
+});
+
+// --- Webhooks ---
+
+export const webhookEventEnum = z.enum([
+  "page.published",
+  "page.unpublished",
+  "form.submitted",
+  "site.updated",
+]);
+
+export const webhookCreateSchema = z.object({
+  url: z
+    .string()
+    .url()
+    .max(2000)
+    .refine((u) => u.startsWith("https://"), {
+      message: "URL must use HTTPS",
+    }),
+  events: z.array(webhookEventEnum).min(1).max(4),
+});
+
+export const webhookUpdateSchema = z.object({
+  url: z
+    .string()
+    .url()
+    .max(2000)
+    .refine((u) => u.startsWith("https://"), {
+      message: "URL must use HTTPS",
+    })
+    .optional(),
+  events: z.array(webhookEventEnum).min(1).max(4).optional(),
+  active: z.boolean().optional(),
 });
 
 // --- Block hierarchy validation ---

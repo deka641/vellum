@@ -160,6 +160,13 @@
   overflow: hidden;
 }
 
+.resultSnippet :global(mark) {
+  background: var(--color-accent-muted, rgba(59, 130, 246, 0.15));
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
 .resultBadge {
   display: inline-block;
   font-family: var(--font-body);

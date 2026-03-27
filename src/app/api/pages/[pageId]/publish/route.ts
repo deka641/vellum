@@ -8,6 +8,7 @@ import { logger } from "@/lib/logger";
 import type { Prisma } from "@prisma/client";
 import { logActivity } from "@/lib/activity";
 import { prunePageRevisions } from "@/lib/revisions";
+import { fireWebhooks } from "@/lib/webhook";
 
 export async function POST(
   req: Request,
@@ -131,6 +132,14 @@ export async function POST(
     const userId = session.user.id;
     logActivity({ userId, siteId: page.siteId, pageId, action: "page.published", details: { title: page.title } });
 
+    // Fire webhooks (fire-and-forget)
+    fireWebhooks(page.siteId, "page.published", {
+      pageId,
+      title: page.title,
+      slug: page.slug,
+      siteId: page.siteId,
+    }).catch(() => {});
+
     return NextResponse.json(updated);
   } catch (error) {
     return apiError("POST /api/pages/[pageId]/publish", error);
@@ -225,6 +234,14 @@ export async function DELETE(
 
     const userId = session.user.id;
     logActivity({ userId, siteId: page.siteId, pageId, action: "page.unpublished", details: { title: page.title } });
+
+    // Fire webhooks (fire-and-forget)
+    fireWebhooks(page.siteId, "page.unpublished", {
+      pageId,
+      title: page.title,
+      slug: page.slug,
+      siteId: page.siteId,
+    }).catch(() => {});
 
     return NextResponse.json(updated);
   } catch (error) {

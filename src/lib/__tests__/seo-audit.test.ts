@@ -590,4 +590,180 @@ describe("runSeoAudit", () => {
       expect(headingCheck.message).toContain("1 heading");
     });
   });
+
+  // ─── Suggestion heuristics ────────────────────────────────────────
+
+  describe("suggestion heuristics", () => {
+    describe("title suggestions", () => {
+      it("suggests page title when title check is error and pageTitle exists", () => {
+        const { checks } = runSeoAudit([], "My Page", null, "A".repeat(100), null);
+        const check = findCheck(checks, "title");
+        // "My Page" is < 15 chars so it's a warning
+        expect(check.status).toBe("warning");
+      });
+
+      it("suggests fallback text when both pageTitle and metaTitle are empty", () => {
+        const { checks } = runSeoAudit([], "", null, "A".repeat(100), null);
+        const check = findCheck(checks, "title");
+        expect(check.suggestion).toBe("Consider adding a descriptive title");
+      });
+
+      it("suggests pageTitle when error status and pageTitle exists", () => {
+        const { checks } = runSeoAudit([], "My Page Title", null, "A".repeat(100), null);
+        const check = findCheck(checks, "title");
+        // pageTitle is 13 chars (< 15) so status is warning, but metaTitle is null
+        // and pageTitle < 15 too so no suggestion for short title
+        expect(check.status).toBe("warning");
+      });
+
+      it("suggests truncated title when title is too long", () => {
+        const longTitle = "This is a very long title that goes well beyond the sixty character limit for SEO purposes";
+        const { checks } = runSeoAudit([], longTitle, null, "A".repeat(100), null);
+        const check = findCheck(checks, "title");
+        expect(check.status).toBe("warning");
+        expect(check.suggestion).toBeDefined();
+        expect(check.suggestion!.length).toBeLessThanOrEqual(60);
+      });
+
+      it("has no suggestion when title length is good", () => {
+        const goodTitle = "A Perfectly Good Page Title Here";
+        const { checks } = runSeoAudit([], goodTitle, null, "A".repeat(100), null);
+        const check = findCheck(checks, "title");
+        expect(check.status).toBe("good");
+        expect(check.suggestion).toBeUndefined();
+      });
+    });
+
+    describe("description suggestions", () => {
+      it("suggests text from first text block when description is missing", () => {
+        const blocks = [makeText("<p>This is the first paragraph of content on the page.</p>")];
+        const { checks } = runSeoAudit(blocks, "Good Title For The Page", null, null, null);
+        const check = findCheck(checks, "description");
+        expect(check.status).toBe("error");
+        expect(check.suggestion).toContain("This is the first paragraph");
+      });
+
+      it("returns no suggestion when no text blocks exist and description is missing", () => {
+        const { checks } = runSeoAudit([], "Good Title For The Page", null, null, null);
+        const check = findCheck(checks, "description");
+        expect(check.status).toBe("error");
+        expect(check.suggestion).toBeUndefined();
+      });
+
+      it("extracts description from text blocks inside columns", () => {
+        const nestedText = makeText("<p>Nested content inside a column block.</p>");
+        const columns = makeColumns([[nestedText]]);
+        const { checks } = runSeoAudit([columns], "Good Title For The Page", null, null, null);
+        const check = findCheck(checks, "description");
+        expect(check.suggestion).toContain("Nested content");
+      });
+
+      it("suggests truncated description when too long", () => {
+        const longDesc = "A".repeat(200);
+        const { checks } = runSeoAudit([], "Good Title For The Page", null, longDesc, null);
+        const check = findCheck(checks, "description");
+        expect(check.status).toBe("warning");
+        expect(check.suggestion).toBeDefined();
+        expect(check.suggestion!.length).toBeLessThanOrEqual(155);
+      });
+
+      it("has no suggestion when description length is good", () => {
+        const { checks } = runSeoAudit([], "Good Title For The Page", null, "A".repeat(120), null);
+        const check = findCheck(checks, "description");
+        expect(check.status).toBe("good");
+        expect(check.suggestion).toBeUndefined();
+      });
+    });
+
+    describe("heading suggestions", () => {
+      it("suggests adding H1 when no headings exist", () => {
+        const { checks } = runSeoAudit([], "Good Title For The Page", null, "A".repeat(100), null);
+        const check = findCheck(checks, "headings");
+        expect(check.suggestion).toBe("Add an H1 heading as the first block");
+      });
+
+      it("suggests adding H1 when headings exist but no H1", () => {
+        const blocks = [makeHeading(2), makeHeading(3)];
+        const { checks } = runSeoAudit(blocks, "Good Title For The Page", null, "A".repeat(100), null);
+        const check = findCheck(checks, "headings");
+        expect(check.suggestion).toBe("Add an H1 heading as the first block");
+      });
+
+      it("has no suggestion when heading hierarchy is good", () => {
+        const blocks = [makeHeading(1), makeHeading(2)];
+        const { checks } = runSeoAudit(blocks, "Good Title For The Page", null, "A".repeat(100), null);
+        const check = findCheck(checks, "headings");
+        expect(check.suggestion).toBeUndefined();
+      });
+    });
+
+    describe("image alt text suggestions", () => {
+      it("suggests adding alt text when images are missing it", () => {
+        const blocks = [makeImage("")];
+        const { checks } = runSeoAudit(blocks, "Good Title For The Page", null, "A".repeat(100), null);
+        const check = findCheck(checks, "alt");
+        expect(check.suggestion).toBe("Add descriptive alt text to images for accessibility and SEO");
+      });
+
+      it("has no suggestion when all images have alt text", () => {
+        const blocks = [makeImage("A nice photo")];
+        const { checks } = runSeoAudit(blocks, "Good Title For The Page", null, "A".repeat(100), null);
+        const check = findCheck(checks, "alt");
+        expect(check.suggestion).toBeUndefined();
+      });
+    });
+
+    describe("OG image suggestions", () => {
+      it("suggests first image src when OG image is missing and images exist", () => {
+        const blocks = [makeImage("alt text", "https://example.com/hero.jpg")];
+        const { checks } = runSeoAudit(blocks, "Good Title For The Page", null, "A".repeat(100), null);
+        const check = findCheck(checks, "og");
+        expect(check.suggestion).toBe("https://example.com/hero.jpg");
+      });
+
+      it("finds first image from columns for OG suggestion", () => {
+        const nestedImg = makeImage("alt", "https://example.com/nested.jpg");
+        const columns = makeColumns([[nestedImg]]);
+        const { checks } = runSeoAudit([columns], "Good Title For The Page", null, "A".repeat(100), null);
+        const check = findCheck(checks, "og");
+        expect(check.suggestion).toBe("https://example.com/nested.jpg");
+      });
+
+      it("has no suggestion when no images exist", () => {
+        const { checks } = runSeoAudit([], "Good Title For The Page", null, "A".repeat(100), null);
+        const check = findCheck(checks, "og");
+        expect(check.suggestion).toBeUndefined();
+      });
+
+      it("has no suggestion when OG image is already set", () => {
+        const blocks = [makeImage("alt")];
+        const { checks } = runSeoAudit(blocks, "Good Title For The Page", null, "A".repeat(100), "https://example.com/og.jpg");
+        const check = findCheck(checks, "og");
+        expect(check.suggestion).toBeUndefined();
+      });
+    });
+
+    describe("content length suggestions", () => {
+      it("suggests specific word count when content is too short", () => {
+        const blocks = [makeText(words(10))];
+        const { checks } = runSeoAudit(blocks, "Good Title For The Page", null, "A".repeat(100), null);
+        const check = findCheck(checks, "content");
+        expect(check.suggestion).toContain("290 more words");
+      });
+
+      it("suggests word count to reach 300 for mid-range content", () => {
+        const blocks = [makeText(words(150))];
+        const { checks } = runSeoAudit(blocks, "Good Title For The Page", null, "A".repeat(100), null);
+        const check = findCheck(checks, "content");
+        expect(check.suggestion).toContain("150 more words");
+      });
+
+      it("has no suggestion when content is 300+ words", () => {
+        const blocks = [makeText(words(350))];
+        const { checks } = runSeoAudit(blocks, "Good Title For The Page", null, "A".repeat(100), null);
+        const check = findCheck(checks, "content");
+        expect(check.suggestion).toBeUndefined();
+      });
+    });
+  });
 });

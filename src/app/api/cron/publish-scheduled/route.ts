@@ -120,6 +120,7 @@ export async function POST(req: Request) {
 
     // --- Scheduled unpublish ---
     let unpublishedCount = 0;
+    const unpublishErrors: Array<{ error: string }> = [];
     try {
       const pagesToUnpublish = await db.page.findMany({
         where: {
@@ -159,9 +160,13 @@ export async function POST(req: Request) {
       }
     } catch (err) {
       logger.error("cron", "Scheduled unpublishing failed:", err);
+      unpublishErrors.push({
+        error: err instanceof Error ? err.message : "Unknown error",
+      });
     }
 
-    return NextResponse.json({ published: publishedCount, unpublished: unpublishedCount });
+    const status = unpublishErrors.length > 0 ? 207 : 200;
+    return NextResponse.json({ published: publishedCount, unpublished: unpublishedCount, unpublishErrors }, { status });
   } catch (error) {
     return apiError("POST /api/cron/publish-scheduled", error);
   }

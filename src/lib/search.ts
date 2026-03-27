@@ -113,3 +113,54 @@ export function getSnippet(text: string, query: string, maxLen = 160): string {
   if (end < text.length) snippet = snippet + "...";
   return snippet;
 }
+
+/**
+ * Escape HTML special characters to prevent XSS.
+ */
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/**
+ * Wrap matching substrings with `<mark>` tags for search result highlighting.
+ * Escapes HTML in the text first to prevent XSS, then inserts `<mark>` tags.
+ * Uses case-insensitive matching.
+ */
+export function highlightSnippet(text: string, query: string): string {
+  if (!query || query.length === 0) return escapeHtml(text);
+
+  const escaped = escapeHtml(text);
+  const escapedQuery = escapeHtml(query);
+
+  // Escape regex special characters in the query so it can be used in a RegExp safely
+  const regexSafe = escapedQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  if (regexSafe.length === 0) return escaped;
+
+  // eslint-disable-next-line security/detect-non-literal-regexp -- regexSafe is derived from user query with all special chars escaped; no ReDoS risk
+  const regex = new RegExp(`(${regexSafe})`, "gi");
+  return escaped.replace(regex, "<mark>$1</mark>");
+}
+
+/**
+ * Sort search results by match-type relevance priority.
+ * Title matches rank highest (3), then description (2), then content (1).
+ * Stable sort preserves original ordering within each priority group.
+ */
+export function rankSearchResults<T extends { matchType: string }>(results: T[]): T[] {
+  const priorityMap: Record<string, number> = {
+    title: 3,
+    description: 2,
+    content: 1,
+  };
+
+  return [...results].sort((a, b) => {
+    const aPriority = priorityMap[a.matchType] ?? 0;
+    const bPriority = priorityMap[b.matchType] ?? 0;
+    return bPriority - aPriority;
+  });
+}

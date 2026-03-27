@@ -251,7 +251,10 @@ export function SearchOverlay({ siteSlug, isOpen, onClose }: SearchOverlayProps)
                 aria-selected={i === activeIndex}
               >
                 <p className={styles.resultTitle}>{result.pageTitle}</p>
-                <p className={styles.resultSnippet}>{result.snippet}</p>
+                <p
+                  className={styles.resultSnippet}
+                  dangerouslySetInnerHTML={{ __html: result.snippet }}
+                />
                 {result.matchType !== "title" && (
                   <span className={styles.resultBadge}>
                     Match in {result.matchType}

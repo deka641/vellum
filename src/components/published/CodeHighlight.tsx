@@ -52,8 +52,17 @@ export function CodeHighlight({ code, language }: { code: string; language?: str
 
   useEffect(() => {
     checkScroll();
+    const el = preRef.current;
     window.addEventListener("resize", checkScroll);
-    return () => window.removeEventListener("resize", checkScroll);
+    let ro: ResizeObserver | undefined;
+    if (el) {
+      ro = new ResizeObserver(checkScroll);
+      ro.observe(el);
+    }
+    return () => {
+      window.removeEventListener("resize", checkScroll);
+      ro?.disconnect();
+    };
   }, [checkScroll, code]);
 
   const handleCopy = async () => {

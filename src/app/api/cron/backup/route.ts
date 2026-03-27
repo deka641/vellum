@@ -37,8 +37,11 @@ export async function POST(req: Request) {
           orderBy: { sortOrder: "asc" },
           include: {
             blocks: { orderBy: { sortOrder: "asc" } },
+            pageTags: { include: { tag: { select: { slug: true } } } },
           },
         },
+        tags: { select: { name: true, slug: true } },
+        redirects: { select: { fromPath: true, toPath: true, permanent: true } },
       },
     });
 
@@ -48,12 +51,13 @@ export async function POST(req: Request) {
     }
 
     let successCount = 0;
+    const errors: Array<{ siteId: string; siteName: string; error: string }> = [];
 
     for (const site of sites) {
       try {
-        // Generate export data (same format as /api/sites/[siteId]/export)
+        // Generate export data (v2 format, matches /api/sites/[siteId]/export)
         const exportData = {
-          version: 1,
+          version: 2,
           exportedAt: new Date().toISOString(),
           site: {
             name: site.name,
@@ -65,7 +69,20 @@ export async function POST(req: Request) {
             customFooter: site.customFooter,
             notificationEmail: site.notificationEmail,
             favicon: site.favicon,
+            defaultOgImage: site.defaultOgImage,
+            cookieConsent: site.cookieConsent,
+            autoBackup: site.autoBackup,
+            turnstileSiteKey: site.turnstileSiteKey,
           },
+          tags: site.tags.map((tag) => ({
+            name: tag.name,
+            slug: tag.slug,
+          })),
+          redirects: site.redirects.map((r) => ({
+            fromPath: r.fromPath,
+            toPath: r.toPath,
+            permanent: r.permanent,
+          })),
           pages: site.pages.map((page) => ({
             title: page.title,
             slug: page.slug,
@@ -77,6 +94,7 @@ export async function POST(req: Request) {
             metaTitle: page.metaTitle,
             ogImage: page.ogImage,
             noindex: page.noindex,
+            tags: page.pageTags.map((pt) => pt.tag.slug),
             blocks: page.blocks.map((block) => ({
               id: block.id,
               type: block.type,
@@ -120,12 +138,18 @@ export async function POST(req: Request) {
         logger.info("cron", `Backup created for site ${site.id} (${site.name}): ${filename}`);
       } catch (err) {
         logger.error("cron", `Failed to backup site ${site.id} (${site.name}):`, err);
+        errors.push({
+          siteId: site.id,
+          siteName: site.name,
+          error: err instanceof Error ? err.message : "Unknown error",
+        });
       }
     }
 
     logger.info("cron", `Auto-backup complete: ${successCount}/${sites.length} sites backed up`);
 
-    return NextResponse.json({ backedUp: successCount, total: sites.length });
+    const status = errors.length > 0 ? 207 : 200;
+    return NextResponse.json({ backedUp: successCount, total: sites.length, errors }, { status });
   } catch (error) {
     return apiError("POST /api/cron/backup", error);
   }
