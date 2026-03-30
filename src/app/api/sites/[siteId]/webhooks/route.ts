@@ -9,6 +9,7 @@ import {
 } from "@/lib/validations";
 import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
 import { apiError } from "@/lib/api-helpers";
+import { logger } from "@/lib/logger";
 import { fireWebhooks } from "@/lib/webhook";
 
 export async function GET(
@@ -33,6 +34,20 @@ export async function GET(
 
     if (!site) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    // Return delivery history for a specific webhook
+    const url = new URL(_req.url);
+    const webhookIdParam = url.searchParams.get("webhookId");
+    const deliveriesParam = url.searchParams.get("deliveries");
+
+    if (deliveriesParam === "true" && webhookIdParam) {
+      const deliveries = await db.webhookDelivery.findMany({
+        where: { webhookId: webhookIdParam, webhook: { siteId } },
+        orderBy: { createdAt: "desc" },
+        take: 20,
+      });
+      return NextResponse.json({ deliveries });
     }
 
     const webhooks = await db.webhook.findMany({
@@ -184,7 +199,7 @@ export async function PATCH(
         test: true,
         message: "This is a test webhook event from Vellum",
         siteId,
-      }).catch(() => {});
+      }).catch((err) => logger.warn("webhook", "Test webhook fire failed", err));
 
       return NextResponse.json({ success: true, message: "Test event sent" });
     }

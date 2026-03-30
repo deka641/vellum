@@ -116,6 +116,22 @@ function extractTextSnippet(blocks: BlockLike[], maxLength = 160): string | unde
         return text.length > maxLength ? text.slice(0, maxLength - 1) + "\u2026" : text;
       }
     }
+    if (block.type === "quote") {
+      const text = typeof block.content.text === "string" ? block.content.text.trim() : "";
+      if (text) {
+        return text.length > maxLength ? text.slice(0, maxLength - 1) + "\u2026" : text;
+      }
+    }
+    if (block.type === "accordion" && Array.isArray(block.content.items)) {
+      for (const item of block.content.items as Array<{ question?: string; title?: string; content?: string }>) {
+        const question = (item.question || item.title || "").trim();
+        const answer = typeof item.content === "string" ? stripHtmlTags(item.content).trim() : "";
+        const combined = question && answer ? `${question} — ${answer}` : question || answer;
+        if (combined) {
+          return combined.length > maxLength ? combined.slice(0, maxLength - 1) + "\u2026" : combined;
+        }
+      }
+    }
     if (block.type === "columns" && Array.isArray(block.content.columns)) {
       for (const col of block.content.columns as Array<{ blocks?: BlockLike[] }>) {
         if (Array.isArray(col.blocks)) {

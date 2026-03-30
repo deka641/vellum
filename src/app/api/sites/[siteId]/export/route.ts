@@ -32,6 +32,7 @@ export async function GET(
         },
         tags: { select: { name: true, slug: true } },
         redirects: { select: { fromPath: true, toPath: true, permanent: true } },
+        webhooks: { select: { url: true, events: true, active: true } },
       },
     });
 
@@ -64,6 +65,11 @@ export async function GET(
         fromPath: r.fromPath,
         toPath: r.toPath,
         permanent: r.permanent,
+      })),
+      webhooks: site.webhooks.map((w) => ({
+        url: w.url,
+        events: w.events,
+        active: w.active,
       })),
       pages: site.pages.map((page) => ({
         title: page.title,

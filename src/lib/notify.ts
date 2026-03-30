@@ -1,6 +1,7 @@
 import nodemailer from "nodemailer";
 import type { Transporter } from "nodemailer";
 import { logger } from "./logger";
+import { truncateAtWord } from "./utils";
 
 export interface SubmissionNotification {
   to: string;
@@ -170,7 +171,7 @@ export async function notifyFormSubmission(notification: SubmissionNotification)
     await mailer.sendMail({
       from,
       to: notification.to,
-      subject: `New submission: ${notification.pageTitle} — ${notification.siteName}`,
+      subject: truncateAtWord(`New submission: ${notification.pageTitle} — ${notification.siteName}`, 78),
       html: buildEmailHtml(notification),
       text: `New form submission on "${notification.siteName}" - "${notification.pageTitle}"\nSubmitted: ${new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" }).format(notification.submittedAt || new Date())}${notification.pageUrl ? `\nPage: ${notification.pageUrl}` : ""}\n\n${fields}`,
     });

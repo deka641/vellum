@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { unstable_cache } from "next/cache";
-import { Globe, FileText, Send, Image as ImageIcon, Plus, Upload, LayoutTemplate, FileEdit, Inbox, CheckCircle, Mail } from "lucide-react";
+import { Globe, FileText, Send, Image as ImageIcon, Plus, Upload, LayoutTemplate, FileEdit, Inbox, CheckCircle, Mail, Eye } from "lucide-react";
 import { requireAuth } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 import { Topbar } from "@/components/dashboard/Topbar";
@@ -23,7 +23,8 @@ interface SiteOverview {
 const getDashboardData = unstable_cache(
   async (userId: string) => {
     const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
-    const [siteCount, pageCounts, submissionCount, unreadSubmissionCount, mediaCount, recentPages, recentSubmissions, firstSite, sites, staleBySite, missingDescBySite, draftBySite, imageBlocks] =
+    const thirtyDaysAgo30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const [siteCount, pageCounts, submissionCount, unreadSubmissionCount, mediaCount, totalPageViews, recentPages, recentSubmissions, firstSite, sites, staleBySite, missingDescBySite, draftBySite, imageBlocks] =
       await Promise.all([
         db.site.count({ where: { userId } }),
         db.page.groupBy({
@@ -44,6 +45,12 @@ const getDashboardData = unstable_cache(
           },
         }),
         db.media.count({ where: { userId } }),
+        db.pageView.count({
+          where: {
+            site: { userId },
+            viewedAt: { gte: thirtyDaysAgo30 },
+          },
+        }),
         db.page.findMany({
           where: { site: { userId }, deletedAt: null },
           orderBy: { updatedAt: "desc" },
@@ -153,7 +160,7 @@ const getDashboardData = unstable_cache(
       .filter(([_, count]) => count > 0)
       .map(([siteId, count]) => ({ siteId, siteName: siteNameMap.get(siteId) ?? "Unknown", count }));
 
-    return { siteCount, pageCount, publishedCount, submissionCount, unreadSubmissionCount, mediaCount, recentPages, recentSubmissions, firstSite, siteOverviews, stalePages, missingDescriptions, missingAltText, draftCount, stalePerSite, missingDescPerSite, draftPerSite, missingAltPerSite };
+    return { siteCount, pageCount, publishedCount, submissionCount, unreadSubmissionCount, mediaCount, totalPageViews, recentPages, recentSubmissions, firstSite, siteOverviews, stalePages, missingDescriptions, missingAltText, draftCount, stalePerSite, missingDescPerSite, draftPerSite, missingAltPerSite };
   },
   ["dashboard"],
   { revalidate: 30, tags: ["dashboard"] }
@@ -162,7 +169,7 @@ const getDashboardData = unstable_cache(
 export default async function DashboardPage() {
   const user = await requireAuth();
 
-  const { siteCount, pageCount, publishedCount, submissionCount, unreadSubmissionCount, mediaCount, recentPages, recentSubmissions, firstSite, siteOverviews, stalePages, missingDescriptions, missingAltText, draftCount, stalePerSite, missingDescPerSite, draftPerSite, missingAltPerSite } =
+  const { siteCount, pageCount, publishedCount, submissionCount, unreadSubmissionCount, mediaCount, totalPageViews, recentPages, recentSubmissions, firstSite, siteOverviews, stalePages, missingDescriptions, missingAltText, draftCount, stalePerSite, missingDescPerSite, draftPerSite, missingAltPerSite } =
     await getDashboardData(user.id);
 
   return (
@@ -208,6 +215,13 @@ export default async function DashboardPage() {
             <div className={styles.statValue}>{mediaCount}</div>
             <div className={styles.statLabel}>Media Files</div>
           </div>
+          {totalPageViews > 0 && (
+            <div className={styles.statCard}>
+              <div className={`${styles.statIcon} ${styles.statIconBlue}`}><Eye size={20} /></div>
+              <div className={styles.statValue}>{totalPageViews.toLocaleString()}</div>
+              <div className={styles.statLabel}>Page Views (30d)</div>
+            </div>
+          )}
         </div>
 
         <div className={styles.quickActions}>

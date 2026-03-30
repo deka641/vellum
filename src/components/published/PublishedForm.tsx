@@ -286,7 +286,7 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
       case "radio":
         return (
           <>
-            <fieldset className={styles.formRadioGroup} role="radiogroup" aria-required={field.required}>
+            <fieldset className={styles.formRadioGroup} role="radiogroup" aria-required={field.required} aria-invalid={hasError || undefined} aria-describedby={hasError ? errorId : undefined}>
               <legend className={styles.srOnly}>{field.label}</legend>
               {(field.options || []).map((opt, i) => (
                 <label key={i} className={styles.formRadioLabel}>

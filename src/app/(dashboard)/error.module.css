@@ -31,3 +31,33 @@
   margin-bottom: var(--space-4);
   font-family: monospace;
 }
+
+.iconCircle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  background: var(--color-warning-light);
+  color: var(--color-warning);
+  margin: 0 auto var(--space-4);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  justify-content: center;
+}
+
+.homeLink {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.homeLink:hover {
+  color: var(--color-text-primary);
+}

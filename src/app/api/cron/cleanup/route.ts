@@ -68,11 +68,27 @@ export async function POST(req: Request) {
       logger.error("cron", "Failed to clean up trashed pages:", err);
     }
 
-    logger.info("cron", `Cleanup complete: ${deletedTokens} tokens, ${deletedPages} trashed pages`);
+    // 3. Delete old webhook delivery records (>30 days)
+    let deletedDeliveries = 0;
+    try {
+      const deliveryCutoff = new Date(Date.now() - TRASH_RETENTION_DAYS * 24 * 60 * 60 * 1000);
+      const deliveryResult = await db.webhookDelivery.deleteMany({
+        where: { createdAt: { lt: deliveryCutoff } },
+      });
+      deletedDeliveries = deliveryResult.count;
+      if (deletedDeliveries > 0) {
+        logger.info("cron", `Deleted ${deletedDeliveries} old webhook deliveries`);
+      }
+    } catch (err) {
+      logger.error("cron", "Failed to clean up webhook deliveries:", err);
+    }
+
+    logger.info("cron", `Cleanup complete: ${deletedTokens} tokens, ${deletedPages} trashed pages, ${deletedDeliveries} webhook deliveries`);
 
     return NextResponse.json({
       deletedTokens,
       deletedPages,
+      deletedDeliveries,
     });
   } catch (error) {
     return apiError("POST /api/cron/cleanup", error);

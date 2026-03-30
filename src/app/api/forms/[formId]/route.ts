@@ -83,6 +83,7 @@ export async function POST(
             response: turnstileResponse,
             remoteip: ip,
           }),
+          signal: AbortSignal.timeout(5_000),
         });
         const verifyData = await verifyRes.json() as { success: boolean };
         if (!verifyData.success) {
@@ -178,7 +179,7 @@ export async function POST(
         pageId,
         siteId: page.site.id,
         submissionId: submission.id,
-      }).catch(() => {});
+      }).catch((err) => logger.warn("webhook", "Form submission webhook fire failed", err));
     }
 
     revalidateTag("dashboard", { expire: 0 });

@@ -132,16 +132,18 @@ export async function POST(req: Request) {
       let mediumUrl: string | null = null;
       if (mimeType.startsWith("image/")) {
         await optimizeImage(filename);
-        const dims = await getImageDimensions(filename);
+        const [dims, webpFilename, mediumFilename] = await Promise.all([
+          getImageDimensions(filename),
+          generateWebpVariant(filename),
+          generateMediumVariant(filename),
+        ]);
         if (dims) {
           width = dims.width;
           height = dims.height;
         }
-        const webpFilename = await generateWebpVariant(filename);
         if (webpFilename) {
           webpUrl = `/uploads/${webpFilename}`;
         }
-        const mediumFilename = await generateMediumVariant(filename);
         if (mediumFilename) {
           mediumUrl = `/uploads/${mediumFilename}`;
         }

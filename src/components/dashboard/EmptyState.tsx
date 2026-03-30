@@ -13,20 +13,18 @@ interface EmptyStateProps {
 }
 
 export function EmptyState({ icon, title, description, actionLabel, onAction, actionHref }: EmptyStateProps) {
-  const actionButton = actionLabel ? (
-    <Button onClick={onAction}>{actionLabel}</Button>
-  ) : null;
-
   return (
     <div className={styles.container}>
       <div className={styles.iconCircle}>{icon}</div>
       <h3 className={styles.title}>{title}</h3>
       <p className={styles.description}>{description}</p>
-      {actionButton && actionHref ? (
-        <Link href={actionHref}>{actionButton}</Link>
-      ) : (
-        actionButton
-      )}
+      {actionLabel && actionHref ? (
+        <Link href={actionHref} className={styles.actionLink}>
+          {actionLabel}
+        </Link>
+      ) : actionLabel ? (
+        <Button onClick={onAction}>{actionLabel}</Button>
+      ) : null}
     </div>
   );
 }

@@ -66,6 +66,7 @@ async function deliverWebhook(
   let statusCode = 0;
   let lastErr: unknown;
   const maxRetries = 3;
+  const startTime = Date.now();
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
@@ -83,6 +84,7 @@ async function deliverWebhook(
       statusCode = res.status;
 
       if (res.ok) {
+        const duration = Date.now() - startTime;
         await db.webhook
           .update({
             where: { id: webhookId },
@@ -91,7 +93,8 @@ async function deliverWebhook(
               lastStatusCode: statusCode,
             },
           })
-          .catch(() => {});
+          .catch((err) => logger.warn("webhook", "Failed to update webhook status after success", err));
+        recordDelivery(webhookId, event, statusCode, true, duration, null);
         return;
       }
 
@@ -109,6 +112,8 @@ async function deliverWebhook(
     }
   }
 
+  const duration = Date.now() - startTime;
+
   // Record last failure
   await db.webhook
     .update({
@@ -118,11 +123,37 @@ async function deliverWebhook(
         lastStatusCode: statusCode || 0,
       },
     })
-    .catch(() => {}); // Don't fail if webhook was deleted
+    .catch((err) => logger.warn("webhook", "Failed to update webhook status after failure (webhook may be deleted)", err));
+
+  recordDelivery(webhookId, event, statusCode || 0, false, duration, lastErr ? String(lastErr) : null);
 
   logger.warn(
     "webhook",
     `Webhook ${webhookId} failed after ${maxRetries} retries:`,
     lastErr
   );
+}
+
+/** Fire-and-forget delivery record with probabilistic cleanup */
+function recordDelivery(
+  webhookId: string,
+  event: string,
+  statusCode: number,
+  success: boolean,
+  duration: number,
+  error: string | null
+): void {
+  db.webhookDelivery
+    .create({
+      data: { webhookId, event, statusCode, success, duration, error },
+    })
+    .catch((err) => logger.warn("webhook", "Failed to record delivery", err));
+
+  // Probabilistic cleanup (~1% chance) — remove deliveries older than 30 days
+  if (Math.random() < 0.01) {
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    db.webhookDelivery
+      .deleteMany({ where: { createdAt: { lt: thirtyDaysAgo } } })
+      .catch((err) => logger.warn("webhook", "Delivery cleanup failed", err));
+  }
 }

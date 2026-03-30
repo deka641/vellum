@@ -250,19 +250,34 @@ model ActivityLog {
 }
 
 model Webhook {
-  id              String    @id @default(cuid())
+  id              String            @id @default(cuid())
   siteId          String
-  site            Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  site            Site              @relation(fields: [siteId], references: [id], onDelete: Cascade)
   url             String
   events          String[]
   secret          String
-  active          Boolean   @default(true)
+  active          Boolean           @default(true)
   lastTriggeredAt DateTime?
   lastStatusCode  Int?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  deliveries      WebhookDelivery[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
 
   @@index([siteId])
+}
+
+model WebhookDelivery {
+  id         String   @id @default(cuid())
+  webhookId  String
+  webhook    Webhook  @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+  event      String
+  statusCode Int
+  success    Boolean
+  duration   Int
+  error      String?
+  createdAt  DateTime @default(now())
+
+  @@index([webhookId, createdAt])
 }
 
 model PageView {

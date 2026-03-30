@@ -123,7 +123,7 @@ export async function PATCH(
     fireWebhooks(siteId, "site.updated", {
       siteId,
       name: updated.name,
-    }).catch(() => {});
+    }).catch((err) => logger.warn("webhook", "Site update webhook fire failed", err));
 
     return NextResponse.json(updated);
   } catch (error) {

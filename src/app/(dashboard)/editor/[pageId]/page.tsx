@@ -331,7 +331,7 @@ export default function EditorPage() {
       clearInterval(interval);
       window.removeEventListener("beforeunload", releaseEditing);
       // Release lock on navigation
-      fetch(`/api/pages/${params.pageId}/editing`, { method: "DELETE" }).catch(() => {});
+      fetch(`/api/pages/${params.pageId}/editing`, { method: "DELETE" }).catch((err) => console.error("Editor: Failed to release editing lock", err));
     };
   }, [loading, loadError, params.pageId]);
 

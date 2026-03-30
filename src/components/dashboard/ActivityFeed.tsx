@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { FileText, Globe, Upload, Trash2, Send, Clock } from "lucide-react";
 import { formatRelativeDate } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/Skeleton/Skeleton";
@@ -28,14 +28,27 @@ const ACTION_CONFIG: Record<string, { icon: React.ElementType; getLabel: (d: Rec
 export function ActivityFeed() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
 
-  useEffect(() => {
+  const load = useCallback(() => {
+    setFetchError(false);
+    setLoading(true);
     fetch("/api/activity")
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
       .then((data) => setActivities(data.activities || []))
-      .catch(() => {})
+      .catch((err) => {
+        console.error("ActivityFeed: Failed to load activities", err);
+        setFetchError(true);
+      })
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   if (loading) {
     return (
@@ -51,6 +64,21 @@ export function ActivityFeed() {
               </div>
             </div>
           ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <div className={styles.feed}>
+        <h3 className={styles.title}>Recent Activity</h3>
+        <div className={styles.empty}>
+          <Clock size={32} />
+          <p>Failed to load activity</p>
+          <button className={styles.retryButton} onClick={load} type="button">
+            Try again
+          </button>
         </div>
       </div>
     );

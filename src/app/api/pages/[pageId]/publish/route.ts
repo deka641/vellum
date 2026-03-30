@@ -138,7 +138,7 @@ export async function POST(
       title: page.title,
       slug: page.slug,
       siteId: page.siteId,
-    }).catch(() => {});
+    }).catch((err) => logger.warn("webhook", "Publish webhook fire failed", err));
 
     return NextResponse.json(updated);
   } catch (error) {
@@ -241,7 +241,7 @@ export async function DELETE(
       title: page.title,
       slug: page.slug,
       siteId: page.siteId,
-    }).catch(() => {});
+    }).catch((err) => logger.warn("webhook", "Unpublish webhook fire failed", err));
 
     return NextResponse.json(updated);
   } catch (error) {
