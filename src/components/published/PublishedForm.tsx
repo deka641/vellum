@@ -26,11 +26,12 @@ interface PublishedFormProps {
   successMessage: string;
   successRedirectUrl?: string;
   turnstileSiteKey?: string;
+  csrfToken?: string;
 }
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export function PublishedForm({ blockId, pageId, fields, submitText, successMessage, successRedirectUrl, turnstileSiteKey }: PublishedFormProps) {
+export function PublishedForm({ blockId, pageId, fields, submitText, successMessage, successRedirectUrl, turnstileSiteKey, csrfToken }: PublishedFormProps) {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -172,6 +173,7 @@ export function PublishedForm({ blockId, pageId, fields, submitText, successMess
           data,
           pageId,
           _hp: honeypotValue,
+          ...(csrfToken && { _csrf: csrfToken }),
           ...(turnstileToken !== undefined && { "cf-turnstile-response": turnstileToken }),
         }),
       });

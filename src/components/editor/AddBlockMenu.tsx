@@ -24,6 +24,9 @@ import {
 } from "lucide-react";
 import { type BlockType } from "@/types/blocks";
 import { blockDefinitions, blockCategories } from "@/lib/blocks";
+import { getBlockSuggestions } from "@/lib/block-suggestions";
+import type { BlockData } from "@/types/blocks";
+import { useEditorStore } from "@/stores/editor-store";
 import { Skeleton } from "@/components/ui/Skeleton/Skeleton";
 import { useToast } from "@/components/ui/Toast/Toast";
 import styles from "./AddBlockMenu.module.css";
@@ -206,6 +209,8 @@ interface SavedBlockTemplate {
 const ALL_CATEGORIES = [{ key: "all", label: "All" }, { key: "saved", label: "Saved" }, ...blockCategories] as const;
 
 export function AddBlockMenu({ onAdd }: AddBlockMenuProps) {
+  const blocks = useEditorStore((s) => s.blocks);
+  const suggestions = useMemo(() => getBlockSuggestions(blocks as unknown as BlockData[]), [blocks]);
   const [filter, setFilter] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [showColumnPresets, setShowColumnPresets] = useState(false);
@@ -382,6 +387,39 @@ export function AddBlockMenu({ onAdd }: AddBlockMenuProps) {
           </button>
         ))}
       </div>
+      {activeCategory === "all" && !filter && suggestions.length > 0 && (
+        <div className={styles.category}>
+          <span className={styles.categoryLabel}>Suggested</span>
+          <div className={styles.grid} role="listbox" aria-label="Suggested blocks">
+            {suggestions.map((s) => {
+              const def = blockDefinitions[s.type];
+              if (!def) return null;
+              return (
+                <button
+                  key={`suggest-${s.type}`}
+                  className={`${styles.blockButton} ${styles.blockButtonSuggested}`}
+                  role="option"
+                  aria-selected={false}
+                  title={s.reason}
+                  onClick={() => {
+                    if (s.type === "columns") {
+                      setShowColumnPresets(true);
+                    } else {
+                      onAdd(s.type);
+                    }
+                  }}
+                >
+                  <span className={styles.blockIcon}>
+                    {iconMap[def.icon]}
+                  </span>
+                  <BlockPreview type={s.type} />
+                  <span className={styles.blockLabel}>{def.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
       {activeCategory !== "saved" && categoriesToShow.map((cat) => {
         const blocks = filteredBlocks.filter((b) => b.category === cat.key);
         if (blocks.length === 0) return null;

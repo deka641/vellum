@@ -129,6 +129,15 @@
   background: var(--color-bg-secondary);
 }
 
+.blockButtonSuggested {
+  border: 1px dashed var(--color-accent-muted);
+}
+
+.blockButtonSuggested .blockIcon {
+  background: var(--color-accent-light);
+  color: var(--color-accent);
+}
+
 .blockButtonActive .blockIcon {
   background: var(--color-accent-light);
   color: var(--color-accent);

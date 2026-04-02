@@ -42,7 +42,7 @@ export async function GET(
         page: { siteId, site: { userId: session.user.id } },
         createdAt: { gte: since },
       },
-      select: { createdAt: true, readAt: true },
+      select: { createdAt: true, isRead: true },
     });
 
     // Group submissions by date string (YYYY-MM-DD)
@@ -52,7 +52,7 @@ export async function GET(
     for (const sub of submissions) {
       const dateStr = sub.createdAt.toISOString().split("T")[0];
       countsByDate.set(dateStr, (countsByDate.get(dateStr) || 0) + 1);
-      if (!sub.readAt) unread++;
+      if (!sub.isRead) unread++;
     }
 
     // Build daily array with all dates in the range (including zero-count days)

@@ -31,6 +31,7 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { ContentScoreBadge } from "./ContentScoreBadge";
 import styles from "./PageList.module.css";
 
 interface Page {
@@ -54,6 +55,10 @@ interface TagItem {
   slug: string;
 }
 
+interface ContentScoreMap {
+  [pageId: string]: { total: number; label: string };
+}
+
 interface PageListProps {
   pages: Page[];
   siteSlug: string;
@@ -67,6 +72,7 @@ interface PageListProps {
   onBulkAction?: (action: "publish" | "unpublish", pageIds: string[]) => Promise<void>;
   tags?: TagItem[];
   onBulkTagAction?: (action: "add" | "remove", pageIds: string[], tagIds: string[]) => Promise<void>;
+  contentScores?: ContentScoreMap;
 }
 
 function SortablePageItem({
@@ -81,6 +87,7 @@ function SortablePageItem({
   selected,
   hasSelection,
   onToggleSelect,
+  contentScore,
 }: {
   page: Page;
   siteSlug: string;
@@ -93,6 +100,7 @@ function SortablePageItem({
   selected: boolean;
   hasSelection: boolean;
   onToggleSelect: (id: string) => void;
+  contentScore?: { total: number; label: string };
 }) {
   const {
     attributes,
@@ -148,6 +156,9 @@ function SortablePageItem({
           >
             {page.status === "PUBLISHED" ? "Published" : "Draft"}
           </Badge>
+          {contentScore && (
+            <ContentScoreBadge score={contentScore.total} label={contentScore.label} />
+          )}
           {page.scheduledPublishAt && (
             <Badge
               variant="warning"
@@ -251,7 +262,7 @@ function SortablePageItem({
   );
 }
 
-export function PageList({ pages, siteSlug, onDelete, onPublish, onUnpublish, onDuplicate, onSetHomepage, onReorder, onToggleNav, onBulkAction, tags, onBulkTagAction }: PageListProps) {
+export function PageList({ pages, siteSlug, onDelete, onPublish, onUnpublish, onDuplicate, onSetHomepage, onReorder, onToggleNav, onBulkAction, tags, onBulkTagAction, contentScores }: PageListProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
   const [tagMenuOpen, setTagMenuOpen] = useState(false);
@@ -470,6 +481,7 @@ export function PageList({ pages, siteSlug, onDelete, onPublish, onUnpublish, on
                 selected={selectedIds.has(page.id)}
                 hasSelection={hasSelection}
                 onToggleSelect={toggleSelect}
+                contentScore={contentScores?.[page.id]}
               />
             ))}
           </div>

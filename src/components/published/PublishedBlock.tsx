@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { sanitizeRichHtml, sanitizeUrl, sanitizeImageSrc, getSafeVideoEmbedUrl, sanitizeEmbedHtml } from "@/lib/sanitize";
 import { slugify } from "@/lib/utils";
+import { generateFormToken } from "@/lib/csrf";
 import { HeadingAnchor } from "./HeadingAnchor";
 import { PublishedForm } from "./PublishedForm";
 import { ImageLightbox } from "./ImageLightbox";
@@ -131,7 +132,11 @@ export function PublishedBlock({ block, pageId, allBlocks, turnstileSiteKey }: P
         <>
           {webpSrc ? (
             <picture>
-              <source srcSet={webpSrc} type="image/webp" />
+              <source
+                srcSet={mediumSrc ? `${mediumSrc.replace(/\.(jpe?g|png)$/i, ".webp")} 768w, ${webpSrc} 1920w` : webpSrc}
+                sizes={mediumSrc ? "(max-width: 768px) 100vw, 1080px" : undefined}
+                type="image/webp"
+              />
               {imgTag}
             </picture>
           ) : (
@@ -295,6 +300,7 @@ export function PublishedBlock({ block, pageId, allBlocks, turnstileSiteKey }: P
       const successMessage = (content.successMessage as string) || "Thank you! Your submission has been received.";
       const successRedirectUrl = typeof content.successRedirectUrl === "string" ? sanitizeUrl(content.successRedirectUrl) : undefined;
       if (pageId) {
+        const csrfToken = generateFormToken(pageId, block.id);
         return (
           <PublishedForm
             blockId={block.id}
@@ -304,6 +310,7 @@ export function PublishedBlock({ block, pageId, allBlocks, turnstileSiteKey }: P
             successMessage={successMessage}
             successRedirectUrl={successRedirectUrl !== "#" ? successRedirectUrl : undefined}
             turnstileSiteKey={turnstileSiteKey}
+            csrfToken={csrfToken}
           />
         );
       }

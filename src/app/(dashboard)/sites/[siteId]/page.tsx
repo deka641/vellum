@@ -20,6 +20,7 @@ import {
 import { Input } from "@/components/ui/Input/Input";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog/ConfirmDialog";
 import { PageAnalytics } from "@/components/dashboard/PageAnalytics";
+import { AnalyticsCard } from "@/components/dashboard/AnalyticsCard";
 import styles from "./site-detail.module.css";
 import dialogStyles from "@/components/ui/Dialog/Dialog.module.css";
 
@@ -110,6 +111,7 @@ function SiteDetailContent() {
   }> | null>(null);
   const [contentSearching, setContentSearching] = useState(false);
   const contentSearchTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [contentScores, setContentScores] = useState<Record<string, { total: number; label: string }>>({});
 
   // Health filter from dashboard deep-links
   const filterParam = searchParams.get("filter");
@@ -137,6 +139,14 @@ function SiteDetailContent() {
       .catch(() => {
         // Non-critical: badge simply won't show rather than showing 0
         setUnreadCount(-1);
+      });
+
+    // Fetch content performance scores
+    fetch(`/api/sites/${params.siteId}/content-scores`)
+      .then((res) => res.ok ? res.json() : {})
+      .then(setContentScores)
+      .catch(() => {
+        // Non-critical: badges simply won't show
       });
   }, [params.siteId]);
 
@@ -959,8 +969,10 @@ function SiteDetailContent() {
               onBulkAction={handleBulkAction}
               tags={site.tags}
               onBulkTagAction={handleBulkTagAction}
+              contentScores={contentScores}
             />
             <PageAnalytics siteId={site.id} />
+            <AnalyticsCard siteId={site.id} />
           </>
         )}
       </div>

@@ -68,7 +68,7 @@ export default async function PublishedSiteLayout({ params, children }: Props) {
       <WebSiteJsonLd name={site.name} description={site.description} url={siteUrl} />
       <SiteHeader siteName={site.name} siteLogo={site.logo} homeHref={homeHref} navItems={navItems} siteSlug={site.slug} hasPublishedPages={site.pages.length > 0} />
       <main id="main-content" className={styles.main}>{children}</main>
-      <SiteFooter siteName={site.name} footer={site.footer as Record<string, unknown> | null} />
+      <SiteFooter siteName={site.name} footer={site.footer as Record<string, unknown> | null} siteSlug={site.slug} />
       {site.customFooter && (
         <div dangerouslySetInnerHTML={{ __html: site.customFooter }} />
       )}

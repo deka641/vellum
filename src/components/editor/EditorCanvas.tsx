@@ -372,6 +372,29 @@ export function EditorCanvas({ onAddBlock }: EditorCanvasProps) {
           </button>
         )}
       </div>
+      <ShortcutHint />
+    </div>
+  );
+}
+
+function ShortcutHint() {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const key = "vellum-shortcuts-seen";
+    if (typeof localStorage !== "undefined" && !localStorage.getItem(key)) {
+      setVisible(true);
+      localStorage.setItem(key, "1");
+      const timer = setTimeout(() => setVisible(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  if (!visible) return null;
+
+  return (
+    <div className={styles.shortcutHint} onClick={() => setVisible(false)} role="status">
+      Press <kbd>?</kbd> to view keyboard shortcuts
     </div>
   );
 }

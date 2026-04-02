@@ -9,6 +9,7 @@ import { parseBody, formSubmissionSchema } from "@/lib/validations";
 import { notifyFormSubmission } from "@/lib/notify";
 import { logger } from "@/lib/logger";
 import { fireWebhooks } from "@/lib/webhook";
+import { validateFormToken } from "@/lib/csrf";
 
 export async function POST(
   req: Request,
@@ -65,7 +66,8 @@ export async function POST(
     }
 
     // Verify Cloudflare Turnstile CAPTCHA if configured
-    if (page.site?.turnstileSecretKey) {
+    const hasTurnstile = Boolean(page.site?.turnstileSecretKey);
+    if (hasTurnstile) {
       const turnstileResponse = (body as Record<string, unknown>)["cf-turnstile-response"];
       if (!turnstileResponse || typeof turnstileResponse !== "string") {
         return NextResponse.json(
@@ -79,7 +81,7 @@ export async function POST(
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            secret: page.site.turnstileSecretKey,
+            secret: page.site!.turnstileSecretKey,
             response: turnstileResponse,
             remoteip: ip,
           }),
@@ -96,6 +98,17 @@ export async function POST(
         logger.warn("turnstile", "Turnstile verification request failed", err);
         return NextResponse.json(
           { error: "CAPTCHA verification failed" },
+          { status: 403 }
+        );
+      }
+    }
+
+    // CSRF token validation — required when Turnstile is not configured
+    if (!hasTurnstile) {
+      const csrfToken = (body as Record<string, unknown>)._csrf;
+      if (!csrfToken || typeof csrfToken !== "string" || !validateFormToken(csrfToken, pageId, blockId)) {
+        return NextResponse.json(
+          { error: "Invalid form token" },
           { status: 403 }
         );
       }

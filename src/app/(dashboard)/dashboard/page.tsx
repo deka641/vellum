@@ -41,7 +41,7 @@ const getDashboardData = unstable_cache(
         db.formSubmission.count({
           where: {
             page: { site: { userId } },
-            readAt: null,
+            isRead: false,
           },
         }),
         db.media.count({ where: { userId } }),
@@ -69,6 +69,7 @@ const getDashboardData = unstable_cache(
           take: 5,
           select: {
             id: true,
+            isRead: true,
             readAt: true,
             createdAt: true,
             page: { select: { title: true, siteId: true } },
@@ -314,8 +315,8 @@ export default async function DashboardPage() {
                     <li key={sub.id} className={styles.listItem}>
                       <Link href={`/sites/${sub.page.siteId}/submissions`} className={styles.listLink}>
                         <div className={styles.listRight}>
-                          {!sub.readAt && <span className={styles.unreadDot} title="Unread" />}
-                          <span className={`${styles.listTitle} ${!sub.readAt ? styles.listTitleBold : ""}`}>{sub.page.title}</span>
+                          {!sub.isRead && <span className={styles.unreadDot} title="Unread" />}
+                          <span className={`${styles.listTitle} ${!sub.isRead ? styles.listTitleBold : ""}`}>{sub.page.title}</span>
                         </div>
                         <span className={styles.listDate}>{formatDate(sub.createdAt)}</span>
                       </Link>

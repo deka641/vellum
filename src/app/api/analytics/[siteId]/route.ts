@@ -37,49 +37,79 @@ export async function GET(
     const since = new Date();
     since.setDate(since.getDate() - days);
 
-    // Total views in period
-    const totalViews = await db.pageView.count({
-      where: { siteId, viewedAt: { gte: since } },
-    });
+    // Previous period for comparison
+    const previousSince = new Date(since);
+    previousSince.setDate(previousSince.getDate() - days);
 
-    // Top pages (top 10 by views)
-    const topPagesRaw = await db.$queryRaw<
-      Array<{ path: string; views: bigint }>
-    >(
-      Prisma.sql`
-        SELECT path, COUNT(*)::bigint AS views
-        FROM "PageView"
-        WHERE "siteId" = ${siteId} AND "viewedAt" >= ${since}
-        GROUP BY path
-        ORDER BY views DESC
-        LIMIT 10
-      `
-    );
+    // Run all queries in parallel
+    const [totalViews, previousViews, topPagesRaw, dailyRaw, referrersRaw] = await Promise.all([
+      // Total views in period
+      db.pageView.count({
+        where: { siteId, viewedAt: { gte: since } },
+      }),
+      // Previous period views for trend comparison
+      db.pageView.count({
+        where: { siteId, viewedAt: { gte: previousSince, lt: since } },
+      }),
+      // Top pages (top 10 by views)
+      db.$queryRaw<Array<{ path: string; views: bigint }>>(
+        Prisma.sql`
+          SELECT path, COUNT(*)::bigint AS views
+          FROM "PageView"
+          WHERE "siteId" = ${siteId} AND "viewedAt" >= ${since}
+          GROUP BY path
+          ORDER BY views DESC
+          LIMIT 10
+        `
+      ),
+      // Daily view counts
+      db.$queryRaw<Array<{ date: string; views: bigint }>>(
+        Prisma.sql`
+          SELECT TO_CHAR("viewedAt", 'YYYY-MM-DD') AS date, COUNT(*)::bigint AS views
+          FROM "PageView"
+          WHERE "siteId" = ${siteId} AND "viewedAt" >= ${since}
+          GROUP BY date
+          ORDER BY date ASC
+        `
+      ),
+      // Top referrers (grouped by domain)
+      db.$queryRaw<Array<{ referrer: string; views: bigint }>>(
+        Prisma.sql`
+          SELECT
+            CASE
+              WHEN referrer IS NULL OR referrer = '' THEN 'Direct'
+              ELSE SPLIT_PART(SPLIT_PART(referrer, '://', 2), '/', 1)
+            END AS referrer,
+            COUNT(*)::bigint AS views
+          FROM "PageView"
+          WHERE "siteId" = ${siteId} AND "viewedAt" >= ${since}
+          GROUP BY 1
+          ORDER BY views DESC
+          LIMIT 10
+        `
+      ),
+    ]);
 
     const topPages = topPagesRaw.map((row) => ({
       path: row.path,
       views: Number(row.views),
     }));
 
-    // Daily view counts
-    const dailyRaw = await db.$queryRaw<
-      Array<{ date: string; views: bigint }>
-    >(
-      Prisma.sql`
-        SELECT TO_CHAR("viewedAt", 'YYYY-MM-DD') AS date, COUNT(*)::bigint AS views
-        FROM "PageView"
-        WHERE "siteId" = ${siteId} AND "viewedAt" >= ${since}
-        GROUP BY date
-        ORDER BY date ASC
-      `
-    );
-
     const daily = dailyRaw.map((row) => ({
       date: row.date,
       views: Number(row.views),
     }));
 
-    return NextResponse.json({ totalViews, topPages, daily });
+    const referrers = referrersRaw.map((row) => ({
+      referrer: row.referrer,
+      views: Number(row.views),
+    }));
+
+    const trend = previousViews > 0
+      ? Math.round(((totalViews - previousViews) / previousViews) * 100)
+      : totalViews > 0 ? 100 : 0;
+
+    return NextResponse.json({ totalViews, previousViews, trend, topPages, daily, referrers });
   } catch (error) {
     return apiError("GET /api/analytics/[siteId]", error);
   }

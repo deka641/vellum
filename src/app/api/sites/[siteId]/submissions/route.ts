@@ -41,13 +41,16 @@ export async function GET(
     const searchQuery = searchParams.get("q")?.trim() || "";
     const unreadOnly = searchParams.get("unreadOnly") === "true";
 
+    const isReadParam = searchParams.get("isRead");
+
     // Build where clause
     const where: Prisma.FormSubmissionWhereInput = {
       page: {
         siteId,
         ...(pageIdFilter ? { id: pageIdFilter } : {}),
       },
-      ...(unreadOnly ? { readAt: null } : {}),
+      ...(unreadOnly ? { isRead: false } : {}),
+      ...(isReadParam === "true" ? { isRead: true } : isReadParam === "false" ? { isRead: false } : {}),
     };
 
     // If search query provided (min 2 chars), use raw SQL to search JSON data field
@@ -61,7 +64,8 @@ export async function GET(
         INNER JOIN "Page" p ON fs."pageId" = p.id
         WHERE p."siteId" = ${siteId}
         ${pageIdFilter ? Prisma.sql`AND p.id = ${pageIdFilter}` : Prisma.empty}
-        ${unreadOnly ? Prisma.sql`AND fs."readAt" IS NULL` : Prisma.empty}
+        ${unreadOnly ? Prisma.sql`AND fs."isRead" = false` : Prisma.empty}
+        ${isReadParam === "true" ? Prisma.sql`AND fs."isRead" = true` : isReadParam === "false" ? Prisma.sql`AND fs."isRead" = false` : Prisma.empty}
         AND (
           p.title ILIKE ${searchPattern}
           OR fs.data::text ILIKE ${searchPattern}
@@ -74,18 +78,20 @@ export async function GET(
         id: string;
         blockId: string;
         data: Prisma.JsonValue;
+        isRead: boolean;
         readAt: Date | null;
         createdAt: Date;
         pageId: string;
         pageTitle: string;
       }>>`
-        SELECT fs.id, fs."blockId", fs.data, fs."readAt", fs."createdAt",
+        SELECT fs.id, fs."blockId", fs.data, fs."isRead", fs."readAt", fs."createdAt",
                p.id as "pageId", p.title as "pageTitle"
         FROM "FormSubmission" fs
         INNER JOIN "Page" p ON fs."pageId" = p.id
         WHERE p."siteId" = ${siteId}
         ${pageIdFilter ? Prisma.sql`AND p.id = ${pageIdFilter}` : Prisma.empty}
-        ${unreadOnly ? Prisma.sql`AND fs."readAt" IS NULL` : Prisma.empty}
+        ${unreadOnly ? Prisma.sql`AND fs."isRead" = false` : Prisma.empty}
+        ${isReadParam === "true" ? Prisma.sql`AND fs."isRead" = true` : isReadParam === "false" ? Prisma.sql`AND fs."isRead" = false` : Prisma.empty}
         AND (
           p.title ILIKE ${searchPattern}
           OR fs.data::text ILIKE ${searchPattern}
@@ -99,6 +105,7 @@ export async function GET(
         id: s.id,
         blockId: s.blockId,
         data: s.data,
+        isRead: s.isRead,
         readAt: s.readAt,
         createdAt: s.createdAt,
         page: { id: s.pageId, title: s.pageTitle },
@@ -123,6 +130,7 @@ export async function GET(
           id: true,
           blockId: true,
           data: true,
+          isRead: true,
           readAt: true,
           createdAt: true,
           page: { select: { id: true, title: true } },
@@ -222,6 +230,10 @@ const bulkReadStatusSchema = z.object({
   action: z.enum(["read", "unread"]),
 });
 
+const markAllReadSchema = z.object({
+  action: z.literal("markAllRead"),
+});
+
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ siteId: string }> }
@@ -254,6 +266,25 @@ export async function PATCH(
       return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
 
+    // Try markAllRead first
+    const markAllParsed = markAllReadSchema.safeParse(body);
+    if (markAllParsed.success) {
+      const result = await db.formSubmission.updateMany({
+        where: {
+          page: { siteId },
+          isRead: false,
+        },
+        data: {
+          isRead: true,
+          readAt: new Date(),
+        },
+      });
+
+      revalidateTag("dashboard", { expire: 0 });
+      return NextResponse.json({ updated: result.count });
+    }
+
+    // Bulk read/unread by IDs
     const parsed = parseBody(bulkReadStatusSchema, body);
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error }, { status: 400 });
@@ -272,10 +303,14 @@ export async function PATCH(
       return NextResponse.json({ error: "No matching submissions found" }, { status: 404 });
     }
 
+    const isRead = action === "read";
     await db.$transaction(async (tx) => {
       await tx.formSubmission.updateMany({
         where: { id: { in: validIds } },
-        data: { readAt: action === "read" ? new Date() : null },
+        data: {
+          isRead,
+          readAt: isRead ? new Date() : null,
+        },
       });
     });
 

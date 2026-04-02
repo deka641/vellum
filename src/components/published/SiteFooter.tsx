@@ -29,6 +29,7 @@ interface FooterConfig {
 interface SiteFooterProps {
   siteName: string;
   footer?: FooterConfig | null;
+  siteSlug?: string;
 }
 
 function isExternalUrl(url: string): boolean {
@@ -48,7 +49,7 @@ function FooterAnchor({ href, className, children }: { href: string; className?:
   );
 }
 
-export function SiteFooter({ siteName, footer }: SiteFooterProps) {
+export function SiteFooter({ siteName, footer, siteSlug }: SiteFooterProps) {
   const year = new Date().getFullYear();
   const text = footer?.text || `\u00A9 ${year} ${siteName}`;
   const links = footer?.links || [];
@@ -132,6 +133,17 @@ export function SiteFooter({ siteName, footer }: SiteFooterProps) {
                   </a>
                 ))}
               </div>
+            )}
+            {siteSlug && (
+              <a
+                href={`/s/${siteSlug}/feed.xml`}
+                className={styles.footerRssLink}
+                aria-label="RSS Feed"
+                title="RSS Feed"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
+                <span>RSS</span>
+              </a>
             )}
             {showBranding && (
               <span className={styles.footerBrand}>Built with Vellum</span>

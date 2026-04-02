@@ -496,6 +496,12 @@ export const webhookUpdateSchema = z.object({
   active: z.boolean().optional(),
 });
 
+// --- API Keys ---
+
+export const createApiKeySchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+});
+
 // --- Block hierarchy validation ---
 
 export const DISALLOWED_NESTED_TYPES = ["columns", "form", "video", "table"];

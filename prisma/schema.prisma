@@ -43,6 +43,7 @@ model Site {
   tags               Tag[]
   webhooks           Webhook[]
   pageViews          PageView[]
+  apiKeys            ApiKey[]
   createdAt          DateTime   @default(now())
   updatedAt          DateTime   @updatedAt
 
@@ -141,6 +142,7 @@ model FormSubmission {
   pageId    String
   blockId   String
   data      Json
+  isRead    Boolean   @default(false)
   readAt    DateTime?
   createdAt DateTime  @default(now())
   page      Page      @relation(fields: [pageId], references: [id], onDelete: Cascade)
@@ -291,4 +293,17 @@ model PageView {
 
   @@index([siteId, viewedAt])
   @@index([pageId, viewedAt])
+}
+
+model ApiKey {
+  id         String    @id @default(cuid())
+  siteId     String
+  site       Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  name       String
+  keyHash    String    @unique
+  prefix     String
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([siteId])
 }

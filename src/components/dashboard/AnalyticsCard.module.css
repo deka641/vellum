@@ -1,0 +1,239 @@
+.card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-4) 0;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-primary);
+}
+
+/* Period toggle - matches PageAnalytics */
+.periodToggle {
+  display: flex;
+  gap: 2px;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+  padding: 2px;
+}
+
+.periodBtn {
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-tertiary);
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.periodBtn:hover {
+  color: var(--color-text-secondary);
+}
+
+.periodBtnActive {
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  box-shadow: 0 1px 2px rgba(var(--shadow-color), 0.08);
+}
+
+/* Body */
+.body {
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Stats row */
+.statsRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.statBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.statValueRow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.statValue {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+
+.statLabel {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+}
+
+/* Trend indicators */
+.trendUp,
+.trendDown,
+.trendNeutral {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-full);
+  line-height: 1.2;
+}
+
+.trendUp {
+  color: var(--color-success);
+  background: var(--color-success-light);
+}
+
+.trendDown {
+  color: var(--color-error);
+  background: var(--color-error-light);
+}
+
+.trendNeutral {
+  color: var(--color-text-tertiary);
+  background: var(--color-bg-secondary);
+}
+
+/* Chart area */
+.chartWrap {
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  padding: var(--space-2);
+  background: var(--color-bg-primary);
+}
+
+/* Lists grid */
+.listsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.listSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.listHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.listItem {
+  display: grid;
+  grid-template-columns: minmax(60px, 1fr) 1fr auto;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.listLabel {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.barWrap {
+  height: 6px;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.bar {
+  height: 100%;
+  background: var(--color-accent);
+  border-radius: var(--radius-full);
+  min-width: 2px;
+  transition: width var(--duration-normal) var(--ease-out);
+}
+
+.listCount {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-primary);
+  text-align: right;
+  min-width: 28px;
+}
+
+/* Empty / Error states */
+.emptyText {
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+  margin: 0;
+}
+
+.errorBody {
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding-top: var(--space-6);
+  padding-bottom: var(--space-6);
+}
+
+.errorText {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+/* Responsive - stacked lists on small screens */
+@media (max-width: 600px) {
+  .listsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Touch targets for toggle buttons */
+@media (hover: none), (pointer: coarse) {
+  .periodBtn {
+    min-height: 44px;
+    padding: var(--space-2) var(--space-3);
+  }
+}

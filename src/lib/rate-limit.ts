@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logger } from "@/lib/logger";
 
 // --- Sliding window rate limiter ---
 
@@ -75,6 +76,7 @@ export function rateLimit(key: string, preset: RateLimitPreset): RateLimitResult
   const resetAt = entry.windowStart + windowMs;
 
   if (estimated >= limit) {
+    logger.warn("rate-limit", `Rate limit exceeded: key=${key} preset=${preset} limit=${limit}`);
     return { success: false, limit, remaining: 0, resetAt };
   }
 

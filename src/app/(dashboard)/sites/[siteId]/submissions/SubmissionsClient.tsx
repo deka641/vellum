@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Download, ChevronLeft, ChevronRight, Search, AlertCircle, Trash2, Mail, MailOpen, Eye, EyeOff } from "lucide-react";
+import { Download, ChevronLeft, ChevronRight, Search, AlertCircle, Trash2, Mail, MailOpen, Eye, EyeOff, CheckCheck } from "lucide-react";
 import { Button } from "@/components/ui/Button/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog/ConfirmDialog";
 import { useToast } from "@/components/ui/Toast/Toast";
@@ -14,6 +14,7 @@ interface Submission {
   id: string;
   blockId: string;
   data: Record<string, string>;
+  isRead: boolean;
   readAt: string | null;
   createdAt: string;
   page: { id: string; title: string };
@@ -44,6 +45,7 @@ export function SubmissionsClient({ siteId, pages }: SubmissionsClientProps) {
   const [showBulkDelete, setShowBulkDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [updatingReadStatus, setUpdatingReadStatus] = useState(false);
+  const [markingAllRead, setMarkingAllRead] = useState(false);
   const { toast } = useToast();
   const searchTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -153,6 +155,85 @@ export function SubmissionsClient({ siteId, pages }: SubmissionsClientProps) {
     }
   }
 
+  async function handleSingleDelete(submissionId: string) {
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/sites/${siteId}/submissions/${submissionId}`, {
+        method: "DELETE",
+      });
+      if (res.ok || res.status === 204) {
+        toast("Deleted submission");
+        fetchSubmissions();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast(err.error || "Failed to delete submission", "error");
+      }
+    } catch {
+      toast("Something went wrong", "error");
+    } finally {
+      setDeleting(false);
+      setDeleteId(null);
+    }
+  }
+
+  async function handleSingleReadStatus(submissionId: string, isRead: boolean) {
+    setUpdatingReadStatus(true);
+    try {
+      const res = await fetch(`/api/sites/${siteId}/submissions/${submissionId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isRead }),
+      });
+      if (res.ok) {
+        const label = isRead ? "read" : "unread";
+        toast(`Marked submission as ${label}`);
+        setSubmissions((prev) =>
+          prev.map((s) =>
+            s.id === submissionId
+              ? { ...s, isRead, readAt: isRead ? new Date().toISOString() : null }
+              : s
+          )
+        );
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast(err.error || "Failed to update read status", "error");
+      }
+    } catch {
+      toast("Something went wrong", "error");
+    } finally {
+      setUpdatingReadStatus(false);
+    }
+  }
+
+  async function handleMarkAllRead() {
+    setMarkingAllRead(true);
+    try {
+      const res = await fetch(`/api/sites/${siteId}/submissions`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "markAllRead" }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.updated > 0) {
+          toast(`Marked ${data.updated} submission${data.updated !== 1 ? "s" : ""} as read`);
+          setSubmissions((prev) =>
+            prev.map((s) => ({ ...s, isRead: true, readAt: s.readAt || new Date().toISOString() }))
+          );
+        } else {
+          toast("All submissions are already read");
+        }
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast(err.error || "Failed to mark all as read", "error");
+      }
+    } catch {
+      toast("Something went wrong", "error");
+    } finally {
+      setMarkingAllRead(false);
+    }
+  }
+
   async function handleReadStatus(ids: string[], action: "read" | "unread") {
     setUpdatingReadStatus(true);
     try {
@@ -166,10 +247,11 @@ export function SubmissionsClient({ siteId, pages }: SubmissionsClientProps) {
         const label = action === "read" ? "read" : "unread";
         toast(`Marked ${data.updated} submission${data.updated !== 1 ? "s" : ""} as ${label}`);
         // Update local state
+        const isRead = action === "read";
         setSubmissions((prev) =>
           prev.map((s) =>
             ids.includes(s.id)
-              ? { ...s, readAt: action === "read" ? new Date().toISOString() : null }
+              ? { ...s, isRead, readAt: isRead ? new Date().toISOString() : null }
               : s
           )
         );
@@ -186,8 +268,9 @@ export function SubmissionsClient({ siteId, pages }: SubmissionsClientProps) {
   }
 
   const selectedSubmissions = submissions.filter((s) => selectedIds.has(s.id));
-  const hasUnreadSelected = selectedSubmissions.some((s) => !s.readAt);
-  const hasReadSelected = selectedSubmissions.some((s) => s.readAt);
+  const hasUnreadSelected = selectedSubmissions.some((s) => !s.isRead);
+  const hasReadSelected = selectedSubmissions.some((s) => s.isRead);
+  const hasAnyUnread = submissions.some((s) => !s.isRead);
 
   return (
     <div className={styles.content}>
@@ -257,6 +340,17 @@ export function SubmissionsClient({ siteId, pages }: SubmissionsClientProps) {
             </Button>
           </>
         )}
+        {hasAnyUnread && selectedIds.size === 0 && (
+          <Button
+            variant="secondary"
+            size="sm"
+            leftIcon={<CheckCheck size={14} />}
+            onClick={handleMarkAllRead}
+            disabled={markingAllRead}
+          >
+            {markingAllRead ? "Marking..." : "Mark all read"}
+          </Button>
+        )}
         <Button
           variant="ghost"
           size="sm"
@@ -309,7 +403,7 @@ export function SubmissionsClient({ siteId, pages }: SubmissionsClientProps) {
               </thead>
               <tbody>
                 {submissions.map((sub) => {
-                  const isUnread = !sub.readAt;
+                  const isUnread = !sub.isRead;
                   return (
                     <tr key={sub.id} className={`${styles.tr} ${isUnread ? styles.trUnread : ""}`}>
                       <td className={styles.td}>
@@ -350,7 +444,7 @@ export function SubmissionsClient({ siteId, pages }: SubmissionsClientProps) {
                           <button
                             className={styles.actionBtn}
                             onClick={() =>
-                              handleReadStatus([sub.id], isUnread ? "read" : "unread")
+                              handleSingleReadStatus(sub.id, isUnread)
                             }
                             title={isUnread ? "Mark as read" : "Mark as unread"}
                             aria-label={isUnread ? "Mark as read" : "Mark as unread"}
@@ -408,7 +502,7 @@ export function SubmissionsClient({ siteId, pages }: SubmissionsClientProps) {
         description="Are you sure you want to delete this submission? This cannot be undone."
         confirmLabel="Delete"
         variant="danger"
-        onConfirm={() => { if (deleteId) handleDelete([deleteId]); }}
+        onConfirm={() => { if (deleteId) handleSingleDelete(deleteId); }}
       />
       <ConfirmDialog
         open={showBulkDelete}
